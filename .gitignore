@@ -9,5 +9,15 @@
 *.swo
 *~
 
+# Python
+venv/
+__pycache__/
+*.pyc
+.env
+
+# Data (generada en runtime)
+data/vectors/
+data/logs/
+
 # Versiones antiguas (opcional incluir en git)
 # versions/

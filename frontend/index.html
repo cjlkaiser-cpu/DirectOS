@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🛠️ DirectOS v6.0</title>
+    <title>🛠️ DirectOS v7.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -46,6 +46,15 @@
         .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; }
         .status-online { background-color: #22c55e; box-shadow: 0 0 10px #22c55e; }
         .status-offline { background-color: #ef4444; box-shadow: 0 0 10px #ef4444; }
+
+        /* ESTADOS DE MAESTRÍA */
+        .status-badge { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .status-used { background-color: rgba(34, 197, 94, 0.2); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
+        .status-learning { background-color: rgba(234, 179, 8, 0.2); color: #eab308; border: 1px solid rgba(234, 179, 8, 0.3); }
+        .status-new { background-color: rgba(59, 130, 246, 0.2); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
+
+        /* Categoría DevOps */
+        .cat-devops { border-left-color: #f97316; }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-200 h-screen flex overflow-hidden selection:bg-blue-500 selection:text-white">
@@ -57,7 +66,7 @@
                 <i class="fa-solid fa-layer-group text-blue-500"></i>
                 Director<span class="text-slate-500">OS</span>
             </h1>
-            <p class="text-xs text-slate-500 mt-1">v6.0 - RAG + Scout</p>
+            <p class="text-xs text-slate-500 mt-1">v7.0 - Knowledge Base</p>
         </div>
         
         <nav class="flex-1 overflow-y-auto p-4 space-y-2">
@@ -154,6 +163,94 @@
             <div class="bg-slate-900 border border-slate-700 rounded-xl w-96 shadow-2xl">
                 <div class="p-4 border-b border-slate-800 flex justify-between items-center"><h3 class="font-bold text-white">Cargar Arquitectura</h3><button onclick="closeModal('load-modal')" class="text-slate-500 hover:text-white"><i class="fa-solid fa-times"></i></button></div>
                 <div id="load-list" class="p-2 max-h-64 overflow-y-auto space-y-1"></div>
+            </div>
+        </div>
+
+        <!-- Modal Patrón Detalle -->
+        <div id="pattern-modal" class="hidden absolute inset-0 bg-slate-950/90 z-50 flex items-center justify-center p-8 backdrop-blur-sm">
+            <div class="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-2xl shadow-2xl flex flex-col max-h-[90vh]">
+                <div class="p-4 border-b border-slate-800 flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <span id="pattern-modal-emoji" class="text-2xl"></span>
+                        <h3 id="pattern-modal-title" class="font-bold text-white text-lg"></h3>
+                    </div>
+                    <button onclick="closeModal('pattern-modal')" class="text-slate-500 hover:text-white"><i class="fa-solid fa-times"></i></button>
+                </div>
+                <div class="p-6 overflow-y-auto flex-1 space-y-5">
+                    <!-- Problema -->
+                    <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                        <h4 class="text-xs font-bold text-red-400 uppercase tracking-widest mb-2 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation"></i> Problema</h4>
+                        <p id="pattern-modal-problem" class="text-sm text-slate-300"></p>
+                    </div>
+                    <!-- Prompt -->
+                    <div class="bg-slate-950 border border-slate-800 rounded-lg p-4">
+                        <h4 class="text-xs font-bold text-blue-400 uppercase tracking-widest mb-2 flex items-center gap-2"><i class="fa-solid fa-wand-magic-sparkles"></i> Prompt</h4>
+                        <pre id="pattern-modal-prompt" class="text-sm text-slate-300 whitespace-pre-wrap font-mono leading-relaxed"></pre>
+                    </div>
+                    <!-- Flujo Táctico -->
+                    <div class="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
+                        <h4 class="text-xs font-bold text-purple-400 uppercase tracking-widest mb-3 flex items-center gap-2"><i class="fa-solid fa-diagram-project"></i> Flujo Táctico</h4>
+                        <p id="pattern-modal-flowdesc" class="text-xs text-slate-400 mb-3 font-mono"></p>
+                        <div id="pattern-modal-flow" class="flex flex-wrap gap-2"></div>
+                    </div>
+                </div>
+                <div class="p-4 border-t border-slate-800 bg-slate-900 flex gap-3">
+                    <button onclick="loadPatternToPrompt()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-sm px-4 py-2 rounded-lg font-medium transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-copy"></i> Usar Prompt
+                    </button>
+                    <button onclick="loadPatternToArchitect()" class="flex-1 bg-purple-600 hover:bg-purple-500 text-white text-sm px-4 py-2 rounded-lg font-medium transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-pen-ruler"></i> Abrir en Arquitecto
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Ficha Técnica (Tool Detail) -->
+        <div id="tool-modal" class="hidden absolute inset-0 bg-slate-950/90 z-50 flex items-center justify-center p-8 backdrop-blur-sm">
+            <div class="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-2xl shadow-2xl flex flex-col max-h-[90vh]">
+                <div class="p-4 border-b border-slate-800 flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <i id="tool-modal-icon" class="fa-solid text-2xl"></i>
+                        <div>
+                            <h3 id="tool-modal-title" class="font-bold text-white text-lg"></h3>
+                            <span id="tool-modal-tag" class="text-xs text-slate-500"></span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span id="tool-modal-status" class="status-badge"></span>
+                        <button onclick="closeModal('tool-modal')" class="text-slate-500 hover:text-white"><i class="fa-solid fa-times"></i></button>
+                    </div>
+                </div>
+                <div class="p-6 overflow-y-auto flex-1 space-y-5">
+                    <!-- Qué es -->
+                    <div>
+                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2"><i class="fa-solid fa-circle-info text-blue-400"></i> Qué es</h4>
+                        <p id="tool-modal-desc" class="text-sm text-slate-300 leading-relaxed"></p>
+                    </div>
+                    <!-- Por qué me importa -->
+                    <div class="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
+                        <h4 class="text-xs font-bold text-purple-400 uppercase tracking-widest mb-2 flex items-center gap-2"><i class="fa-solid fa-lightbulb"></i> Por qué me importa</h4>
+                        <p id="tool-modal-why" class="text-sm text-slate-300 leading-relaxed"></p>
+                    </div>
+                    <!-- Casos de Uso -->
+                    <div>
+                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2"><i class="fa-solid fa-folder-open text-amber-400"></i> Casos de uso en minerOS</h4>
+                        <div id="tool-modal-cases" class="flex flex-wrap gap-2"></div>
+                    </div>
+                    <!-- Código -->
+                    <div class="bg-slate-950 border border-slate-800 rounded-lg p-4">
+                        <h4 class="text-xs font-bold text-green-400 uppercase tracking-widest mb-2 flex items-center gap-2"><i class="fa-solid fa-code"></i> Snippet de código</h4>
+                        <pre id="tool-modal-code" class="text-xs text-green-400 font-mono whitespace-pre-wrap overflow-x-auto"></pre>
+                    </div>
+                </div>
+                <div class="p-4 border-t border-slate-800 bg-slate-900 flex gap-3">
+                    <button onclick="addToolToArchitect()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-sm px-4 py-2 rounded-lg font-medium transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-plus"></i> Añadir al Arquitecto
+                    </button>
+                    <button onclick="copyToolCode()" class="bg-slate-700 hover:bg-slate-600 text-white text-sm px-4 py-2 rounded-lg font-medium transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-copy"></i> Copiar código
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -260,23 +357,45 @@
         <div id="view-generator" class="hidden flex-1 overflow-y-auto p-8 relative">
              <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
                 <div class="lg:col-span-4 space-y-6">
+                    <!-- BIBLIOTECA DE PATRONES -->
                     <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
-                        <h3 class="font-bold text-white text-sm mb-2">Rol</h3>
-                        <select id="prompt-role" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-300">
-                            <option>Arquitecto de Software Senior</option>
-                            <option>Ingeniero de Datos y RAG</option>
-                            <option>Experto en Debugging y Python</option>
-                            <option>Desarrollador Frontend Minimalista</option>
-                            <option>Ingeniero DevOps</option>
-                        </select>
+                        <div class="flex items-center gap-2 mb-4">
+                            <i class="fa-solid fa-book text-amber-400"></i>
+                            <h3 class="font-bold text-white text-sm">Biblioteca de Patrones</h3>
+                            <span class="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full">15</span>
+                        </div>
+                        <div id="patterns-accordion" class="space-y-2"></div>
                     </div>
+
+                    <!-- Modo Libre -->
                     <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
-                        <h3 class="font-bold text-white text-sm mb-2">Objetivo</h3>
-                        <textarea id="prompt-goal" rows="4" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-sm text-slate-300"></textarea>
-                        <div class="mt-3 flex flex-wrap gap-2">
-                            <button onclick="setGoal('Generar andamiaje (scaffold) inicial de proyecto')" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-400 px-2 py-1 rounded border border-slate-700 transition">🏗️ Scaffold</button>
-                            <button onclick="setGoal('Explicar este código línea por línea')" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-400 px-2 py-1 rounded border border-slate-700 transition">📖 Explicar</button>
-                            <button onclick="setGoal('Optimizar para rendimiento y concurrencia')" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-400 px-2 py-1 rounded border border-slate-700 transition">🚀 Optimizar</button>
+                        <div class="flex items-center gap-2 mb-3">
+                            <i class="fa-solid fa-pen text-slate-400"></i>
+                            <h3 class="font-bold text-white text-sm">Modo Libre</h3>
+                        </div>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="text-xs text-slate-500 mb-1 block">Rol</label>
+                                <select id="prompt-role" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-slate-300">
+                                    <option>Arquitecto de Software Senior</option>
+                                    <option>Ingeniero de Datos y RAG</option>
+                                    <option>Experto en Debugging y Python</option>
+                                    <option>Desarrollador Frontend Minimalista</option>
+                                    <option>Ingeniero DevOps</option>
+                                    <option>Ingeniero de QA</option>
+                                    <option>Technical Writer</option>
+                                    <option>Ingeniero de Seguridad</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-500 mb-1 block">Objetivo</label>
+                                <textarea id="prompt-goal" rows="3" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-300" placeholder="Describe qué quieres lograr..."></textarea>
+                            </div>
+                            <div class="flex flex-wrap gap-1">
+                                <button onclick="setGoal('Generar andamiaje (scaffold) inicial de proyecto')" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-400 px-2 py-1 rounded border border-slate-700 transition">🏗️ Scaffold</button>
+                                <button onclick="setGoal('Explicar este código línea por línea')" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-400 px-2 py-1 rounded border border-slate-700 transition">📖 Explicar</button>
+                                <button onclick="setGoal('Optimizar para rendimiento y concurrencia')" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-400 px-2 py-1 rounded border border-slate-700 transition">🚀 Optimizar</button>
+                            </div>
                         </div>
                     </div>
                     <button onclick="generatePrompt()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition active:scale-95">Generar Orden</button>
@@ -324,31 +443,213 @@
         // 1. DATA TOOLS & DETAILS (TAGS CON ICONOS AÑADIDOS)
         // ============================================
         const tools = [
-            // Frontend
-            { name: "HTML5", cat: "Frontend", id:"html", icon: "fa-html5", color: "text-orange-500", tag: "🏗️ Estructura", pri: "Alta", desc: "Estructura semántica fundamental.", tip: "Tags semánticos." },
-            { name: "Tailwind", cat: "Frontend", id:"css", icon: "fa-css3", color: "text-blue-400", tag: "🎨 Estilos", pri: "Media", desc: "Estilos utility-first rápidos.", tip: "@apply para limpieza." },
-            { name: "HTMX", cat: "Frontend", id:"htmx", icon: "fa-bolt", color: "text-yellow-400", tag: "⚡ Interactividad", pri: "Alta", desc: "AJAX sin escribir JS complejo.", tip: "Usar hx-swap para transiciones." },
-            // Backend
-            { name: "FastAPI", cat: "Backend", id:"fastapi", icon: "fa-server", color: "text-green-400", tag: "🌐 API Server", pri: "Alta", desc: "API moderna y asíncrona.", tip: "Docs automáticos en /docs." },
-            { name: "Python", cat: "Backend", id:"python", icon: "fa-brands fa-python", color: "text-blue-500", tag: "🐍 Lenguaje Core", pri: "Alta", desc: "Lenguaje núcleo del sistema.", tip: "Usar Type Hints siempre." },
-            { name: "Loguru", cat: "Backend", id:"loguru", icon: "fa-list-ul", color: "text-slate-400", tag: "📝 Logging", pri: "Media", desc: "Logging simplificado y bonito.", tip: "Configurar rotación de logs." },
-            { name: "BeautifulSoup", cat: "Backend", id:"bs4", icon: "fa-code", color: "text-green-300", tag: "🕷️ Scraper", pri: "Media", desc: "Parser HTML para scraping.", tip: "Usar con requests." },
-            { name: "Watchdog", cat: "Backend", id:"watchdog", icon: "fa-eye", color: "text-amber-400", tag: "👁️ File Watcher", pri: "Media", desc: "Detecta cambios en carpetas.", tip: "Eventos: created, modified." },
-            // Process
-            { name: "OpenCV", cat: "Process", id:"opencv", icon: "fa-eye", color: "text-red-400", tag: "📸 Visión Artificial", pri: "Media", desc: "Procesamiento de píxeles.", tip: "Usar arrays de numpy." },
-            { name: "FFmpeg", cat: "Process", id:"ffmpeg", icon: "fa-film", color: "text-pink-400", tag: "🎞️ Motor Multimedia", pri: "Media", desc: "Navaja suiza multimedia.", tip: "Usar subprocess para llamar." },
-            { name: "Tesseract", cat: "Process", id:"ocr", icon: "fa-font", color: "text-cyan-400", tag: "👁️ OCR", pri: "Media", desc: "Extrae texto de imágenes/PDFs.", tip: "pytesseract wrapper." },
-            { name: "Pillow", cat: "Process", id:"pillow", icon: "fa-image", color: "text-rose-400", tag: "📸 Imágenes", pri: "Media", desc: "Manipulación de imágenes.", tip: "Redimensionar antes de CLIP." },
-            // IA Models
-            { name: "CLIP", cat: "IA Model", id:"clip", icon: "fa-brain", color: "text-purple-400", tag: "🧠 Embeddings IMG", pri: "Alta", desc: "Entendimiento Texto-Imagen.", tip: "Procesar en batch." },
-            { name: "Whisper", cat: "IA Model", id:"whisper", icon: "fa-ear-listen", color: "text-indigo-400", tag: "🧠 Speech-to-Text", pri: "Media", desc: "Transcripción Speech-to-Text.", tip: "Modelo 'base' para CPU." },
-            { name: "Sentence-BERT", cat: "IA Model", id:"sbert", icon: "fa-brain", color: "text-teal-400", tag: "🧠 Embeddings TXT", pri: "Alta", desc: "Vectoriza texto para búsqueda.", tip: "all-MiniLM-L6-v2 es rápido." },
-            { name: "Claude API", cat: "IA Model", id:"claude", icon: "fa-comments", color: "text-orange-400", tag: "🤖 LLM Cloud", pri: "Alta", desc: "Razonamiento y generación.", tip: "Sonnet para balance coste/calidad." },
-            { name: "Llama Local", cat: "IA Model", id:"llama", icon: "fa-microchip", color: "text-lime-400", tag: "🤖 LLM Local", pri: "Media", desc: "LLM sin API, privacidad total.", tip: "Ollama para fácil setup." },
-            // Storage
-            { name: "ChromaDB", cat: "Storage", id:"chroma", icon: "fa-database", color: "text-emerald-400", tag: "💾 Vector DB", pri: "Alta", desc: "Memoria a largo plazo de la IA.", tip: "Persistencia local obligatoria." },
-            { name: "SQLite", cat: "Storage", id:"sqlite", icon: "fa-table", color: "text-blue-300", tag: "🗃️ Relacional", pri: "Alta", desc: "Metadatos relacionales.", tip: "Activar modo WAL." },
-            { name: "Markdown", cat: "Storage", id:"markdown", icon: "fa-file-lines", color: "text-slate-300", tag: "📝 Archivos", pri: "Media", desc: "Notas y documentación.", tip: "Compatible con Obsidian." }
+            // ==========================================
+            // 🟧 FRONTEND (La Cara Visible)
+            // ==========================================
+            {
+                id: "html", name: "HTML5 Semántico", cat: "Frontend",
+                icon: "fa-html5", color: "text-orange-500", tag: "Estructura", status: "used",
+                desc: "El esqueleto fundamental de la web moderna.",
+                why: "Porque minerOS es 'Local First' y web. Un buen HTML semántico (<article>, <section>) hace que tus datos sean portables y accesibles sin depender de frameworks.",
+                cases: ["Estructura de dashboards", "Reportes generados por IA", "Interfaz de PhotoMine"],
+                code: "<article class='card'>\n  <header>\n    <h2>Factura #102</h2>\n  </header>\n  <p>Contenido...</p>\n</article>"
+            },
+            {
+                id: "css", name: "Tailwind CSS", cat: "Frontend",
+                icon: "fa-css3", color: "text-blue-400", tag: "Estilos", status: "used",
+                desc: "Framework de estilos 'utility-first' para diseño rápido.",
+                why: "Te permite diseñar interfaces profesionales (modo oscuro, grids responsive) sin escribir hojas de estilo separadas. Ideal para prototipar rápido.",
+                cases: ["Layouts de PhotoMine", "Tarjetas del Dashboard", "Botones interactivos"],
+                code: "<div class='bg-slate-900 text-white p-4 rounded-xl hover:bg-slate-800 transition shadow-lg'>\n  Panel de Control\n</div>"
+            },
+            {
+                id: "htmx", name: "HTMX", cat: "Frontend",
+                icon: "fa-bolt", color: "text-yellow-400", tag: "Interactividad", status: "learning",
+                desc: "Superpoderes para HTML. AJAX sin JavaScript complejo.",
+                why: "Convierte tus botones y formularios en dinámicos (sin recargar página) conectando directo con Python. Es la alternativa KISS a React.",
+                cases: ["Búsqueda en vivo", "Carga infinita de fotos", "Edición inline de datos"],
+                code: "<button hx-post='/api/procesar' hx-target='#resultado' hx-swap='innerHTML'>\n  Analizar Imagen\n</button>"
+            },
+            {
+                id: "alpine", name: "Alpine.js", cat: "Frontend",
+                icon: "fa-code", color: "text-teal-400", tag: "Reactividad", status: "new",
+                desc: "JavaScript minimalista para interacciones en el navegador.",
+                why: "Para cuando necesitas abrir un modal, un menú desplegable o pestañas sin llamar al servidor. Pesa poquísimo.",
+                cases: ["Modales de confirmación", "Tabs del Dashboard", "Toggles de visibilidad"],
+                code: "<div x-data='{ open: false }'>\n  <button @click='open = true'>Abrir</button>\n  <span x-show='open'>Hola!</span>\n</div>"
+            },
+
+            // ==========================================
+            // 🟩 BACKEND (El Cerebro Lógico)
+            // ==========================================
+            {
+                id: "python", name: "Python 3.11+", cat: "Backend",
+                icon: "fa-brands fa-python", color: "text-blue-500", tag: "Lenguaje Core", status: "used",
+                desc: "El lenguaje de programación para IA y Datos.",
+                why: "Es el pegamento de todo el ecosistema minerOS. Orquesta la IA, mueve archivos y sirve la web.",
+                cases: ["Scripts de automatización", "Lógica de negocio", "Pegamento entre herramientas"],
+                code: "def procesar_archivo(ruta: str) -> dict:\n    datos = extraer_texto(ruta)\n    return {'status': 'ok', 'data': datos}"
+            },
+            {
+                id: "fastapi", name: "FastAPI", cat: "Backend",
+                icon: "fa-server", color: "text-green-400", tag: "API Server", status: "learning",
+                desc: "El servidor web más rápido y moderno para Python.",
+                why: "Es asíncrono (no se bloquea mientras la IA piensa). Genera documentación automática (/docs) para que pruebes tus funciones.",
+                cases: ["Backend de DirectOS", "API de búsqueda", "Endpoint de ingesta de archivos"],
+                code: "from fastapi import FastAPI\napp = FastAPI()\n\n@app.get('/items/{id}')\nasync def read_item(id: int):\n    return {'item_id': id}"
+            },
+            {
+                id: "pydantic", name: "Pydantic", cat: "Backend",
+                icon: "fa-shield-halved", color: "text-red-400", tag: "Validación", status: "new",
+                desc: "Control de calidad para tus datos.",
+                why: "Define cómo deben ser tus datos (ej: 'La edad debe ser un número'). Si algo falla, te avisa antes de romper la base de datos.",
+                cases: ["Validar JSON de entrada", "Configuración (.env)", "Esquemas de DB"],
+                code: "from pydantic import BaseModel\n\nclass Usuario(BaseModel):\n    id: int\n    email: str\n    es_admin: bool = False"
+            },
+            {
+                id: "loguru", name: "Loguru", cat: "Backend",
+                icon: "fa-list-ul", color: "text-slate-400", tag: "Logging", status: "learning",
+                desc: "Logging simplificado y bonito para humanos.",
+                why: "Deja de usar print(). Loguru te dice dónde, cuándo y por qué falló algo, con colores y guardado automático en archivo.",
+                cases: ["Depuración de errores", "Historial de operaciones", "Alertas del sistema"],
+                code: "from loguru import logger\n\nlogger.add('app.log', rotation='1 day')\nlogger.info('Iniciando proceso...')\nlogger.error('Error crítico en DB')"
+            },
+            {
+                id: "bs4", name: "BeautifulSoup", cat: "Backend",
+                icon: "fa-code", color: "text-green-300", tag: "Scraper", status: "learning",
+                desc: "Parser HTML para extraer datos de webs.",
+                why: "Cuando necesitas sacar información de páginas web (precios, artículos, datos públicos) de forma estructurada.",
+                cases: ["Scraping de precios", "Extracción de artículos", "Monitoreo de cambios web"],
+                code: "from bs4 import BeautifulSoup\nsoup = BeautifulSoup(html, 'html.parser')\ntitulo = soup.find('h1').text"
+            },
+            {
+                id: "watchdog", name: "Watchdog", cat: "Backend",
+                icon: "fa-eye", color: "text-amber-400", tag: "File Watcher", status: "learning",
+                desc: "Detecta cambios en carpetas automáticamente.",
+                why: "Para pipelines automáticos: cuando guardas un archivo, se procesa solo. Ideal para ingesta continua.",
+                cases: ["Auto-indexar Descargas", "Procesar fotos nuevas", "Backup automático"],
+                code: "from watchdog.observers import Observer\nobserver = Observer()\nobserver.schedule(handler, path='./inbox')"
+            },
+
+            // ==========================================
+            // 🟪 IA & MODELOS (La Magia)
+            // ==========================================
+            {
+                id: "clip", name: "OpenAI CLIP", cat: "IA Model",
+                icon: "fa-brain", color: "text-purple-400", tag: "Visión", status: "used",
+                desc: "Modelo multimodal que entiende imágenes y texto.",
+                why: "Es el corazón de PhotoMine. Permite buscar 'perro en la playa' y encontrar la foto sin que nadie la haya etiquetado.",
+                cases: ["Búsqueda semántica visual", "Clasificación automática", "Detección de duplicados"],
+                code: "inputs = processor(text=['gato', 'perro'], images=image, return_tensors='pt')\nprobs = model(**inputs).logits_per_image.softmax(dim=1)"
+            },
+            {
+                id: "whisper", name: "Whisper", cat: "IA Model",
+                icon: "fa-ear-listen", color: "text-indigo-400", tag: "Audio", status: "learning",
+                desc: "Reconocimiento de voz a texto de alta precisión.",
+                why: "Convierte el audio (vídeos, notas de voz) en texto que luego puedes buscar, resumir o procesar.",
+                cases: ["Transcribir reuniones", "Subtítulos automáticos", "Notas de voz a Obsidian"],
+                code: "import whisper\nmodel = whisper.load_model('base')\nresult = model.transcribe('audio.mp3')\nprint(result['text'])"
+            },
+            {
+                id: "sbert", name: "Sentence-BERT", cat: "IA Model",
+                icon: "fa-brain", color: "text-teal-400", tag: "Embeddings", status: "used",
+                desc: "Vectoriza texto para búsqueda semántica.",
+                why: "Convierte párrafos en vectores matemáticos. Permite buscar 'documentos similares a este' sin keywords exactas.",
+                cases: ["Knowledge Base RAG", "Búsqueda en notas", "Clustering de documentos"],
+                code: "from sentence_transformers import SentenceTransformer\nmodel = SentenceTransformer('all-MiniLM-L6-v2')\nvector = model.encode('Tu texto aquí')"
+            },
+            {
+                id: "claude", name: "Claude API", cat: "IA Model",
+                icon: "fa-comments", color: "text-orange-400", tag: "LLM Cloud", status: "used",
+                desc: "Razonamiento y generación de texto avanzado.",
+                why: "Para tareas complejas: resumir, analizar errores, generar código. Scout usa Claude para diagnosticar problemas.",
+                cases: ["Análisis de errores (Scout)", "Resúmenes inteligentes", "Generación de código"],
+                code: "from anthropic import Anthropic\nclient = Anthropic()\nresponse = client.messages.create(\n  model='claude-sonnet-4-20250514',\n  messages=[{'role': 'user', 'content': prompt}]\n)"
+            },
+            {
+                id: "ollama", name: "Ollama", cat: "IA Model",
+                icon: "fa-robot", color: "text-pink-400", tag: "Local LLM", status: "new",
+                desc: "Ejecuta modelos tipo ChatGPT (Llama 3, Mistral) en tu Mac.",
+                why: "Privacidad total. Te permite tener un asistente inteligente que lee tus documentos privados sin subirlos a la nube.",
+                cases: ["Resumir documentos sensibles", "Chatbot offline", "Extracción de datos privados"],
+                code: "# En terminal:\nollama run llama3\n# O desde Python:\nimport ollama\nollama.chat(model='llama3', messages=[...])"
+            },
+
+            // ==========================================
+            // 🟨 DATOS & ALMACENAMIENTO (La Memoria)
+            // ==========================================
+            {
+                id: "chroma", name: "ChromaDB", cat: "Storage",
+                icon: "fa-database", color: "text-emerald-400", tag: "Vector DB", status: "used",
+                desc: "Base de datos para guardar vectores (embeddings).",
+                why: "Es donde vive la 'memoria semántica' de minerOS. Permite buscar por significado ('algo parecido a esto') en lugar de palabras exactas.",
+                cases: ["Motor de búsqueda RAG", "Recomendaciones", "Memoria de chatbot"],
+                code: "collection = client.get_collection('fotos')\nresults = collection.query(query_texts=['atardecer'], n_results=5)"
+            },
+            {
+                id: "sqlite", name: "SQLite", cat: "Storage",
+                icon: "fa-table", color: "text-blue-300", tag: "Relacional", status: "used",
+                desc: "Base de datos SQL en un archivo único.",
+                why: "Perfecta para metadatos estructurados (fechas, nombres, rutas). Es robusta, rápida y no necesita servidor.",
+                cases: ["Índice de archivos", "Registro de usuarios", "Logs estructurados"],
+                code: "import sqlite3\ncon = sqlite3.connect('mineros.db')\ncon.execute('SELECT * FROM docs WHERE fecha > ?', ('2024-01-01',))"
+            },
+            {
+                id: "markdown", name: "Markdown", cat: "Storage",
+                icon: "fa-file-lines", color: "text-slate-300", tag: "Archivos", status: "used",
+                desc: "Formato de texto plano para notas y documentación.",
+                why: "Es el formato universal de conocimiento. Compatible con Obsidian, GitHub, y fácil de procesar con IA.",
+                cases: ["Notas de aprendizaje", "Documentación de proyectos", "Knowledge Base"],
+                code: "# Título\n## Subtítulo\n- Lista de items\n- **Negrita** y *cursiva*\n```python\ncodigo()\n```"
+            },
+
+            // ==========================================
+            // 🟥 PROCESAMIENTO (Los Obreros)
+            // ==========================================
+            {
+                id: "opencv", name: "OpenCV / Pillow", cat: "Process",
+                icon: "fa-eye", color: "text-red-400", tag: "Visión", status: "used",
+                desc: "Librerías para manipular imágenes píxel a píxel.",
+                why: "Necesarias para preparar las imágenes antes de pasarlas a la IA (redimensionar, recortar, convertir formato).",
+                cases: ["Generar miniaturas", "Detectar caras", "Normalizar para CLIP"],
+                code: "from PIL import Image\nimg = Image.open('foto.jpg').resize((224, 224))\nimg.save('thumb.jpg')"
+            },
+            {
+                id: "ffmpeg", name: "FFmpeg", cat: "Process",
+                icon: "fa-film", color: "text-pink-400", tag: "Multimedia", status: "learning",
+                desc: "La navaja suiza del vídeo y audio.",
+                why: "Permite extraer el audio de un vídeo para Whisper, o sacar fotogramas cada 5 segundos para CLIP.",
+                cases: ["Extraer audio de vídeo", "Comprimir vídeos", "Generar GIFs"],
+                code: "import subprocess\nsubprocess.run(['ffmpeg', '-i', 'video.mp4', '-vn', 'audio.mp3'])"
+            },
+            {
+                id: "ocr", name: "Tesseract OCR", cat: "Process",
+                icon: "fa-font", color: "text-cyan-400", tag: "OCR", status: "learning",
+                desc: "Extrae texto de imágenes y PDFs escaneados.",
+                why: "Para digitalizar documentos físicos (facturas, recibos) y hacerlos buscables.",
+                cases: ["Escanear facturas", "Digitalizar notas a mano", "Extraer texto de capturas"],
+                code: "import pytesseract\nfrom PIL import Image\ntexto = pytesseract.image_to_string(Image.open('scan.png'))"
+            },
+
+            // ==========================================
+            // ⬛ DEVOPS & CALIDAD (El Taller)
+            // ==========================================
+            {
+                id: "git", name: "Git", cat: "DevOps",
+                icon: "fa-code-branch", color: "text-orange-400", tag: "Versiones", status: "learning",
+                desc: "Sistema de control de versiones.",
+                why: "Tu red de seguridad. Te permite experimentar sin miedo a romper nada, pudiendo volver atrás en el tiempo.",
+                cases: ["Guardar progreso", "Probar features nuevas (ramas)", "Backup en GitHub"],
+                code: "git init\ngit add .\ngit commit -m 'Añadido nuevo parser'"
+            },
+            {
+                id: "ruff", name: "Ruff / Black", cat: "DevOps",
+                icon: "fa-check-double", color: "text-yellow-200", tag: "Calidad", status: "new",
+                desc: "Herramientas de limpieza y formateo de código.",
+                why: "Hacen que tu código se vea profesional automáticamente. Black formatea y Ruff busca errores.",
+                cases: ["Formatear al guardar", "Detectar imports no usados", "Estilo consistente"],
+                code: "# En terminal\nruff check .\nblack ."
+            }
         ];
 
         // ============================================
@@ -405,8 +706,396 @@
             }
         ];
         
-        const catStyles = { "Frontend": "cat-frontend", "Backend": "cat-backend", "IA Model": "cat-ai", "Storage": "cat-storage", "Process": "cat-process" };
-        
+        const catStyles = { "Frontend": "cat-frontend", "Backend": "cat-backend", "IA Model": "cat-ai", "Storage": "cat-storage", "Process": "cat-process", "DevOps": "cat-devops" };
+        const statusLabels = { "used": "✅ Dominada", "learning": "🚧 En progreso", "new": "🆕 Por descubrir" };
+
+        // ============================================
+        // BIBLIOTECA DE PATRONES DE PROMPTS
+        // ============================================
+        const promptPatterns = {
+            "refactoring": {
+                name: "🔧 Refactoring",
+                icon: "fa-wrench",
+                patterns: [
+                    {
+                        id: "refactorizador-modular",
+                        name: "Refactorizador Modular",
+                        emoji: "🏗️",
+                        problem: "Tienes un script prueba.py de 300 líneas que funciona, pero es un caos.",
+                        prompt: `Actúa como Arquitecto de Software. Toma este código monolítico y refactorízalo siguiendo la arquitectura limpia de minerOS. Sepáralo en: routers/ (endpoints), services/ (lógica pura), y core/ (configuración). Usa inyección de dependencias y Pydantic para validación. Entrégame la estructura de archivos final.`,
+                        flow: ["python", "fastapi", "loguru"],
+                        flowDesc: "Script → Analiza → Separa módulos → Estructura limpia"
+                    },
+                    {
+                        id: "guardian-calidad",
+                        name: "Guardián de Calidad",
+                        emoji: "🛡️",
+                        problem: "Tienes miedo de tocar el código porque se puede romper.",
+                        prompt: `Actúa como Ingeniero de QA experto en Pytest. Genera una suite de tests completa para este módulo. Incluye conftest.py con fixtures para mockear la base de datos y las llamadas a APIs externas (como OpenAI). Cubre casos de éxito, casos de error y casos borde.`,
+                        flow: ["python", "sqlite", "loguru"],
+                        flowDesc: "Código → Analiza → Genera tests → conftest.py + tests/"
+                    },
+                    {
+                        id: "constructor-interfaz",
+                        name: "Constructor de Interfaz",
+                        emoji: "🎨",
+                        problem: "Tienes la API hecha pero te da pereza hacer el HTML.",
+                        prompt: `Actúa como Desarrollador Frontend Minimalista. Teniendo en cuenta este esquema de datos Pydantic del backend, genera un componente HTML5 + TailwindCSS autónomo. Usa HTMX para conectar con el endpoint sin escribir JavaScript. El diseño debe ser limpio, oscuro (Slate-900) y mobile-first.`,
+                        flow: ["html", "css", "htmx", "fastapi"],
+                        flowDesc: "Pydantic Schema → HTML5 + Tailwind → HTMX bindings"
+                    }
+                ]
+            },
+            "contenido": {
+                name: "📝 Contenido",
+                icon: "fa-pen-fancy",
+                patterns: [
+                    {
+                        id: "alquimista-contenido",
+                        name: "Alquimista de Contenido",
+                        emoji: "✨",
+                        problem: "Tienes un archivo Markdown técnico y quieres convertirlo en contenido publicable.",
+                        prompt: `Actúa como Content Strategist técnico. Toma este archivo Markdown y genera: 1) Un hilo de Twitter de 5 tweets con hooks y emojis, 2) Un post de LinkedIn profesional con bullet points, 3) Una Newsletter HTML maquetada. Mantén el tono técnico pero accesible.`,
+                        flow: ["python", "claude", "clip", "html", "sqlite"],
+                        flowDesc: "Markdown → IA extrae ideas → Genera formatos → HTML Newsletter"
+                    }
+                ]
+            },
+            "seguridad": {
+                name: "🛡️ Seguridad",
+                icon: "fa-shield-halved",
+                patterns: [
+                    {
+                        id: "escudo-privacidad",
+                        name: "Escudo de Privacidad",
+                        emoji: "🔒",
+                        problem: "Necesitas compartir logs o documentos pero contienen datos sensibles.",
+                        prompt: `Actúa como Ingeniero de Seguridad. Crea un script Python que escanee archivos recursivamente, detecte datos sensibles (DNI, Email, Teléfono, API Keys, IBANs) usando regex y opcionalmente Spacy NER, y genere una copia censurada con [REDACTED]. Usa Loguru para alertar cada hallazgo. Sin APIs externas - todo local.`,
+                        flow: ["python", "ocr", "loguru"],
+                        flowDesc: "Archivos → OCR si es imagen → Regex/Spacy detecta → Copia censurada"
+                    }
+                ]
+            },
+            "knowledge": {
+                name: "🧠 Knowledge",
+                icon: "fa-brain",
+                patterns: [
+                    {
+                        id: "sintetizador-conocimiento",
+                        name: "Sintetizador de Conocimiento",
+                        emoji: "📚",
+                        problem: "Tienes 50 PDFs sobre un tema y necesitas un resumen coherente.",
+                        prompt: `Actúa como Investigador Senior. Genera un "Estado del Arte" sobre el tema especificado basándote únicamente en los fragmentos recuperados de mi Knowledge Base local. Estructura el ensayo con: Introducción, Conceptos clave, Evolución histórica, Estado actual, y Conclusiones. Cita las fuentes originales.`,
+                        flow: ["fastapi", "chroma", "python", "claude", "html"],
+                        flowDesc: "Tema → ChromaDB busca → Reranking → LLM sintetiza → Informe HTML"
+                    }
+                ]
+            },
+            "aprendizaje": {
+                name: "📖 Aprendizaje",
+                icon: "fa-graduation-cap",
+                patterns: [
+                    {
+                        id: "mentor-socratico",
+                        name: "Mentor Socrático",
+                        emoji: "🎓",
+                        problem: "Quieres comprobar si realmente entendiste un documento técnico.",
+                        prompt: `Actúa como profesor universitario experto en evaluación. Lee este documento técnico y genera un test de 10 preguntas tipo test (4 opciones, solo 1 correcta). Incluye preguntas de comprensión, aplicación y análisis. Devuelve un JSON con: pregunta, opciones[], respuesta_correcta, explicacion.`,
+                        flow: ["python", "claude", "htmx", "markdown"],
+                        flowDesc: "PDF/MD → LLM genera quiz → JSON → Interfaz Flashcards"
+                    },
+                    {
+                        id: "resumen-ejecutivo",
+                        name: "Resumen Ejecutivo",
+                        emoji: "📋",
+                        problem: "Al final del día no recuerdas qué guardaste en tus carpetas.",
+                        prompt: `Actúa como Asistente Personal. Escanea los archivos creados/modificados en las últimas 24 horas en la carpeta especificada. Para cada archivo, extrae su "esencia" (título, tipo, tema principal). Genera un resumen narrativo de 1 párrafo: "Hoy guardaste 3 facturas, 2 notas de voz sobre X, y 1 snippet de código para Y".`,
+                        flow: ["python", "watchdog", "ocr", "clip", "claude", "markdown"],
+                        flowDesc: "Watchdog → Clasifica archivos → IA resume → DIARIO.md"
+                    },
+                    {
+                        id: "torre-babel",
+                        name: "Torre de Babel",
+                        emoji: "🌍",
+                        problem: "Necesitas leer documentación técnica en otro idioma.",
+                        prompt: `Actúa como Traductor Técnico especializado. Traduce este documento manteniendo: 1) Bloques de código intactos, 2) Nombres de variables/funciones sin traducir, 3) Terminología técnica estándar (API, endpoint, etc). Genera una versión bilingüe lado a lado si es posible.`,
+                        flow: ["python", "claude", "html", "markdown"],
+                        flowDesc: "Markdown → Separa código/texto → Traduce texto → Re-ensambla"
+                    }
+                ]
+            },
+            "devops": {
+                name: "🔧 DevOps",
+                icon: "fa-code",
+                patterns: [
+                    {
+                        id: "code-reviewer",
+                        name: "Code Reviewer",
+                        emoji: "👀",
+                        problem: "Quieres un segundo par de ojos antes de hacer commit.",
+                        prompt: `Actúa como Senior Python Developer con 10 años de experiencia. Revisa este código buscando: 1) Vulnerabilidades de seguridad (inyección, exposición de secrets), 2) Problemas de rendimiento (N+1, memory leaks), 3) Falta de type hints, 4) Code smells (funciones largas, acoplamiento). Prioriza los hallazgos por severidad.`,
+                        flow: ["python", "loguru"],
+                        flowDesc: "Código → Análisis estático → IA review → Reporte priorizado"
+                    },
+                    {
+                        id: "semilla-datos",
+                        name: "Semilla de Datos",
+                        emoji: "🌱",
+                        problem: "Necesitas datos de prueba realistas sin usar datos reales de producción.",
+                        prompt: `Actúa como Ingeniero de Datos. Genera un dataset de prueba con el esquema especificado. Los datos deben ser: 1) Coherentes entre sí (edades realistas, nombres plausibles), 2) Diversos (cubrir casos borde), 3) En formato JSON/CSV. Incluye al menos 100 registros.`,
+                        flow: ["fastapi", "claude", "python", "sqlite"],
+                        flowDesc: "Esquema → LLM genera JSON → Valida Pydantic → Inserta SQLite"
+                    },
+                    {
+                        id: "documentador-fantasma",
+                        name: "Documentador Fantasma",
+                        emoji: "👻",
+                        problem: "Tu código funciona pero no tiene documentación.",
+                        prompt: `Actúa como Technical Writer. Lee este módulo Python usando AST y genera: 1) Docstrings en formato Google Style para cada función, 2) Un README.md con: descripción, instalación, uso básico, y ejemplos. 3) Un diagrama ASCII del flujo principal. No inventes funcionalidad - documenta solo lo que existe.`,
+                        flow: ["python", "claude", "markdown"],
+                        flowDesc: "Código → AST extrae estructura → LLM documenta → docs/"
+                    }
+                ]
+            },
+            "debug": {
+                name: "🔍 Debug & Performance",
+                icon: "fa-bug",
+                patterns: [
+                    {
+                        id: "debugger-sherlock",
+                        name: "Debugger Sherlock",
+                        emoji: "🔍",
+                        problem: "Tienes un error críptico y no sabes por dónde empezar.",
+                        prompt: `Actúa como Detective de Bugs Senior. Analiza este traceback como Sherlock Holmes. Identifica: 1) La línea exacta del fallo y tipo de excepción, 2) El contexto (qué datos entraron), 3) 3 hipótesis ordenadas por probabilidad, 4) Plan de debugging paso a paso con prints/breakpoints estratégicos. No asumas - deduce desde la evidencia.`,
+                        flow: ["python", "loguru", "claude"],
+                        flowDesc: "Traceback → Analiza contexto → Hipótesis → Plan de acción"
+                    },
+                    {
+                        id: "performance-hunter",
+                        name: "Performance Hunter",
+                        emoji: "⚡",
+                        problem: "Tu script funciona pero tarda demasiado.",
+                        prompt: `Actúa como Performance Engineer. Analiza este código Python buscando: 1) Loops O(n²) convertibles a O(n) con sets/dicts, 2) Operaciones I/O bloqueantes que podrían ser async, 3) Memory allocations innecesarias en loops, 4) Candidatos para caching (@lru_cache). Prioriza por impacto/esfuerzo. Dame el código optimizado.`,
+                        flow: ["python", "loguru"],
+                        flowDesc: "Código lento → Profiling mental → Identificar hotspots → Optimizar"
+                    }
+                ]
+            },
+            "data-api": {
+                name: "🗂️ Data & API",
+                icon: "fa-database",
+                patterns: [
+                    {
+                        id: "schema-detective",
+                        name: "Schema Detective",
+                        emoji: "🗂️",
+                        problem: "Recibes un JSON/CSV gigante y necesitas entender su estructura.",
+                        prompt: `Actúa como Data Analyst. Analiza este dataset (JSON/CSV) y genera: 1) Modelo Pydantic con tipos inferidos automáticamente, 2) Campos opcionales (Optional[]) vs requeridos detectados, 3) Valores únicos que deberían ser Enums, 4) Relaciones entre entidades si existen. Formato listo para copiar a models.py.`,
+                        flow: ["python", "fastapi", "sqlite"],
+                        flowDesc: "JSON/CSV → Inferir tipos → Generar Pydantic → models.py"
+                    },
+                    {
+                        id: "api-architect",
+                        name: "API Architect",
+                        emoji: "🏛️",
+                        problem: "Sabes qué necesitas pero no cómo diseñar los endpoints.",
+                        prompt: `Actúa como API Designer experto en REST. Dado este dominio de negocio, diseña una API RESTful completa: 1) Recursos y rutas (GET/POST/PUT/DELETE), 2) Esquemas Pydantic de request/response, 3) Códigos HTTP específicos (201, 204, 404, 422), 4) Ejemplo curl de cada endpoint. Estilo FastAPI, listo para implementar.`,
+                        flow: ["fastapi", "python", "sqlite"],
+                        flowDesc: "Dominio → Identificar recursos → Diseñar rutas → Schemas"
+                    }
+                ]
+            },
+            "meta": {
+                name: "🎯 Meta & Automation",
+                icon: "fa-wand-magic-sparkles",
+                patterns: [
+                    {
+                        id: "prompt-optimizer",
+                        name: "Prompt Optimizer",
+                        emoji: "🎯",
+                        problem: "Tu prompt funciona a medias, a veces da respuestas inconsistentes.",
+                        prompt: `Actúa como Prompt Engineer Senior. Analiza este prompt y mejóralo aplicando: 1) Rol específico con expertise, 2) Formato de salida estructurado (JSON, Markdown), 3) Ejemplos few-shot si el patrón es complejo, 4) Restricciones explícitas (qué NO hacer), 5) Pensamiento paso a paso si requiere razonamiento. Devuelve: versión original vs mejorada.`,
+                        flow: ["claude", "markdown"],
+                        flowDesc: "Prompt débil → Análisis → Aplicar técnicas → Prompt robusto"
+                    },
+                    {
+                        id: "workflow-automator",
+                        name: "Workflow Automator",
+                        emoji: "🤖",
+                        problem: "Haces lo mismo manualmente cada día (renombrar, mover, procesar).",
+                        prompt: `Actúa como Automation Engineer. Dado este flujo manual, genera un script Python con Watchdog que: 1) Detecte archivos nuevos por patrón (*.pdf, *.jpg), 2) Ejecute la acción automáticamente, 3) Loguee cada operación con Loguru, 4) Tenga modo --dry-run para probar. Sin dependencias innecesarias. Local-first.`,
+                        flow: ["python", "watchdog", "loguru"],
+                        flowDesc: "Describir flujo → Watchdog detecta → Acción → Log"
+                    }
+                ]
+            },
+            "ui-creative": {
+                name: "🎨 Creatividad & UI",
+                icon: "fa-palette",
+                patterns: [
+                    {
+                        id: "pincel-digital",
+                        name: "Pincel Digital",
+                        emoji: "🖌️",
+                        problem: "Tienes un HTML funcional pero feo. Quieres que parezca SaaS profesional.",
+                        prompt: `Actúa como Diseñador UI/UX Senior experto en Tailwind CSS. Toma este HTML crudo y rediséñalo para que sea moderno, oscuro y minimalista. Requisitos: Gradientes sutiles (slate-900→slate-950), tipografía Inter, micro-interacciones (hover, transiciones 200ms), sombras para profundidad. Mantén la estructura funcional intacta.`,
+                        flow: ["html", "css", "htmx"],
+                        flowDesc: "HTML feo → Análisis UX → Tailwind magic → HTML profesional"
+                    },
+                    {
+                        id: "narrador-datos",
+                        name: "Narrador de Datos",
+                        emoji: "📊",
+                        problem: "Tienes datos en SQLite/Python pero verlos en tablas es aburrido.",
+                        prompt: `Actúa como Experto en Visualización de Datos. Tengo este dataset JSON. Genera código HTML + JS usando Chart.js para un dashboard interactivo: gráfico de línea temporal, donut para distribución por categorías, tarjetas KPI con totales. Paleta neón (cyan, magenta, amarillo) sobre fondo slate-900.`,
+                        flow: ["html", "python", "sqlite"],
+                        flowDesc: "Datos → Elegir visualización → Chart.js → Dashboard"
+                    },
+                    {
+                        id: "arquitecto-componentes",
+                        name: "Arquitecto de Componentes",
+                        emoji: "🧱",
+                        problem: "Repites mucho código HTML (tarjetas, botones, menús).",
+                        prompt: `Actúa como Frontend Developer experto en DRY. Extrae este bloque de HTML repetitivo y conviértelo en: A) Macro de Jinja2, B) Template con slots, o C) Componente Alpine.js. Que acepte parámetros: título, imagen, estado, onClick. Incluye ejemplo instanciándolo 3 veces con datos diferentes.`,
+                        flow: ["html", "htmx", "python"],
+                        flowDesc: "HTML repetido → Identificar variaciones → Parametrizar → Componente"
+                    }
+                ]
+            },
+            "robustez": {
+                name: "🛠️ Ingeniería & Robustez",
+                icon: "fa-hammer",
+                patterns: [
+                    {
+                        id: "comandante-terminal",
+                        name: "Comandante de Terminal",
+                        emoji: "⌨️",
+                        problem: "Ejecutar scripts editando variables en el código es cutre.",
+                        prompt: `Actúa como Python Tooling Expert. Convierte este script en una CLI profesional con Typer. Requisitos: Comandos claros (scan, process, clean), opciones con defaults, barras de progreso con rich/tqdm, ayuda automática (--help), colores para éxito/error, manejo de Ctrl+C graceful.`,
+                        flow: ["python", "loguru"],
+                        flowDesc: "Script → Identificar inputs → Typer CLI → Instalable con pip"
+                    },
+                    {
+                        id: "cirujano-datos",
+                        name: "Cirujano de Datos",
+                        emoji: "🔬",
+                        problem: "Tus consultas a SQLite empiezan a ir lentas.",
+                        prompt: `Actúa como DBA experto en SQLite. Analiza este esquema y consulta SQL lenta. Tareas: 1) Identificar cuellos de botella (table scans, joins sin índice), 2) Sugerir índices (CREATE INDEX), 3) Normalizar si hay redundancia, 4) Reescribir query optimizada, 5) Explicar con EXPLAIN QUERY PLAN.`,
+                        flow: ["sqlite", "python"],
+                        flowDesc: "Schema + Query → EXPLAIN → Índices → Query optimizada"
+                    },
+                    {
+                        id: "centinela-errores",
+                        name: "Centinela de Errores",
+                        emoji: "🛡️",
+                        problem: "Tu script se rompe si falta internet o un archivo.",
+                        prompt: `Actúa como SRE (Site Reliability Engineer). Envuelve este código en estructura robusta de errores: Excepciones específicas (NetworkError, FileNotFoundError), retry con backoff exponencial (3 intentos: 1s→2s→4s), fallback graceful, Loguru para registrar timestamp/intento/error/contexto.`,
+                        flow: ["python", "loguru"],
+                        flowDesc: "Código frágil → Identificar fallos → try/except → Retry → Log"
+                    }
+                ]
+            },
+            "data-eng": {
+                name: "🧹 Data Engineering",
+                icon: "fa-broom",
+                patterns: [
+                    {
+                        id: "conserje-datos",
+                        name: "Conserje de Datos",
+                        emoji: "🧹",
+                        problem: "Tienes un CSV/JSON sucio con fechas mixtas, nulos y duplicados.",
+                        prompt: `Actúa como Data Engineer. Genera script de limpieza con Pandas: 1) Estandarizar fechas a ISO 8601, 2) Manejar nulos (media para numéricos, "UNKNOWN" para strings), 3) Eliminar duplicados por columnas clave, 4) Detectar outliers (>3 std), 5) Exportar CSV limpio + quality_report.json.`,
+                        flow: ["python", "sqlite"],
+                        flowDesc: "CSV sucio → Pandas → Limpieza → CSV limpio + reporte"
+                    },
+                    {
+                        id: "susurrador-regex",
+                        name: "Susurrador de Regex",
+                        emoji: "🔮",
+                        problem: "Necesitas extraer información de texto no estructurado (logs, emails).",
+                        prompt: `Actúa como experto en Expresiones Regulares de Python. Necesito extraer [PATRÓN: IBANs, referencias catastrales, fechas, etc] de este texto. Para cada patrón: 1) Regex comentada paso a paso, 2) Código Python con re.findall(), 3) Tests con casos borde (qué matchea y qué no).`,
+                        flow: ["python", "loguru"],
+                        flowDesc: "Texto → Identificar patrón → Regex → Extraer → Lista limpia"
+                    },
+                    {
+                        id: "traductor-formatos",
+                        name: "Traductor de Formatos",
+                        emoji: "🔄",
+                        problem: "Necesitas mover datos entre sistemas incompatibles (XML→SQLite).",
+                        prompt: `Actúa como Integration Engineer. Genera script de migración en Python: 1) Parsear origen (lxml para XML, openpyxl para Excel), 2) Transformar al esquema destino, 3) Validar con Pydantic antes de insertar, 4) Manejar errores por registro (no fallar todo por uno), 5) Log de migración: exitosos/fallidos/warnings.`,
+                        flow: ["python", "sqlite", "fastapi"],
+                        flowDesc: "Origen → Parse → Transform → Validate → Load → Log"
+                    }
+                ]
+            },
+            "docs-visual": {
+                name: "📐 Documentación Visual",
+                icon: "fa-diagram-project",
+                patterns: [
+                    {
+                        id: "diagramador-auto",
+                        name: "Diagramador Automático",
+                        emoji: "📐",
+                        problem: "Necesitas explicar un flujo visualmente pero dibujar es tedioso.",
+                        prompt: `Actúa como Technical Illustrator. Analiza este código/flujo y genera código Mermaid.js. Tipos: Secuencia (Frontend→API→DB), Flowchart (if/else), ER (relaciones tablas), State (estados proceso). Output: código Mermaid listo para GitHub/Notion + preview ASCII si es posible.`,
+                        flow: ["markdown", "python"],
+                        flowDesc: "Código/descripción → Elegir tipo → Mermaid.js → Diagrama"
+                    },
+                    {
+                        id: "bibliotecario-api",
+                        name: "Bibliotecario de API",
+                        emoji: "📚",
+                        problem: "Tu API funciona pero no tiene documentación para otros devs.",
+                        prompt: `Actúa como API Documentation Specialist. Genera documentación OpenAPI 3.0 (Swagger) en YAML: Paths con métodos HTTP, Request/Response schemas, Códigos de error (400, 404, 500), Ejemplos realistas, Tags por recurso. Bonus: docstring para que FastAPI auto-genere /docs.`,
+                        flow: ["fastapi", "python", "markdown"],
+                        flowDesc: "Código → Extraer endpoints → OpenAPI YAML → /docs automático"
+                    },
+                    {
+                        id: "gestor-entorno",
+                        name: "Gestor de Entorno",
+                        emoji: "⚙️",
+                        problem: "Tienes API keys y rutas hardcodeadas en el código.",
+                        prompt: `Actúa como DevOps Engineer. Analiza este script e identifica variables de configuración: API Keys, rutas, URLs, puertos, feature flags. Refactoriza usando python-dotenv + Pydantic Settings. Genera .env.example con placeholders. Añade validación (app no arranca si falta ANTHROPIC_API_KEY).`,
+                        flow: ["python", "fastapi", "loguru"],
+                        flowDesc: "Código → Identificar config → .env + Settings → Validación"
+                    }
+                ]
+            },
+            "comodin": {
+                name: "🃏 Comodín",
+                icon: "fa-hat-wizard",
+                patterns: [
+                    {
+                        id: "meta-patron",
+                        name: "Meta-Patrón",
+                        emoji: "🃏",
+                        problem: "Necesitas un patrón que no existe en esta lista.",
+                        prompt: `Actúa como Prompt Architect de minerOS. Necesito un nuevo patrón de prompt para [DESCRIBIR PROBLEMA]. Genera siguiendo esta estructura: Nombre creativo + emoji, El Problema (1 frase), El Prompt completo, Flujo Táctico (herramientas), Ejemplo de uso real.`,
+                        flow: ["claude", "markdown"],
+                        flowDesc: "Problema → Diseñar patrón → Prompt + Flujo → Ejemplo"
+                    },
+                    {
+                        id: "auditor-proyecto",
+                        name: "Auditor de Proyecto",
+                        emoji: "🔎",
+                        problem: "Heredas un proyecto y no sabes por dónde empezar.",
+                        prompt: `Actúa como Tech Lead haciendo due diligence. Escanea este proyecto y genera informe: 1) Stack detectado (lenguajes, frameworks, DBs), 2) Estructura de carpetas, 3) Puntos de entrada (main.py, index.html), 4) Dependencias críticas, 5) Red flags: código muerto, secrets expuestos, deuda técnica, 6) Siguiente paso recomendado.`,
+                        flow: ["python", "loguru", "markdown"],
+                        flowDesc: "Proyecto → Escanear → Analizar → Informe ejecutivo"
+                    },
+                    {
+                        id: "simplificador-kiss",
+                        name: "Simplificador KISS",
+                        emoji: "✂️",
+                        problem: "Sospechas que tu código está sobre-engineered.",
+                        prompt: `Actúa como Senior Developer minimalista. Revisa este código con filosofía KISS. Identifica: 1) Abstracciones prematuras (clases usadas una vez), 2) Patrones de diseño innecesarios, 3) Configuración excesiva, 4) Código "por si acaso" que nunca se ejecuta. Para cada hallazgo: código actual vs versión simplificada.`,
+                        flow: ["python", "loguru"],
+                        flowDesc: "Código complejo → Identificar excesos → Simplificar → KISS"
+                    }
+                ]
+            }
+        };
+
         const nodeDetails = { 
             fastapi: { title: "FastAPI", role: "Arquitecto Senior", desc: "Servidor asíncrono. Maneja las peticiones de entrada.", code: "@app.post('/ingest')\nasync def ingest(file: UploadFile):\n    await process_file(file)\n    return {'status': 'ok'}", goal: "Crear endpoint no bloqueante para subida de archivos." }, 
             chroma: { title: "ChromaDB", role: "Arquitecto Datos", desc: "Base de datos vectorial para búsqueda semántica.", code: "client = chromadb.PersistentClient(path='./db')\ncollection.add(embeddings=[vector])", goal: "Configurar cliente persistente y esquema de colección." },
@@ -563,14 +1252,28 @@
         // Monitor & Generator
         let isOnline = false; const term = document.getElementById('terminal-window');
         function addLog(t,m){const time=new Date().toLocaleTimeString('es-ES',{hour12:false});let c="text-slate-300";if(t==="SUCCESS")c="text-green-400";if(t==="ERROR")c="text-red-400";term.innerHTML+=`<div class="terminal-line"><span class="text-slate-600">[${time}]</span> <span class="${c} font-bold w-16 inline-block">${t}</span> ${m}</div>`;term.scrollTop=term.scrollHeight;}
-        setTimeout(()=>{addLog("INFO","Conectado a DirectorOS v5.3")},1000);
+        setTimeout(()=>{addLog("INFO","Conectado a DirectOS v7.0 - Knowledge Base Edition")},1000);
         
         // Render Grid
         const grid = document.getElementById('tools-grid');
         tools.forEach(t => {
             const card = document.createElement('div');
-            card.className = `bg-slate-900 border border-slate-800 border-l-4 ${catStyles[t.cat]} p-5 rounded-xl flex flex-col justify-between hover:border-slate-600 transition card-hover`;
-            card.innerHTML = `<div><div class="flex justify-between items-start mb-3"><i class="fa-solid ${t.icon} ${t.color} text-xl"></i><span class="text-[10px] bg-slate-950 px-2 py-1 rounded text-slate-400 uppercase tracking-wider">${t.tag}</span></div><h3 class="text-lg font-bold text-white mb-2">${t.name}</h3><p class="text-sm text-slate-400 mb-4 leading-relaxed">${t.desc}</p></div><div class="mt-2 pt-3 border-t border-slate-800"><p class="text-xs font-semibold text-blue-400 mb-1">💡 Tip:</p><p class="text-xs text-slate-300 italic">"${t.tip}"</p></div>`;
+            card.className = `bg-slate-900 border border-slate-800 border-l-4 ${catStyles[t.cat]} p-5 rounded-xl flex flex-col justify-between hover:border-slate-600 transition card-hover cursor-pointer`;
+            card.onclick = () => openToolModal(t.id);
+            card.innerHTML = `
+                <div>
+                    <div class="flex justify-between items-start mb-3">
+                        <i class="fa-solid ${t.icon} ${t.color} text-xl"></i>
+                        <span class="status-badge status-${t.status}">${statusLabels[t.status]}</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-1">${t.name}</h3>
+                    <span class="text-[10px] bg-slate-950 px-2 py-0.5 rounded text-slate-500 uppercase tracking-wider">${t.tag}</span>
+                    <p class="text-sm text-slate-400 mt-3 leading-relaxed">${t.desc}</p>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-800 flex flex-wrap gap-1">
+                    ${t.cases.slice(0, 2).map(c => `<span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded">${c}</span>`).join('')}
+                    ${t.cases.length > 2 ? `<span class="text-[10px] text-slate-600">+${t.cases.length - 2}</span>` : ''}
+                </div>`;
             grid.appendChild(card);
         });
 
@@ -623,7 +1326,177 @@
 
         setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); }, 1000);
         initPresets(); // Cargar patrones de arquitectura
+        initPatternsAccordion(); // Cargar biblioteca de patrones
         switchView('architect'); renderCanvas();
+
+        // ============================================
+        // BIBLIOTECA DE PATRONES - FUNCIONES
+        // ============================================
+        let currentPattern = null;
+
+        function initPatternsAccordion() {
+            const container = document.getElementById('patterns-accordion');
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            for (const [catId, category] of Object.entries(promptPatterns)) {
+                const catDiv = document.createElement('div');
+                catDiv.className = 'border border-slate-800 rounded-lg overflow-hidden';
+
+                // Header del acordeón
+                const header = document.createElement('button');
+                header.className = 'w-full flex items-center justify-between p-3 bg-slate-950 hover:bg-slate-800 transition text-left';
+                header.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid ${category.icon} text-slate-500 text-xs"></i>
+                        <span class="text-sm font-medium text-slate-300">${category.name}</span>
+                        <span class="text-[10px] bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded">${category.patterns.length}</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-down text-slate-600 text-xs transition-transform accordion-icon"></i>
+                `;
+
+                // Contenido del acordeón
+                const content = document.createElement('div');
+                content.className = 'hidden bg-slate-900/50 border-t border-slate-800';
+
+                category.patterns.forEach(pattern => {
+                    const patternBtn = document.createElement('button');
+                    patternBtn.className = 'w-full text-left p-2.5 hover:bg-slate-800 transition flex items-center gap-2 border-b border-slate-800/50 last:border-0';
+                    patternBtn.innerHTML = `
+                        <span class="text-base">${pattern.emoji}</span>
+                        <span class="text-xs text-slate-400">${pattern.name}</span>
+                    `;
+                    patternBtn.onclick = () => openPatternModal(pattern);
+                    content.appendChild(patternBtn);
+                });
+
+                // Toggle acordeón
+                header.onclick = () => {
+                    const isOpen = !content.classList.contains('hidden');
+                    // Cerrar todos
+                    container.querySelectorAll('.accordion-content').forEach(c => c.classList.add('hidden'));
+                    container.querySelectorAll('.accordion-icon').forEach(i => i.style.transform = 'rotate(0deg)');
+                    // Abrir actual si estaba cerrado
+                    if (!isOpen) {
+                        content.classList.remove('hidden');
+                        header.querySelector('.accordion-icon').style.transform = 'rotate(180deg)';
+                    }
+                };
+
+                content.classList.add('accordion-content');
+                catDiv.appendChild(header);
+                catDiv.appendChild(content);
+                container.appendChild(catDiv);
+            }
+        }
+
+        function openPatternModal(pattern) {
+            currentPattern = pattern;
+
+            document.getElementById('pattern-modal-emoji').textContent = pattern.emoji;
+            document.getElementById('pattern-modal-title').textContent = pattern.name;
+            document.getElementById('pattern-modal-problem').textContent = pattern.problem;
+            document.getElementById('pattern-modal-prompt').textContent = pattern.prompt;
+            document.getElementById('pattern-modal-flowdesc').textContent = pattern.flowDesc;
+
+            // Renderizar herramientas del flujo
+            const flowContainer = document.getElementById('pattern-modal-flow');
+            flowContainer.innerHTML = pattern.flow.map(toolId => {
+                const tool = tools.find(t => t.id === toolId);
+                if (!tool) return '';
+                return `<span class="inline-flex items-center gap-1.5 bg-slate-800 border border-slate-700 px-2 py-1 rounded text-xs">
+                    <i class="fa-solid ${tool.icon} ${tool.color}"></i>
+                    <span class="text-slate-300">${tool.name}</span>
+                </span>`;
+            }).join('<span class="text-slate-600">→</span>');
+
+            document.getElementById('pattern-modal').classList.remove('hidden');
+        }
+
+        function loadPatternToPrompt() {
+            if (!currentPattern) return;
+
+            // Copiar prompt al output
+            document.getElementById('prompt-output').textContent = currentPattern.prompt;
+
+            // Seleccionar herramientas del stack
+            document.querySelectorAll('.tool-checkbox').forEach(cb => {
+                const toolName = cb.value;
+                const tool = tools.find(t => t.name === toolName);
+                cb.checked = tool && currentPattern.flow.includes(tool.id);
+            });
+
+            closeModal('pattern-modal');
+
+            // Notificación
+            addLog("SUCCESS", `Patrón "${currentPattern.name}" cargado en Generador`);
+        }
+
+        function loadPatternToArchitect() {
+            if (!currentPattern) return;
+
+            // Limpiar canvas y cargar herramientas del patrón
+            canvasNodes = [];
+            currentPattern.flow.forEach(toolId => {
+                const tool = tools.find(t => t.id === toolId);
+                if (tool) canvasNodes.push(tool);
+            });
+            renderCanvas();
+
+            closeModal('pattern-modal');
+            switchView('architect');
+
+            // Notificación
+            addLog("SUCCESS", `Patrón "${currentPattern.name}" cargado en Arquitecto Pro`);
+        }
+
+        // ============================================
+        // FICHA TÉCNICA - FUNCIONES
+        // ============================================
+        let currentTool = null;
+
+        function openToolModal(toolId) {
+            const tool = tools.find(t => t.id === toolId);
+            if (!tool) return;
+            currentTool = tool;
+
+            // Rellenar datos
+            const iconEl = document.getElementById('tool-modal-icon');
+            iconEl.className = `fa-solid ${tool.icon} ${tool.color} text-2xl`;
+            document.getElementById('tool-modal-title').textContent = tool.name;
+            document.getElementById('tool-modal-tag').textContent = `${tool.cat} • ${tool.tag}`;
+
+            const statusEl = document.getElementById('tool-modal-status');
+            statusEl.textContent = statusLabels[tool.status];
+            statusEl.className = `status-badge status-${tool.status}`;
+
+            document.getElementById('tool-modal-desc').textContent = tool.desc;
+            document.getElementById('tool-modal-why').textContent = tool.why;
+            document.getElementById('tool-modal-code').textContent = tool.code;
+
+            // Renderizar casos de uso
+            const casesContainer = document.getElementById('tool-modal-cases');
+            casesContainer.innerHTML = tool.cases.map(c =>
+                `<span class="bg-slate-800 border border-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-lg">${c}</span>`
+            ).join('');
+
+            document.getElementById('tool-modal').classList.remove('hidden');
+        }
+
+        function addToolToArchitect() {
+            if (!currentTool) return;
+            addNodeToCanvas(currentTool.id);
+            closeModal('tool-modal');
+            switchView('architect');
+            addLog("SUCCESS", `"${currentTool.name}" añadido al Arquitecto`);
+        }
+
+        function copyToolCode() {
+            if (!currentTool) return;
+            navigator.clipboard.writeText(currentTool.code);
+            addLog("SUCCESS", `Código de "${currentTool.name}" copiado`);
+        }
 
         // ============================================
         // 6. BACKEND API CONNECTION
