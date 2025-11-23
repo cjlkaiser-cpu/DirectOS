@@ -94,8 +94,22 @@
         <!-- VISTA 0: ARQUITECTO VISUAL PRO -->
         <div id="view-architect" class="flex-1 overflow-hidden flex relative">
             <div class="w-64 bg-slate-900 border-r border-slate-800 p-4 overflow-y-auto flex-shrink-0">
-                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Herramientas</h3>
-                <div id="architect-toolbox" class="space-y-3"></div>
+                <!-- Selector de Presets -->
+                <div class="mb-6">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Patrones</h3>
+                    <select id="preset-selector" onchange="loadPreset(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-slate-300 mb-2">
+                        <option value="">-- Seleccionar patrón --</option>
+                    </select>
+                    <div id="preset-info" class="hidden bg-slate-950/50 border border-slate-800 rounded-lg p-3 text-xs">
+                        <p id="preset-desc" class="text-slate-400 mb-2"></p>
+                        <p id="preset-flow" class="text-blue-400 font-mono text-[10px]"></p>
+                        <p id="preset-usecase" class="text-slate-500 mt-2 italic"></p>
+                    </div>
+                </div>
+                <div class="border-t border-slate-800 pt-4">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Herramientas</h3>
+                    <div id="architect-toolbox" class="space-y-3"></div>
+                </div>
             </div>
             <div class="flex-1 bg-slate-950 p-8 overflow-y-auto relative bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px]">
                 <div class="max-w-2xl mx-auto relative">
@@ -310,18 +324,85 @@
         // 1. DATA TOOLS & DETAILS (TAGS CON ICONOS AÑADIDOS)
         // ============================================
         const tools = [
-            { name: "HTML5", cat: "Frontend", id:"html", icon: "fa-html5", color: "text-orange-500", tag: "🏗️ Estructura", pri: "Alta", desc: "Estructura semántica fundamental.", tip: "Tags semánticos." }, 
-            { name: "Tailwind", cat: "Frontend", id:"css", icon: "fa-css3", color: "text-blue-400", tag: "🎨 Estilos", pri: "Media", desc: "Estilos utility-first rápidos.", tip: "@apply para limpieza." }, 
+            // Frontend
+            { name: "HTML5", cat: "Frontend", id:"html", icon: "fa-html5", color: "text-orange-500", tag: "🏗️ Estructura", pri: "Alta", desc: "Estructura semántica fundamental.", tip: "Tags semánticos." },
+            { name: "Tailwind", cat: "Frontend", id:"css", icon: "fa-css3", color: "text-blue-400", tag: "🎨 Estilos", pri: "Media", desc: "Estilos utility-first rápidos.", tip: "@apply para limpieza." },
             { name: "HTMX", cat: "Frontend", id:"htmx", icon: "fa-bolt", color: "text-yellow-400", tag: "⚡ Interactividad", pri: "Alta", desc: "AJAX sin escribir JS complejo.", tip: "Usar hx-swap para transiciones." },
-            { name: "FastAPI", cat: "Backend", id:"fastapi", icon: "fa-server", color: "text-green-400", tag: "🌐 API Server", pri: "Alta", desc: "API moderna y asíncrona.", tip: "Docs automáticos en /docs." }, 
+            // Backend
+            { name: "FastAPI", cat: "Backend", id:"fastapi", icon: "fa-server", color: "text-green-400", tag: "🌐 API Server", pri: "Alta", desc: "API moderna y asíncrona.", tip: "Docs automáticos en /docs." },
             { name: "Python", cat: "Backend", id:"python", icon: "fa-brands fa-python", color: "text-blue-500", tag: "🐍 Lenguaje Core", pri: "Alta", desc: "Lenguaje núcleo del sistema.", tip: "Usar Type Hints siempre." },
             { name: "Loguru", cat: "Backend", id:"loguru", icon: "fa-list-ul", color: "text-slate-400", tag: "📝 Logging", pri: "Media", desc: "Logging simplificado y bonito.", tip: "Configurar rotación de logs." },
+            { name: "BeautifulSoup", cat: "Backend", id:"bs4", icon: "fa-code", color: "text-green-300", tag: "🕷️ Scraper", pri: "Media", desc: "Parser HTML para scraping.", tip: "Usar con requests." },
+            { name: "Watchdog", cat: "Backend", id:"watchdog", icon: "fa-eye", color: "text-amber-400", tag: "👁️ File Watcher", pri: "Media", desc: "Detecta cambios en carpetas.", tip: "Eventos: created, modified." },
+            // Process
             { name: "OpenCV", cat: "Process", id:"opencv", icon: "fa-eye", color: "text-red-400", tag: "📸 Visión Artificial", pri: "Media", desc: "Procesamiento de píxeles.", tip: "Usar arrays de numpy." },
             { name: "FFmpeg", cat: "Process", id:"ffmpeg", icon: "fa-film", color: "text-pink-400", tag: "🎞️ Motor Multimedia", pri: "Media", desc: "Navaja suiza multimedia.", tip: "Usar subprocess para llamar." },
-            { name: "CLIP", cat: "IA Model", id:"clip", icon: "fa-brain", color: "text-purple-400", tag: "🧠 Embeddings", pri: "Alta", desc: "Entendimiento Texto-Imagen.", tip: "Procesar en batch." }, 
-            { name: "Whisper", cat: "IA Model", id:"whisper", icon: "fa-ear-listen", color: "text-indigo-400", tag: "🧠 Speech-to-Text", pri: "Media", desc: "Transcripción Speech-to-Text.", tip: "Modelo 'base' para CPU." }, 
-            { name: "ChromaDB", cat: "Storage", id:"chroma", icon: "fa-database", color: "text-emerald-400", tag: "💾 Vector DB", pri: "Alta", desc: "Memoria a largo plazo de la IA.", tip: "Persistencia local obligatoria." }, 
-            { name: "SQLite", cat: "Storage", id:"sqlite", icon: "fa-table", color: "text-blue-300", tag: "🗃️ Relacional", pri: "Alta", desc: "Metadatos relacionales.", tip: "Activar modo WAL." }
+            { name: "Tesseract", cat: "Process", id:"ocr", icon: "fa-font", color: "text-cyan-400", tag: "👁️ OCR", pri: "Media", desc: "Extrae texto de imágenes/PDFs.", tip: "pytesseract wrapper." },
+            { name: "Pillow", cat: "Process", id:"pillow", icon: "fa-image", color: "text-rose-400", tag: "📸 Imágenes", pri: "Media", desc: "Manipulación de imágenes.", tip: "Redimensionar antes de CLIP." },
+            // IA Models
+            { name: "CLIP", cat: "IA Model", id:"clip", icon: "fa-brain", color: "text-purple-400", tag: "🧠 Embeddings IMG", pri: "Alta", desc: "Entendimiento Texto-Imagen.", tip: "Procesar en batch." },
+            { name: "Whisper", cat: "IA Model", id:"whisper", icon: "fa-ear-listen", color: "text-indigo-400", tag: "🧠 Speech-to-Text", pri: "Media", desc: "Transcripción Speech-to-Text.", tip: "Modelo 'base' para CPU." },
+            { name: "Sentence-BERT", cat: "IA Model", id:"sbert", icon: "fa-brain", color: "text-teal-400", tag: "🧠 Embeddings TXT", pri: "Alta", desc: "Vectoriza texto para búsqueda.", tip: "all-MiniLM-L6-v2 es rápido." },
+            { name: "Claude API", cat: "IA Model", id:"claude", icon: "fa-comments", color: "text-orange-400", tag: "🤖 LLM Cloud", pri: "Alta", desc: "Razonamiento y generación.", tip: "Sonnet para balance coste/calidad." },
+            { name: "Llama Local", cat: "IA Model", id:"llama", icon: "fa-microchip", color: "text-lime-400", tag: "🤖 LLM Local", pri: "Media", desc: "LLM sin API, privacidad total.", tip: "Ollama para fácil setup." },
+            // Storage
+            { name: "ChromaDB", cat: "Storage", id:"chroma", icon: "fa-database", color: "text-emerald-400", tag: "💾 Vector DB", pri: "Alta", desc: "Memoria a largo plazo de la IA.", tip: "Persistencia local obligatoria." },
+            { name: "SQLite", cat: "Storage", id:"sqlite", icon: "fa-table", color: "text-blue-300", tag: "🗃️ Relacional", pri: "Alta", desc: "Metadatos relacionales.", tip: "Activar modo WAL." },
+            { name: "Markdown", cat: "Storage", id:"markdown", icon: "fa-file-lines", color: "text-slate-300", tag: "📝 Archivos", pri: "Media", desc: "Notas y documentación.", tip: "Compatible con Obsidian." }
+        ];
+
+        // ============================================
+        // PATRONES DE ARQUITECTURA (PRESETS)
+        // ============================================
+        const presets = [
+            {
+                id: "rag-chatbot",
+                name: "🧠 Cerebro de Segunda Memoria",
+                desc: "RAG Chatbot - Chatea con tus PDFs/Apuntes",
+                useCase: "farmaIA, DocMine",
+                tools: ["fastapi", "sbert", "chroma", "claude", "htmx"],
+                flow: "Pregunta → Vector → Busca contexto → LLM responde"
+            },
+            {
+                id: "video-search",
+                name: "🦅 Ojo de Halcón",
+                desc: "Video Search - Encuentra momentos por texto o imagen",
+                useCase: "VideoMine, PhotoMine++",
+                tools: ["ffmpeg", "whisper", "clip", "sqlite", "fastapi"],
+                flow: "Video → Escenas + Audio → Indexa → Busca"
+            },
+            {
+                id: "smart-scraper",
+                name: "🕵️ Agente Curador",
+                desc: "Smart Scraper - Extrae datos limpios de webs",
+                useCase: "Investigación, precios",
+                tools: ["python", "bs4", "claude", "sqlite", "loguru"],
+                flow: "URL → HTML → LLM extrae JSON → Guarda"
+            },
+            {
+                id: "voice-notes",
+                name: "🎤 Escriba Silencioso",
+                desc: "Voice-to-Knowledge - Notas de voz a texto estructurado",
+                useCase: "Diario, ideas, reuniones",
+                tools: ["whisper", "python", "claude", "markdown"],
+                flow: "Audio → Transcribe → LLM resume → Guarda .md"
+            },
+            {
+                id: "auto-tagger",
+                name: "👻 Clasificador Fantasma",
+                desc: "Auto-Tagging - Organiza archivos por contenido",
+                useCase: "Descargas, Escritorio",
+                tools: ["watchdog", "clip", "ocr", "chroma", "python"],
+                flow: "Detecta archivo → Analiza → Clasifica → Mueve"
+            },
+            {
+                id: "text-to-sql",
+                name: "🔮 Oráculo de Datos",
+                desc: "Text-to-SQL - Pregunta a tu BD en lenguaje natural",
+                useCase: "Farmacia, Fiscalidad",
+                tools: ["fastapi", "claude", "python", "sqlite", "htmx"],
+                flow: "Pregunta → LLM genera SQL → Ejecuta → Muestra"
+            }
         ];
         
         const catStyles = { "Frontend": "cat-frontend", "Backend": "cat-backend", "IA Model": "cat-ai", "Storage": "cat-storage", "Process": "cat-process" };
@@ -417,6 +498,41 @@
         }
         function estimateComplexity() { alert(`Complejidad estimada: ${canvasNodes.length * 2} puntos.`); }
 
+        // --- PRESETS ---
+        function initPresets() {
+            const selector = document.getElementById('preset-selector');
+            presets.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = p.name;
+                selector.appendChild(opt);
+            });
+        }
+
+        function loadPreset(presetId) {
+            if (!presetId) {
+                document.getElementById('preset-info').classList.add('hidden');
+                return;
+            }
+
+            const preset = presets.find(p => p.id === presetId);
+            if (!preset) return;
+
+            // Mostrar info del preset
+            document.getElementById('preset-info').classList.remove('hidden');
+            document.getElementById('preset-desc').textContent = preset.desc;
+            document.getElementById('preset-flow').textContent = preset.flow;
+            document.getElementById('preset-usecase').textContent = `Casos: ${preset.useCase}`;
+
+            // Limpiar canvas y cargar herramientas del preset
+            canvasNodes = [];
+            preset.tools.forEach(toolId => {
+                const tool = tools.find(t => t.id === toolId);
+                if (tool) canvasNodes.push(tool);
+            });
+            renderCanvas();
+        }
+
         // --- CORE UI ---
         function compileArchitecture() {
             if(canvasNodes.length===0) return alert("Lienzo vacío");
@@ -506,6 +622,7 @@
         function loadProjectPreset() { const v=document.getElementById('project-select').value; canvasNodes=[]; if(v==='videomine')['fastapi','ffmpeg','whisper','clip','chroma'].forEach(id=>addNodeToCanvas(id)); else if(v==='docmine')['fastapi','python','clip','chroma','sqlite'].forEach(id=>addNodeToCanvas(id)); renderCanvas(); }
 
         setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); }, 1000);
+        initPresets(); // Cargar patrones de arquitectura
         switchView('architect'); renderCanvas();
 
         // ============================================
