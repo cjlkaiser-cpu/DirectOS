@@ -1,6 +1,6 @@
-# Biblioteca de Patrones de Prompts - DirectOS v7.1
+# Biblioteca de Patrones de Prompts - DirectOS v7.2
 
-> 33 patrones listos para copiar y usar con Claude Code / Claude API
+> 42 patrones listos para copiar y usar con Claude Code / Claude API
 
 ---
 
@@ -21,8 +21,10 @@
 | 11 | Ingeniería & Robustez | 3 | Sistema sólido |
 | 12 | Data Engineering | 3 | Limpieza datos |
 | 13 | Documentación Visual | 3 | Diagramas y docs |
+| 14 | RAG Avanzado | 3 | Knowledge Base inteligente |
+| 15 | DevOps CI/CD | 3 | Despliegue y automatización |
 
-**Total: 33 patrones**
+**Total: 42 patrones** (39 principales + 3 bonus)
 
 ---
 
@@ -671,9 +673,144 @@ Actúa como DevOps Engineer. Analiza este script y:
 
 ---
 
+## Pack 14: RAG & Ingeniería del Conocimiento
+
+> Para cuando el RAG básico no es suficiente y necesitas respuestas más inteligentes.
+
+### 34. Arquitecto de Memoria (RAG Pipeline)
+
+**Problema**: Quieres construir un sistema RAG (Chat con Documentos) desde cero, pero no sabes qué pasos seguir.
+
+**Prompt**:
+```
+Actúa como Ingeniero RAG. Dame el plan y el código Python para un pipeline RAG
+local de principio a fin. Pasos:
+1. Cargar Documentos (PDFs/Markdown)
+2. Dividir Documentos (Chunking) de forma inteligente
+3. Vectorizar (Sentence-BERT)
+4. Almacenar (ChromaDB persistente)
+5. Endpoint de Query (FastAPI) que recupere contexto y llame a un LLM (Ollama)
+   para la respuesta
+```
+
+**Flujo Táctico**: `Python → ChromaDB → FastAPI → Ollama`
+
+**Herramientas**: Python, ChromaDB, FastAPI, Ollama, Sentence-BERT
+
+---
+
+### 35. Evaluador de Relevancia (RAG Grader)
+
+**Problema**: Tu RAG responde, pero no sabes si las respuestas son fieles al contexto o si alucina.
+
+**Prompt**:
+```
+Actúa como Investigador de IA. Necesito un script de Python para evaluar la
+calidad de mi pipeline RAG. Genera:
+1. Un pequeño dataset sintético de 'pregunta/respuesta ideal'
+2. Una función que llame a mi API RAG
+3. Un "LLM-como-juez" (usando Claude/Llama) que compare la respuesta generada
+   vs la ideal y dé una nota de 1 a 5 en:
+   (A) Relevancia del Contexto
+   (B) Fidelidad de la Respuesta
+```
+
+**Flujo Táctico**: `Python → FastAPI (Test) → Claude API → Loguru`
+
+**Herramientas**: Python, FastAPI, Claude API, Loguru
+
+---
+
+### 36. Traductor de Intenciones (Query Transformer)
+
+**Problema**: El usuario busca "problemas de dinero" pero tus documentos dicen "crisis financiera". El RAG no encuentra nada.
+
+**Prompt**:
+```
+Actúa como experto en RAG Avanzado. Implementa un 'Query Transformer' en Python.
+Antes de buscar en ChromaDB, toma la pregunta del usuario y usa un LLM (Ollama)
+para:
+1. Re-escribirla: Generar 3 variantes de la pregunta
+2. Expandirla (HyDE): Generar una respuesta hipotética para buscar por ese concepto
+3. Descomponerla: Si es compleja, dividirla en sub-preguntas
+
+Devuelve las nuevas queries para consultar la base de datos.
+```
+
+**Flujo Táctico**: `FastAPI → Ollama (Transform) → ChromaDB (Multi-Query)`
+
+**Herramientas**: FastAPI, Ollama, ChromaDB, Python
+
+---
+
+## Pack 15: DevOps & Ciclo de Vida
+
+> Para que tus proyectos sean robustos, portables y automáticos.
+
+### 37. Ingeniero de Despliegue (Dockerizer)
+
+**Problema**: Tu app FastAPI/minerOS funciona en tu Mac, pero quieres que funcione en cualquier servidor sin instalar nada.
+
+**Prompt**:
+```
+Actúa como Ingeniero DevOps. Genera un Dockerfile multi-etapa para esta
+aplicación FastAPI.
+- Etapa 'build': Para instalar dependencias con pip
+- Etapa 'final': Una imagen ligera solo con el código y las librerías necesarias
+
+Bonus: Genera un docker-compose.yml que levante la API y un volumen persistente
+para la base de datos (Chroma/SQLite).
+```
+
+**Flujo Táctico**: `Python → FastAPI → Docker → Git`
+
+**Herramientas**: Python, FastAPI, Docker, docker-compose
+
+---
+
+### 38. Robot de Integración (CI/CD Workflow)
+
+**Problema**: A veces subes código a GitHub que está roto o mal formateado.
+
+**Prompt**:
+```
+Genera un workflow de GitHub Actions (.github/workflows/ci.yml).
+Debe tener un solo job ('build-and-test') que:
+1. Se active en cada push a la rama main
+2. Instale Python 3.11
+3. Instale dependencias desde requirements.txt
+4. Lint: Corra Ruff y Black para verificar el formato
+5. Test: Corra Pytest
+```
+
+**Flujo Táctico**: `Git → Ruff/Black → Pytest`
+
+**Herramientas**: Git, GitHub Actions, Ruff, Black, Pytest
+
+---
+
+### 39. Vigilante de Salud (Health Check API)
+
+**Problema**: Tu API FastAPI está corriendo, pero no sabes si la conexión a ChromaDB o SQLite está viva.
+
+**Prompt**:
+```
+Añade un sistema de 'health check' robusto a mi main.py de FastAPI.
+1. Un endpoint /health que devuelva {'status': 'ok'}
+2. Una dependencia (Depends()) que chequee el 'heartbeat' de ChromaDB y SQLite
+3. Si la base de datos falla, el endpoint debe devolver un 503 Service Unavailable
+4. Usa el evento lifespan para loguear el inicio/fin con Loguru
+```
+
+**Flujo Táctico**: `FastAPI → Depends() → ChromaDB/SQLite → Loguru`
+
+**Herramientas**: FastAPI, ChromaDB, SQLite, Loguru
+
+---
+
 ## Bonus: 3 Patrones Comodín
 
-### 31. El Meta-Patrón (Pattern Generator)
+### 40. El Meta-Patrón (Pattern Generator)
 
 **Problema**: Necesitas un patrón que no existe en esta lista.
 
@@ -691,7 +828,7 @@ Genera siguiendo esta estructura:
 
 ---
 
-### 32. El Auditor de Proyecto (Project Scanner)
+### 41. El Auditor de Proyecto (Project Scanner)
 
 **Problema**: Heredas un proyecto y no sabes por dónde empezar.
 
@@ -709,7 +846,7 @@ informe ejecutivo:
 
 ---
 
-### 33. El Simplificador (KISS Enforcer)
+### 42. El Simplificador (KISS Enforcer)
 
 **Problema**: Sospechas que tu código está sobre-engineered.
 
@@ -749,4 +886,4 @@ claude "Actúa como Debugger Sherlock... [pegar traceback]"
 
 ---
 
-*DirectOS v7.1 - 33 Patrones | minerOS Ecosystem | Nov 2025*
+*DirectOS v7.2 - 42 Patrones (39 + 3 Bonus) | minerOS Ecosystem | Nov 2025*

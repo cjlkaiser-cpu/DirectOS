@@ -36,28 +36,10 @@
 
 ---
 
-## v8.0 - Learning Path
-
-**Prioridad: Alta | Esfuerzo: Medio**
-
-### Sistema de Progreso
-- [ ] **Rutas de aprendizaje**: "Ruta RAG", "Ruta Scraping", "Ruta DevOps"
-- [ ] **Dependencias entre herramientas**: "Para usar CLIP, primero domina Pillow"
-- [ ] **Sugerencias inteligentes**: "Ya dominas X, prueba Y"
-- [ ] **Badges/Logros**: "RAG Master", "Pipeline Architect"
-
-### Quiz Mode
-- [ ] **Test por herramienta**: Preguntas generadas con el patrón "Mentor Socrático"
-- [ ] **Flashcards**: Revisar conceptos clave
-- [ ] **Spaced repetition**: Recordatorios para repasar
-
-### Integración
-- [ ] **Sincronizar con Obsidian**: Exportar progreso como nota
-- [ ] **Importar notas**: Indexar tu vault de Obsidian completo
 
 ---
 
-## v9.0 - Pipeline Builder
+## v8.0 - Pipeline Builder
 
 **Prioridad: Media | Esfuerzo: Alto**
 
@@ -74,7 +56,7 @@
 
 ---
 
-## v10.0 - Agent Mode
+## v9.0 - Agent Mode
 
 **Prioridad: Baja | Esfuerzo: Muy Alto**
 

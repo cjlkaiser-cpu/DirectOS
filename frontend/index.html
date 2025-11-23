@@ -55,6 +55,19 @@
 
         /* Categoría DevOps */
         .cat-devops { border-left-color: #f97316; }
+
+        /* Line clamp para tarjetas de flujo */
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Flow cards hover effects */
+        .flow-card {
+            transition: all 0.3s ease;
+        }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-200 h-screen flex overflow-hidden selection:bg-blue-500 selection:text-white">
@@ -66,13 +79,13 @@
                 <i class="fa-solid fa-layer-group text-blue-500"></i>
                 Director<span class="text-slate-500">OS</span>
             </h1>
-            <p class="text-xs text-slate-500 mt-1">v7.0 - Knowledge Base</p>
+            <p class="text-xs text-slate-500 mt-1">v8.0 - Pipeline Builder</p>
         </div>
         
         <nav class="flex-1 overflow-y-auto p-4 space-y-2">
             <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 pl-2">Diseño</p>
-            <button onclick="switchView('architect')" id="btn-architect" class="w-full text-left px-3 py-2.5 rounded-lg text-sm transition font-medium flex items-center gap-3 bg-blue-600 text-white shadow-lg shadow-blue-900/20"><i class="fa-solid fa-pen-ruler"></i> Arquitecto Pro</button>
-            <button onclick="switchView('flow')" id="btn-flow" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3"><i class="fa-solid fa-diagram-project"></i> Flujos Tácticos</button>
+            <button onclick="switchView('architect')" id="btn-architect" class="w-full text-left px-3 py-2.5 rounded-lg text-sm transition font-medium flex items-center gap-3 bg-blue-600 text-white shadow-lg shadow-blue-900/20"><i class="fa-solid fa-diagram-project"></i> Pipeline Builder</button>
+            <button onclick="switchView('flow')" id="btn-flow" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3"><i class="fa-solid fa-store"></i> Recetas</button>
             <button onclick="switchView('generator')" id="btn-generator" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3"><i class="fa-solid fa-wand-magic-sparkles"></i> Generador Prompts</button>
             
             <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 pl-2 mt-6">Operaciones</p>
@@ -100,10 +113,10 @@
             </div>
         </header>
 
-        <!-- VISTA 0: ARQUITECTO VISUAL PRO -->
+        <!-- VISTA 0: PIPELINE BUILDER PRO -->
         <div id="view-architect" class="flex-1 overflow-hidden flex relative">
+            <!-- Sidebar Herramientas -->
             <div class="w-64 bg-slate-900 border-r border-slate-800 p-4 overflow-y-auto flex-shrink-0">
-                <!-- Selector de Presets -->
                 <div class="mb-6">
                     <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Patrones</h3>
                     <select id="preset-selector" onchange="loadPreset(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-slate-300 mb-2">
@@ -117,33 +130,77 @@
                 </div>
                 <div class="border-t border-slate-800 pt-4">
                     <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Herramientas</h3>
-                    <div id="architect-toolbox" class="space-y-3"></div>
+                    <div id="architect-toolbox" class="space-y-3 max-h-[60vh] overflow-y-auto"></div>
                 </div>
             </div>
-            <div class="flex-1 bg-slate-950 p-8 overflow-y-auto relative bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px]">
-                <div class="max-w-2xl mx-auto relative">
-                    <!-- Barra de Herramientas Flotante -->
-                    <div class="flex justify-between items-center mb-6 bg-slate-900/80 backdrop-blur p-2 rounded-lg border border-slate-800">
-                        <div class="flex gap-4 text-[10px] uppercase font-bold tracking-wider text-slate-500 px-2">
-                            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-orange-500"></span> Front</span>
-                            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span> Back</span>
-                            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-500"></span> IA</span>
-                            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-yellow-500"></span> DB</span>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="validateFlow()" class="text-xs px-3 py-1 rounded hover:bg-slate-700 text-slate-300 transition flex items-center gap-1"><i class="fa-solid fa-check-circle text-green-500"></i> Validar</button>
-                            <button onclick="estimateComplexity()" class="text-xs px-3 py-1 rounded hover:bg-slate-700 text-slate-300 transition flex items-center gap-1"><i class="fa-solid fa-chart-line text-blue-500"></i> Estimar</button>
+
+            <!-- Canvas Principal -->
+            <div class="flex-1 bg-slate-950 overflow-hidden relative bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:20px_20px]">
+                <!-- Barra Superior -->
+                <div class="absolute top-4 left-4 right-4 z-20 flex justify-between items-center bg-slate-900/95 backdrop-blur p-3 rounded-xl border border-slate-800 shadow-lg">
+                    <div class="flex gap-4 text-[10px] uppercase font-bold tracking-wider text-slate-500">
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-orange-500"></span> Front</span>
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span> Back</span>
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-500"></span> IA</span>
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-yellow-500"></span> DB</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="autoLayoutNodes()" class="text-xs px-3 py-1.5 rounded-lg hover:bg-slate-700 text-slate-300 transition flex items-center gap-1.5 border border-slate-700" title="Organizar nodos"><i class="fa-solid fa-wand-magic-sparkles text-purple-400"></i> Auto</button>
+                        <button onclick="validateFlowRealtime()" class="text-xs px-3 py-1.5 rounded-lg hover:bg-slate-700 text-slate-300 transition flex items-center gap-1.5 border border-slate-700"><i class="fa-solid fa-check-circle text-green-400"></i> Validar</button>
+                        <button onclick="clearCanvas()" class="text-xs px-3 py-1.5 rounded-lg hover:bg-red-600/20 text-slate-300 hover:text-red-400 transition flex items-center gap-1.5 border border-slate-700 hover:border-red-500/50"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+
+                <!-- Canvas SVG + Nodos -->
+                <div id="pipeline-canvas" class="absolute inset-0 pt-20 pb-28 overflow-auto">
+                    <svg id="connections-svg" class="absolute top-0 left-0 pointer-events-none" style="min-height: 100%; min-width: 100%; z-index: 5;">
+                        <defs>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/>
+                            </marker>
+                        </defs>
+                    </svg>
+                    <div id="nodes-container" class="relative p-8" style="min-height: 600px;">
+                        <div id="canvas-placeholder" class="absolute inset-8 border-2 border-dashed border-slate-800 rounded-2xl flex flex-col items-center justify-center text-slate-600">
+                            <i class="fa-solid fa-diagram-project text-4xl mb-3 text-slate-700"></i>
+                            <p class="text-sm font-medium">Arrastra herramientas aquí</p>
+                            <p class="text-xs mt-1 text-slate-700">o selecciona un patrón predefinido</p>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Canvas -->
-                    <div id="architect-canvas" class="min-h-[500px] pb-32 space-y-2 p-4 bg-slate-950 rounded-xl"></div>
-                    
-                    <!-- Botón Compilar -->
-                    <div class="fixed bottom-8 right-8 left-72 max-w-2xl mx-auto z-30">
-                        <div class="bg-slate-900/90 backdrop-blur border border-slate-700 p-4 rounded-xl shadow-2xl flex gap-4 items-center justify-between">
-                            <div class="text-xs text-slate-400"><span id="node-count" class="font-bold text-white">0</span> nodos conectados</div>
-                            <button onclick="compileArchitecture()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 text-white font-bold py-2 px-6 rounded-lg shadow-lg flex items-center gap-2 transition transform active:scale-95"><i class="fa-solid fa-code"></i> Compilar a Código</button>
+                <!-- Panel de Validación Flotante -->
+                <div id="validation-panel" class="hidden absolute top-20 right-4 w-80 bg-slate-900/95 backdrop-blur border border-slate-700 rounded-xl shadow-2xl z-30 overflow-hidden">
+                    <div class="p-3 border-b border-slate-800 flex justify-between items-center">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-clipboard-check text-blue-400"></i> Validación
+                        </span>
+                        <button onclick="document.getElementById('validation-panel').classList.add('hidden')" class="text-slate-500 hover:text-white"><i class="fa-solid fa-times"></i></button>
+                    </div>
+                    <div id="validation-messages" class="p-3 space-y-2 max-h-64 overflow-y-auto"></div>
+                </div>
+
+                <!-- Barra Inferior -->
+                <div class="absolute bottom-4 left-4 right-4 z-20">
+                    <div class="bg-slate-900/95 backdrop-blur border border-slate-700 p-4 rounded-xl shadow-2xl flex gap-4 items-center justify-between">
+                        <div class="flex items-center gap-6">
+                            <div class="text-sm">
+                                <span id="node-count" class="font-bold text-white text-lg">0</span>
+                                <span class="text-slate-500 text-xs ml-1">nodos</span>
+                            </div>
+                            <div class="text-sm">
+                                <span id="connection-count" class="font-bold text-blue-400 text-lg">0</span>
+                                <span class="text-slate-500 text-xs ml-1">conexiones</span>
+                            </div>
+                            <div id="flow-status" class="hidden"></div>
+                        </div>
+                        <div class="flex gap-3">
+                            <button onclick="generateScaffold()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-5 rounded-lg shadow-lg flex items-center gap-2 transition text-sm">
+                                <i class="fa-solid fa-folder-plus"></i> Crear Proyecto
+                            </button>
+                            <button onclick="compileArchitecture()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-2.5 px-5 rounded-lg shadow-lg flex items-center gap-2 transition text-sm">
+                                <i class="fa-solid fa-code"></i> Generar Código
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -163,6 +220,64 @@
             <div class="bg-slate-900 border border-slate-700 rounded-xl w-96 shadow-2xl">
                 <div class="p-4 border-b border-slate-800 flex justify-between items-center"><h3 class="font-bold text-white">Cargar Arquitectura</h3><button onclick="closeModal('load-modal')" class="text-slate-500 hover:text-white"><i class="fa-solid fa-times"></i></button></div>
                 <div id="load-list" class="p-2 max-h-64 overflow-y-auto space-y-1"></div>
+            </div>
+        </div>
+
+        <!-- Modal Crear Proyecto -->
+        <div id="scaffold-modal" class="hidden absolute inset-0 bg-slate-950/90 z-50 flex items-center justify-center p-8 backdrop-blur-sm">
+            <div class="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-2xl shadow-2xl flex flex-col max-h-[90vh]">
+                <div class="p-4 border-b border-slate-800 flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-folder-plus text-emerald-400 text-xl"></i>
+                        <h3 class="font-bold text-white text-lg">Crear Proyecto</h3>
+                    </div>
+                    <button onclick="closeModal('scaffold-modal')" class="text-slate-500 hover:text-white"><i class="fa-solid fa-times"></i></button>
+                </div>
+                <div class="p-6 overflow-y-auto flex-1 space-y-5">
+                    <!-- Nombre del proyecto -->
+                    <div>
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Nombre del Proyecto</label>
+                        <input type="text" id="project-name" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-slate-200 placeholder-slate-600" placeholder="mi_proyecto_rag" value="">
+                    </div>
+                    <!-- Ruta -->
+                    <div>
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Directorio Base</label>
+                        <input type="text" id="project-path" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-slate-200 font-mono text-sm" value="~/Desktop">
+                    </div>
+                    <!-- Estructura Preview -->
+                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-folder-tree text-amber-400"></i> Estructura a Crear
+                        </h4>
+                        <pre id="scaffold-preview" class="text-xs text-emerald-400 font-mono leading-relaxed"></pre>
+                    </div>
+                    <!-- Opciones -->
+                    <div class="flex flex-wrap gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="opt-git" checked class="w-4 h-4 rounded bg-slate-800 border-slate-600 text-blue-500">
+                            <span class="text-sm text-slate-300">Inicializar Git</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="opt-venv" checked class="w-4 h-4 rounded bg-slate-800 border-slate-600 text-blue-500">
+                            <span class="text-sm text-slate-300">Crear venv</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="opt-readme" checked class="w-4 h-4 rounded bg-slate-800 border-slate-600 text-blue-500">
+                            <span class="text-sm text-slate-300">README.md</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="p-4 border-t border-slate-800 bg-slate-900 flex justify-between items-center">
+                    <p class="text-xs text-slate-500"><i class="fa-solid fa-info-circle mr-1"></i> Se copiará el comando al portapapeles</p>
+                    <div class="flex gap-2">
+                        <button onclick="copyScaffoldCommand()" class="bg-slate-700 hover:bg-slate-600 text-white text-sm px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
+                            <i class="fa-solid fa-copy"></i> Copiar Comando
+                        </button>
+                        <button onclick="downloadScaffoldScript()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
+                            <i class="fa-solid fa-download"></i> Descargar Script
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -243,6 +358,21 @@
                         <pre id="tool-modal-code" class="text-xs text-green-400 font-mono whitespace-pre-wrap overflow-x-auto"></pre>
                     </div>
                 </div>
+                <!-- Cambiar estado -->
+                <div class="p-4 border-t border-slate-800 bg-slate-900/50">
+                    <p class="text-xs text-slate-500 mb-2">Cambiar estado:</p>
+                    <div class="flex gap-2">
+                        <button onclick="changeToolStatus(currentTool.id, 'new')" class="flex-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 text-xs py-2 rounded-lg font-medium transition border border-blue-500/30">
+                            🆕 Por descubrir
+                        </button>
+                        <button onclick="changeToolStatus(currentTool.id, 'learning')" class="flex-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 text-xs py-2 rounded-lg font-medium transition border border-yellow-500/30">
+                            🚧 En progreso
+                        </button>
+                        <button onclick="changeToolStatus(currentTool.id, 'used')" class="flex-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 text-xs py-2 rounded-lg font-medium transition border border-green-500/30">
+                            ✅ Dominada
+                        </button>
+                    </div>
+                </div>
                 <div class="p-4 border-t border-slate-800 bg-slate-900 flex gap-3">
                     <button onclick="addToolToArchitect()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-sm px-4 py-2 rounded-lg font-medium transition flex items-center justify-center gap-2">
                         <i class="fa-solid fa-plus"></i> Añadir al Arquitecto
@@ -289,67 +419,110 @@
             </div>
         </div>
 
-        <!-- VISTA 2: FLUJO TÁCTICO -->
-        <div id="view-flow" class="hidden flex-1 overflow-y-auto p-8 bg-slate-950 relative">
-             <div class="max-w-5xl mx-auto">
-                <div class="text-center mb-10"><h2 class="text-2xl font-bold text-white mb-2">Ingesta Inteligente</h2><p class="text-slate-400">Haz clic en los nodos para ver detalles y acciones.</p></div>
-                <div class="relative flex flex-col items-center space-y-8">
-                    <!-- Nivel 1 -->
-                    <div class="relative group z-10" onclick="openNodeDetails('fastapi')">
-                        <div class="interactive-node bg-slate-800 border border-slate-600 p-4 rounded-xl shadow-lg w-64 text-center border-l-4 border-l-green-500">
-                            <span class="text-xs font-mono text-green-400 mb-1 block">🌐 BACKEND</span>
-                            <h3 class="text-lg font-bold text-white">FastAPI</h3>
-                        </div>
-                    </div>
-                    
-                    <div class="w-1 h-8 bg-slate-700"></div>
-                    <div class="bg-slate-800 border border-slate-600 px-4 py-2 rounded-full text-xs text-slate-300">Router</div>
-                    
-                    <!-- Nivel 2 -->
-                    <div class="w-full max-w-2xl flex justify-between relative">
-                        <div class="absolute top-0 left-1/4 right-1/4 h-1 bg-slate-700 -mt-1"></div><div class="absolute top-0 left-1/4 h-8 w-1 bg-slate-700"></div><div class="absolute top-0 right-1/4 h-8 w-1 bg-slate-700"></div>
-                        
-                        <!-- Rama Izquierda (Visual) -->
-                        <div class="w-5/12 flex flex-col items-center mt-8 space-y-6">
-                            <div class="interactive-node bg-slate-800 border border-slate-600 p-4 rounded-xl w-full text-center relative border-l-4 border-l-pink-500" onclick="openNodeDetails('pillow')">
-                                <span class="text-xs font-mono text-pink-400 mb-1 block">📸 PROCESO</span>
-                                <h3 class="font-bold text-white">Pillow</h3>
-                            </div>
-                            <div class="w-1 h-6 flow-line"></div>
-                            <div class="interactive-node bg-gradient-to-b from-slate-800 to-slate-900 border border-purple-500/50 p-4 rounded-xl w-full text-center border-l-4 border-l-purple-500" onclick="openNodeDetails('clip')">
-                                <span class="text-xs font-mono text-purple-400 mb-1 block">🧠 IA MODEL</span>
-                                <h3 class="font-bold text-purple-400">CLIP</h3>
-                            </div>
-                        </div>
+        <!-- VISTA 2: FLUJOS TÁCTICOS - APP STORE -->
+        <div id="view-flow" class="hidden flex-1 overflow-y-auto p-6 bg-slate-950 relative">
+            <div class="max-w-7xl mx-auto">
+                <!-- Header -->
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-bold text-white mb-2">Recetas de Arquitectura</h2>
+                    <p class="text-slate-400">Selecciona un flujo y clónalo directamente al Arquitecto Pro.</p>
+                </div>
 
-                        <!-- Rama Derecha (Audio) -->
-                        <div class="w-5/12 flex flex-col items-center mt-8 space-y-6">
-                            <div class="interactive-node bg-slate-800 border border-slate-600 p-4 rounded-xl w-full text-center relative border-l-4 border-l-pink-500" onclick="openNodeDetails('ffmpeg')">
-                                <span class="text-xs font-mono text-pink-400 mb-1 block">🎞️ PROCESO</span>
-                                <h3 class="font-bold text-white">FFmpeg</h3>
-                            </div>
-                            <div class="w-1 h-6 flow-line"></div>
-                            <div class="interactive-node bg-gradient-to-b from-slate-800 to-slate-900 border border-purple-500/50 p-4 rounded-xl w-full text-center border-l-4 border-l-purple-500" onclick="openNodeDetails('whisper')">
-                                <span class="text-xs font-mono text-purple-400 mb-1 block">🧠 IA MODEL</span>
-                                <h3 class="font-bold text-purple-400">Whisper</h3>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Filtros por Categoría -->
+                <div class="flex flex-wrap justify-center gap-2 mb-8">
+                    <button onclick="filterFlows('all')" id="flow-filter-all" class="flow-filter-btn bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                        <i class="fa-solid fa-grid-2"></i> Todos
+                        <span class="bg-white/20 px-1.5 py-0.5 rounded text-[10px]" id="flow-count-all">12</span>
+                    </button>
+                    <button onclick="filterFlows('knowledge')" id="flow-filter-knowledge" class="flow-filter-btn bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 border border-slate-700">
+                        <i class="fa-solid fa-brain text-purple-400"></i> Conocimiento
+                        <span class="bg-slate-700 px-1.5 py-0.5 rounded text-[10px]" id="flow-count-knowledge">3</span>
+                    </button>
+                    <button onclick="filterFlows('media')" id="flow-filter-media" class="flow-filter-btn bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 border border-slate-700">
+                        <i class="fa-solid fa-photo-film text-pink-400"></i> Media
+                        <span class="bg-slate-700 px-1.5 py-0.5 rounded text-[10px]" id="flow-count-media">3</span>
+                    </button>
+                    <button onclick="filterFlows('automation')" id="flow-filter-automation" class="flow-filter-btn bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 border border-slate-700">
+                        <i class="fa-solid fa-robot text-amber-400"></i> Automatización
+                        <span class="bg-slate-700 px-1.5 py-0.5 rounded text-[10px]" id="flow-count-automation">3</span>
+                    </button>
+                    <button onclick="filterFlows('devops')" id="flow-filter-devops" class="flow-filter-btn bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 border border-slate-700">
+                        <i class="fa-solid fa-shield-halved text-green-400"></i> DevOps
+                        <span class="bg-slate-700 px-1.5 py-0.5 rounded text-[10px]" id="flow-count-devops">3</span>
+                    </button>
+                </div>
 
-                    <div class="w-full max-w-2xl h-1 bg-slate-700 mt-4 relative"><div class="absolute left-1/2 -translate-x-1/2 -top-0 w-1 h-8 bg-slate-700"></div></div>
-                    
-                    <!-- Nivel 3 -->
-                    <div class="mt-8 interactive-node bg-slate-900 border-2 border-dashed border-slate-600 p-6 rounded-xl w-full max-w-lg text-center relative border-l-4 border-l-yellow-500" onclick="openNodeDetails('chroma')">
-                        <span class="text-xs font-mono text-yellow-400 mb-1 block">💾 STORAGE</span>
-                        <h4 class="font-bold text-green-400">ChromaDB</h4>
-                    </div>
+                <!-- Grid de Flujos -->
+                <div id="flows-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                    <!-- Las tarjetas se generan dinámicamente -->
                 </div>
             </div>
-            
-            <!-- Modal Detalles -->
-            <div id="node-modal" class="hidden absolute top-0 right-0 h-full w-96 bg-slate-900/95 backdrop-blur border-l border-slate-700 shadow-2xl p-6 overflow-y-auto transform transition-transform translate-x-full z-50">
-                <button onclick="closeModal('node-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-times text-xl"></i></button>
-                <div id="modal-content"></div>
+        </div>
+
+        <!-- Modal Detalle de Flujo -->
+        <div id="flow-detail-modal" class="hidden absolute inset-0 bg-slate-950/90 z-50 flex items-center justify-center p-8 backdrop-blur-sm">
+            <div class="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-3xl shadow-2xl flex flex-col max-h-[90vh]">
+                <!-- Header -->
+                <div class="p-5 border-b border-slate-800 flex justify-between items-start">
+                    <div class="flex items-center gap-4">
+                        <span id="flow-modal-emoji" class="text-4xl"></span>
+                        <div>
+                            <h3 id="flow-modal-title" class="font-bold text-white text-xl"></h3>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span id="flow-modal-category" class="text-xs px-2 py-0.5 rounded border"></span>
+                                <span id="flow-modal-complexity" class="text-xs px-2 py-0.5 rounded border"></span>
+                                <span id="flow-modal-cost" class="text-xs px-2 py-0.5 rounded border"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="closeModal('flow-detail-modal')" class="text-slate-500 hover:text-white p-1">
+                        <i class="fa-solid fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Body -->
+                <div class="p-6 overflow-y-auto flex-1 space-y-5">
+                    <!-- Descripción -->
+                    <div>
+                        <p id="flow-modal-desc" class="text-slate-300 leading-relaxed"></p>
+                    </div>
+
+                    <!-- Caso de uso -->
+                    <div class="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                        <h4 class="text-xs font-bold text-blue-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-lightbulb"></i> Caso de Uso
+                        </h4>
+                        <p id="flow-modal-usecase" class="text-sm text-slate-300"></p>
+                    </div>
+
+                    <!-- Flujo de Datos -->
+                    <div class="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
+                        <h4 class="text-xs font-bold text-purple-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-diagram-project"></i> Flujo de Datos
+                        </h4>
+                        <p id="flow-modal-flowdesc" class="text-sm text-slate-300 font-mono mb-4"></p>
+                        <!-- Stack visual -->
+                        <div id="flow-modal-stack" class="flex flex-wrap gap-2"></div>
+                    </div>
+
+                    <!-- Prompt Táctico -->
+                    <div class="bg-slate-950 border border-slate-800 rounded-lg p-4">
+                        <h4 class="text-xs font-bold text-green-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-terminal"></i> Prompt Táctico
+                        </h4>
+                        <pre id="flow-modal-prompt" class="text-xs text-slate-300 whitespace-pre-wrap font-mono leading-relaxed max-h-48 overflow-y-auto"></pre>
+                    </div>
+                </div>
+
+                <!-- Footer con acciones -->
+                <div class="p-4 border-t border-slate-800 bg-slate-900 flex gap-3">
+                    <button onclick="cloneFlowToArchitect()" class="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-sm px-4 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 shadow-lg">
+                        <i class="fa-solid fa-clone"></i> Clonar al Arquitecto
+                    </button>
+                    <button onclick="copyFlowPrompt()" class="bg-slate-700 hover:bg-slate-600 text-white text-sm px-4 py-3 rounded-lg font-medium transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-copy"></i> Copiar Prompt
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -412,29 +585,110 @@
 
         <!-- VISTA 4: GLOSARIO + KNOWLEDGE BASE -->
         <div id="view-grid" class="hidden flex-1 overflow-y-auto p-6">
-            <!-- Barra de búsqueda semántica -->
-            <div class="max-w-2xl mx-auto mb-8">
-                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
-                    <div class="flex items-center gap-3 mb-3">
-                        <i class="fa-solid fa-brain text-blue-400"></i>
-                        <h3 class="text-sm font-bold text-white">Knowledge Base</h3>
-                        <span class="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">RAG</span>
+            <div class="max-w-7xl mx-auto">
+                <!-- Header con progreso -->
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-white mb-1">Glosario de Herramientas</h2>
+                        <p class="text-sm text-slate-400">Tu stack tecnológico personal</p>
                     </div>
-                    <div class="flex gap-2">
-                        <input type="text" id="kb-search" class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-sm text-slate-300 placeholder-slate-600" placeholder="Buscar en tus notas... (ej: ¿cómo funciona RAG?)">
-                        <button onclick="searchKnowledgeBase()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
-                            <i class="fa-solid fa-search"></i> Buscar
+                    <!-- Contador de progreso -->
+                    <div id="progress-card" class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex items-center gap-4">
+                        <div class="relative w-14 h-14">
+                            <svg class="w-14 h-14 transform -rotate-90">
+                                <circle cx="28" cy="28" r="24" stroke="#1e293b" stroke-width="4" fill="none"/>
+                                <circle id="progress-circle" cx="28" cy="28" r="24" stroke="#22c55e" stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="150.8" stroke-dashoffset="150.8"/>
+                            </svg>
+                            <span id="progress-percent" class="absolute inset-0 flex items-center justify-center text-sm font-bold text-white">0%</span>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-500 uppercase tracking-wider">Progreso</p>
+                            <p class="text-sm text-white font-medium"><span id="progress-count">0</span> / <span id="progress-total">0</span> dominadas</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Barra de búsqueda y filtros -->
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-6">
+                    <div class="flex flex-col lg:flex-row gap-4">
+                        <!-- Búsqueda -->
+                        <div class="flex-1">
+                            <div class="relative">
+                                <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                                <input type="text" id="tools-search" oninput="filterTools()" class="w-full bg-slate-950 border border-slate-700 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-300 placeholder-slate-600" placeholder="Buscar herramienta...">
+                            </div>
+                        </div>
+                        <!-- Filtros -->
+                        <div class="flex flex-wrap gap-2">
+                            <!-- Por categoría -->
+                            <select id="filter-category" onchange="filterTools()" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-300">
+                                <option value="all">Todas las categorías</option>
+                                <option value="Frontend">Frontend</option>
+                                <option value="Backend">Backend</option>
+                                <option value="IA Model">IA Model</option>
+                                <option value="Storage">Storage</option>
+                                <option value="Process">Process</option>
+                                <option value="DevOps">DevOps</option>
+                            </select>
+                            <!-- Por estado -->
+                            <select id="filter-status" onchange="filterTools()" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-300">
+                                <option value="all">Todos los estados</option>
+                                <option value="used">✅ Dominadas</option>
+                                <option value="learning">🚧 En progreso</option>
+                                <option value="new">🆕 Por descubrir</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- Filtros rápidos por estado -->
+                    <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-slate-800">
+                        <button onclick="setStatusFilter('all')" class="status-filter-btn bg-slate-800 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-2 border border-slate-700" data-status="all">
+                            Todos <span id="count-all" class="bg-slate-700 px-1.5 py-0.5 rounded">0</span>
                         </button>
-                        <button onclick="indexKnowledgeBase()" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg text-sm transition" title="Indexar archivos">
-                            <i class="fa-solid fa-rotate"></i>
+                        <button onclick="setStatusFilter('used')" class="status-filter-btn bg-slate-800 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-2 border border-slate-700" data-status="used">
+                            <span class="w-2 h-2 rounded-full bg-green-500"></span> Dominadas <span id="count-used" class="bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded">0</span>
+                        </button>
+                        <button onclick="setStatusFilter('learning')" class="status-filter-btn bg-slate-800 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-2 border border-slate-700" data-status="learning">
+                            <span class="w-2 h-2 rounded-full bg-yellow-500"></span> En progreso <span id="count-learning" class="bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded">0</span>
+                        </button>
+                        <button onclick="setStatusFilter('new')" class="status-filter-btn bg-slate-800 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-2 border border-slate-700" data-status="new">
+                            <span class="w-2 h-2 rounded-full bg-blue-500"></span> Por descubrir <span id="count-new" class="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded">0</span>
                         </button>
                     </div>
-                    <!-- Resultados de búsqueda -->
-                    <div id="kb-results" class="hidden mt-4 space-y-3"></div>
+                </div>
+
+                <!-- Knowledge Base RAG (colapsado) -->
+                <details class="bg-slate-900 border border-slate-800 rounded-xl mb-6 group">
+                    <summary class="p-4 cursor-pointer flex items-center justify-between hover:bg-slate-800/50 transition rounded-xl">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-brain text-blue-400"></i>
+                            <span class="text-sm font-bold text-white">Knowledge Base</span>
+                            <span class="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">RAG</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-slate-500 group-open:rotate-180 transition-transform"></i>
+                    </summary>
+                    <div class="p-4 pt-0 border-t border-slate-800">
+                        <div class="flex gap-2">
+                            <input type="text" id="kb-search" class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-sm text-slate-300 placeholder-slate-600" placeholder="Buscar en tus notas... (ej: ¿cómo funciona RAG?)">
+                            <button onclick="searchKnowledgeBase()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                                <i class="fa-solid fa-search"></i> Buscar
+                            </button>
+                            <button onclick="indexKnowledgeBase()" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg text-sm transition" title="Indexar archivos">
+                                <i class="fa-solid fa-rotate"></i>
+                            </button>
+                        </div>
+                        <div id="kb-results" class="hidden mt-4 space-y-3"></div>
+                    </div>
+                </details>
+
+                <!-- Grid de herramientas -->
+                <div id="tools-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"></div>
+
+                <!-- Mensaje cuando no hay resultados -->
+                <div id="no-results" class="hidden text-center py-12">
+                    <i class="fa-solid fa-search text-4xl text-slate-700 mb-4"></i>
+                    <p class="text-slate-500">No se encontraron herramientas con esos filtros</p>
                 </div>
             </div>
-            <!-- Grid de herramientas -->
-            <div id="tools-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"></div>
         </div>
     </main>
 
@@ -649,6 +903,54 @@
                 why: "Hacen que tu código se vea profesional automáticamente. Black formatea y Ruff busca errores.",
                 cases: ["Formatear al guardar", "Detectar imports no usados", "Estilo consistente"],
                 code: "# En terminal\nruff check .\nblack ."
+            },
+            {
+                id: "docker", name: "Docker", cat: "DevOps",
+                icon: "fa-brands fa-docker", color: "text-blue-400", tag: "Contenedores", status: "new",
+                desc: "Empaqueta tu aplicación para que funcione en cualquier servidor.",
+                why: "Tu app funciona en tu Mac pero falla en producción? Docker asegura que el entorno sea idéntico en todas partes.",
+                cases: ["Desplegar minerOS en servidor", "Entornos reproducibles", "CI/CD"],
+                code: "# Dockerfile\nFROM python:3.11-slim\nWORKDIR /app\nCOPY . .\nRUN pip install -r requirements.txt\nCMD [\"uvicorn\", \"main:app\"]"
+            },
+            {
+                id: "pytest", name: "Pytest", cat: "DevOps",
+                icon: "fa-vial", color: "text-green-400", tag: "Testing", status: "new",
+                desc: "Framework de testing para Python. Simple pero potente.",
+                why: "Escribe tests una vez, ejecútalos mil veces. Detecta bugs antes de que lleguen a producción.",
+                cases: ["Tests unitarios", "Tests de integración", "Mocks y fixtures"],
+                code: "def test_suma():\n    assert suma(2, 2) == 4\n\ndef test_api(client):\n    response = client.get('/health')\n    assert response.status_code == 200"
+            },
+            {
+                id: "httpx", name: "HTTPX", cat: "Backend",
+                icon: "fa-globe", color: "text-cyan-400", tag: "HTTP Client", status: "new",
+                desc: "Cliente HTTP moderno y asíncrono para Python.",
+                why: "requests es síncrono y lento. HTTPX es async, soporta HTTP/2 y tiene API idéntica a requests.",
+                cases: ["Llamadas a APIs externas", "Web scraping async", "Testing de endpoints"],
+                code: "import httpx\n\nasync with httpx.AsyncClient() as client:\n    response = await client.get('https://api.example.com/data')\n    data = response.json()"
+            },
+            {
+                id: "jq", name: "jq", cat: "Process",
+                icon: "fa-filter", color: "text-amber-400", tag: "JSON Parser", status: "new",
+                desc: "El grep/sed/awk para JSON. Filtra y transforma JSON desde terminal.",
+                why: "Tienes un JSON gigante y solo necesitas un campo? jq lo extrae en una línea.",
+                cases: ["Filtrar respuestas de API", "Transformar datos", "Pipelines de shell"],
+                code: "# Extraer nombres de un JSON\ncat data.json | jq '.users[].name'\n\n# Filtrar por condición\njq '.items | map(select(.price < 100))'"
+            },
+            {
+                id: "typer", name: "Typer", cat: "Backend",
+                icon: "fa-terminal", color: "text-emerald-400", tag: "CLI", status: "new",
+                desc: "Crea CLIs profesionales con Python usando type hints.",
+                why: "Convierte tus scripts en herramientas de línea de comandos con ayuda automática y autocompletado.",
+                cases: ["CLI para minerOS", "Scripts con argumentos", "Herramientas internas"],
+                code: "import typer\n\napp = typer.Typer()\n\n@app.command()\ndef process(path: str, verbose: bool = False):\n    '''Procesa archivos en PATH'''\n    typer.echo(f'Procesando {path}')"
+            },
+            {
+                id: "rich", name: "Rich", cat: "Backend",
+                icon: "fa-palette", color: "text-purple-400", tag: "Terminal UI", status: "new",
+                desc: "Salida bonita en terminal: colores, tablas, barras de progreso.",
+                why: "Deja de usar print(). Rich hace que tus scripts se vean profesionales.",
+                cases: ["Logs con colores", "Tablas de datos", "Barras de progreso"],
+                code: "from rich import print\nfrom rich.table import Table\n\ntable = Table(title='Resultados')\ntable.add_column('Archivo')\ntable.add_row('foto.jpg')\nprint(table)"
             }
         ];
 
@@ -1096,8 +1398,8 @@
             }
         };
 
-        const nodeDetails = { 
-            fastapi: { title: "FastAPI", role: "Arquitecto Senior", desc: "Servidor asíncrono. Maneja las peticiones de entrada.", code: "@app.post('/ingest')\nasync def ingest(file: UploadFile):\n    await process_file(file)\n    return {'status': 'ok'}", goal: "Crear endpoint no bloqueante para subida de archivos." }, 
+        const nodeDetails = {
+            fastapi: { title: "FastAPI", role: "Arquitecto Senior", desc: "Servidor asíncrono. Maneja las peticiones de entrada.", code: "@app.post('/ingest')\nasync def ingest(file: UploadFile):\n    await process_file(file)\n    return {'status': 'ok'}", goal: "Crear endpoint no bloqueante para subida de archivos." },
             chroma: { title: "ChromaDB", role: "Arquitecto Datos", desc: "Base de datos vectorial para búsqueda semántica.", code: "client = chromadb.PersistentClient(path='./db')\ncollection.add(embeddings=[vector])", goal: "Configurar cliente persistente y esquema de colección." },
             pillow: { title: "Pillow / OpenCV", role: "Ingeniero Datos", desc: "Pre-procesado de imagen: redimensión y normalización.", code: "img = Image.open(file).resize((224,224))\nimg_array = np.array(img)", goal: "Función para limpiar EXIF y normalizar tamaño para CLIP." },
             clip: { title: "OpenAI CLIP", role: "Ingeniero IA", desc: "Convierte imágenes y texto en vectores matemáticos.", code: "inputs = processor(images=img, return_tensors='pt')\nembeds = model.get_image_features(**inputs)", goal: "Implementar extracción de embeddings usando HuggingFace Transformers." },
@@ -1107,6 +1409,264 @@
             html: { title: "HTML5 Semántico", role: "Frontend Dev", desc: "Estructura de la interfaz.", code: "<article class='card'>\n  <h2>Título</h2>\n</article>", goal: "Template HTML5 base con meta tags." },
             css: { title: "Tailwind CSS", role: "Frontend Dev", desc: "Estilos rápidos.", code: "<div class='p-4 bg-slate-900 text-white'>", goal: "Configurar CDN de Tailwind." },
             htmx: { title: "HTMX", role: "Frontend Dev", desc: "Lógica de interacción en HTML.", code: "<button hx-post='/api/action' hx-swap='outerHTML'>", goal: "Botón interactivo con HTMX." }
+        };
+
+        // ============================================
+        // FLUJOS TÁCTICOS - APP STORE DE ARQUITECTURAS
+        // ============================================
+        const FLOWS_DATA = {
+            // 📂 Categoría A: CONOCIMIENTO & RAG
+            "docmine-classic": {
+                title: "DocMine Classic",
+                emoji: "📄",
+                desc: "Chat con tus PDFs y documentos. RAG simple pero efectivo.",
+                category: "knowledge",
+                stack: ["fastapi", "python", "chroma", "ollama"],
+                complexity: "low",
+                cost: "local",
+                useCase: "Consultar manuales técnicos, contratos, documentación interna.",
+                flowDesc: "Documento → Chunking → Embeddings → ChromaDB → Query → LLM responde",
+                prompt: `Actúa como Arquitecto RAG. Implementa un pipeline DocMine:
+1. FastAPI endpoint para subir PDFs
+2. PyMuPDF para extraer texto
+3. Chunking con overlap (500 chars, 50 overlap)
+4. Sentence-BERT para embeddings
+5. ChromaDB para persistencia
+6. Ollama (llama3) para respuestas
+Entrega código modular en services/, routers/.`
+            },
+            "research-synthesizer": {
+                title: "Research Synthesizer",
+                emoji: "🔬",
+                desc: "Genera informes a partir de múltiples fuentes. Deep research.",
+                category: "knowledge",
+                stack: ["python", "chroma", "claude", "markdown"],
+                complexity: "high",
+                cost: "api",
+                useCase: "Estado del arte de una tecnología, comparativas, investigación.",
+                flowDesc: "Tema → Multi-query ChromaDB → Reranking → Claude sintetiza → Markdown",
+                prompt: `Actúa como Research Engineer. Crea un sintetizador que:
+1. Reciba un tema de investigación
+2. Genere 5 queries diferentes (Multi-Query RAG)
+3. Busque en ChromaDB con cada query
+4. Reordene por relevancia (cross-encoder)
+5. Pase contexto a Claude con prompt estructurado
+6. Genere informe Markdown con citas
+Output: Informe con secciones, bullet points y fuentes.`
+            },
+            "voice-to-knowledge": {
+                title: "Voice-to-Knowledge",
+                emoji: "🎤",
+                desc: "Convierte audios en notas estructuradas para Obsidian.",
+                category: "knowledge",
+                stack: ["whisper", "python", "ollama", "markdown"],
+                complexity: "mid",
+                cost: "local",
+                useCase: "Diario personal hablado, ideas al conducir, reuniones.",
+                flowDesc: "Audio → Whisper transcribe → Ollama limpia/resume → Obsidian .md",
+                prompt: `Actúa como Knowledge Engineer. Pipeline de voz a notas:
+1. Watchdog detecta .mp3/.m4a en carpeta inbox/
+2. Whisper (base) transcribe a texto raw
+3. Ollama (llama3) limpia muletillas y estructura
+4. Genera YAML frontmatter (fecha, tags inferidos)
+5. Guarda en vault/diario/ con nombre fecha-hora.md
+Incluye manejo de errores y logs con Loguru.`
+            },
+            // 📂 Categoría B: MEDIA & CREATIVIDAD
+            "videomine-search": {
+                title: "VideoMine Search",
+                emoji: "🎬",
+                desc: "Busca el momento exacto en cualquier video por texto.",
+                category: "media",
+                stack: ["ffmpeg", "clip", "whisper", "chroma", "fastapi"],
+                complexity: "high",
+                cost: "local",
+                useCase: "Buscar en videos familiares, tutoriales, conferencias grabadas.",
+                flowDesc: "Video → FFmpeg (frames+audio) → CLIP+Whisper → ChromaDB → API búsqueda",
+                prompt: `Actúa como Media Search Engineer. Sistema VideoMine:
+1. FFmpeg extrae frame cada 5 segundos + audio completo
+2. CLIP genera embeddings de cada frame
+3. Whisper transcribe audio con timestamps
+4. ChromaDB indexa ambos (visual + texto)
+5. FastAPI endpoint de búsqueda multimodal
+6. Retorna timestamp exacto + thumbnail
+Optimiza para Apple Silicon (MPS).`
+            },
+            "smart-gallery": {
+                title: "Smart Gallery",
+                emoji: "🖼️",
+                desc: "Organiza 10.000 fotos automáticamente sin tocarlas.",
+                category: "media",
+                stack: ["python", "clip", "sqlite", "html", "watchdog"],
+                complexity: "mid",
+                cost: "local",
+                useCase: "PhotoMine v2, organizar biblioteca familiar, portfolio.",
+                flowDesc: "Watchdog detecta → CLIP analiza → SQLite metadata → HTML5 galería",
+                prompt: `Actúa como Photo Engineer. Sistema Smart Gallery:
+1. Watchdog monitorea carpeta de fotos
+2. CLIP genera tags automáticos (top 10 conceptos)
+3. SQLite guarda: path, hash, tags, fecha EXIF, GPS
+4. HTML5 galería estática con filtros por tag
+5. Búsqueda semántica por texto
+6. No mueve archivos, solo indexa
+Incluye detección de duplicados por hash perceptual.`
+            },
+            "podcast-generator": {
+                title: "Podcast Generator",
+                emoji: "🎙️",
+                desc: "Convierte artículos en audio para escuchar.",
+                category: "media",
+                stack: ["python", "ollama", "ffmpeg"],
+                complexity: "mid",
+                cost: "local",
+                useCase: "Consumir noticias mientras cocinas, artículos largos, newsletters.",
+                flowDesc: "URL/Texto → Scraper → Ollama guioniza → TTS local → MP3",
+                prompt: `Actúa como Audio Content Engineer. Pipeline podcast:
+1. BeautifulSoup extrae texto limpio de URL
+2. Ollama reescribe como guión de podcast (más conversacional)
+3. TTS local (piper/kokoro) genera audio
+4. FFmpeg añade intro/outro music
+5. Guarda en podcast/ con metadata ID3
+6. Genera feed RSS opcional
+Target: 10 minutos de lectura → 8 min audio.`
+            },
+            // 📂 Categoría C: AUTOMATIZACIÓN & DATOS
+            "smart-scraper": {
+                title: "Smart Scraper",
+                emoji: "🕷️",
+                desc: "Extrae datos estructurados de cualquier web con IA.",
+                category: "automation",
+                stack: ["python", "bs4", "claude", "sqlite", "loguru"],
+                complexity: "mid",
+                cost: "api",
+                useCase: "Comparador de precios, monitor de BOE, tracking de productos.",
+                flowDesc: "URL → HTTPX fetch → Claude extrae JSON → Valida → SQLite",
+                prompt: `Actúa como Scraping Engineer. Sistema inteligente:
+1. HTTPX con retry y rate limiting
+2. BeautifulSoup parsea HTML
+3. Claude extrae datos según schema Pydantic definido
+4. Validación estricta antes de guardar
+5. SQLite con histórico (tracking de cambios)
+6. Loguru registra cada operación
+Incluye modo --dry-run y ejemplos de schemas.`
+            },
+            "sql-oracle": {
+                title: "SQL Oracle",
+                emoji: "🔮",
+                desc: "Pregunta a tu base de datos en lenguaje natural.",
+                category: "automation",
+                stack: ["fastapi", "claude", "pydantic", "sqlite"],
+                complexity: "mid",
+                cost: "api",
+                useCase: "Dashboard de ventas sin saber SQL, reportes ad-hoc.",
+                flowDesc: "Pregunta → Claude genera SQL → Valida → Ejecuta → Formatea respuesta",
+                prompt: `Actúa como Data Engineer. Sistema Text-to-SQL:
+1. FastAPI recibe pregunta en español
+2. Inyecta schema de tablas en prompt
+3. Claude genera SQL (solo SELECT, no modificaciones)
+4. Regex valida que no haya DROP/DELETE/UPDATE
+5. Ejecuta query y formatea resultado
+6. Cachea queries frecuentes
+Incluye ejemplos few-shot en el prompt.`
+            },
+            "file-organizer": {
+                title: "File Organizer",
+                emoji: "📁",
+                desc: "Limpia la carpeta Descargas automáticamente con IA.",
+                category: "automation",
+                stack: ["python", "ocr", "ollama", "loguru", "watchdog"],
+                complexity: "low",
+                cost: "local",
+                useCase: "Ordenar facturas, organizar documentos recibidos.",
+                flowDesc: "Watchdog detecta → OCR si es imagen → Ollama clasifica → Mueve",
+                prompt: `Actúa como Automation Engineer. Organizador inteligente:
+1. Watchdog monitorea ~/Downloads
+2. Por extensión: PDF/imágenes → OCR extrae texto
+3. Ollama clasifica: factura, recibo, documento, imagen, otro
+4. Mueve a carpetas: facturas/, recibos/, docs/, fotos/
+5. Renombra con patrón: YYYY-MM-DD_tipo_descripcion
+6. Log de cada movimiento
+Modo --dry-run para probar antes de activar.`
+            },
+            // 📂 Categoría D: DEVOPS & CALIDAD
+            "code-reviewer": {
+                title: "Code Reviewer",
+                emoji: "👀",
+                desc: "Revisa tu código antes de hacer commit.",
+                category: "devops",
+                stack: ["git", "python", "claude", "loguru"],
+                complexity: "low",
+                cost: "api",
+                useCase: "CI/CD local, pre-commit hook, code quality.",
+                flowDesc: "git diff → Claude analiza → Reporte severidad → Aprueba/Rechaza",
+                prompt: `Actúa como Code Review Bot. Sistema de revisión:
+1. git diff --staged captura cambios
+2. Claude analiza buscando:
+   - Vulnerabilidades de seguridad
+   - Code smells
+   - Falta de type hints
+   - Complejidad ciclomática
+3. Genera reporte con severidad (critical/warning/info)
+4. Exit code 1 si hay críticos (bloquea commit)
+Integrable como pre-commit hook.`
+            },
+            "privacy-shield": {
+                title: "Privacy Shield",
+                emoji: "🛡️",
+                desc: "Censura datos sensibles en documentos automáticamente.",
+                category: "devops",
+                stack: ["python", "ocr", "loguru"],
+                complexity: "low",
+                cost: "local",
+                useCase: "Compartir logs sin exponer datos, anonimizar documentos.",
+                flowDesc: "Documento → OCR si necesario → Regex/Spacy detecta → Censura → Copia limpia",
+                prompt: `Actúa como Security Engineer. Redactor de PII:
+1. Detecta tipo de archivo (texto, PDF, imagen)
+2. OCR si es imagen/PDF escaneado
+3. Regex detecta: DNI, teléfonos, emails, IBANs, IPs
+4. Opcional: Spacy NER para nombres propios
+5. Genera copia con [REDACTED]
+6. Log de cada dato censurado (sin el dato)
+100% local, sin APIs externas.`
+            },
+            "api-gateway": {
+                title: "API Gateway",
+                emoji: "🚪",
+                desc: "Unifica todos tus microservicios locales en un solo punto.",
+                category: "devops",
+                stack: ["fastapi", "pydantic", "loguru"],
+                complexity: "mid",
+                cost: "local",
+                useCase: "Exponer herramientas minerOS de forma segura, API unificada.",
+                flowDesc: "Request → Auth → Route → Proxy al servicio → Log → Response",
+                prompt: `Actúa como API Architect. Gateway unificado:
+1. FastAPI como punto de entrada único
+2. Rutas: /photos/* → PhotoMine, /docs/* → DocMine, etc.
+3. Middleware de autenticación (API key simple)
+4. Rate limiting por IP
+5. Loguru registra cada request
+6. Health checks a cada servicio
+7. Swagger unificado en /docs
+Incluye docker-compose para orquestar.`
+            }
+        };
+
+        const FLOW_CATEGORIES = {
+            "knowledge": { name: "Conocimiento & RAG", icon: "fa-brain", color: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/30" },
+            "media": { name: "Media & Creatividad", icon: "fa-photo-film", color: "text-pink-400", bg: "bg-pink-500/10", border: "border-pink-500/30" },
+            "automation": { name: "Automatización", icon: "fa-robot", color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/30" },
+            "devops": { name: "DevOps & Calidad", icon: "fa-shield-halved", color: "text-green-400", bg: "bg-green-500/10", border: "border-green-500/30" }
+        };
+
+        const COMPLEXITY_LABELS = {
+            "low": { label: "Fácil", icon: "🟢", class: "bg-green-500/20 text-green-400 border-green-500/30" },
+            "mid": { label: "Media", icon: "🟡", class: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
+            "high": { label: "Alta", icon: "🔴", class: "bg-red-500/20 text-red-400 border-red-500/30" }
+        };
+
+        const COST_LABELS = {
+            "local": { label: "Local", icon: "💻", desc: "Ollama/CPU", class: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
+            "api": { label: "API", icon: "💸", desc: "Claude/OpenAI", class: "bg-orange-500/20 text-orange-400 border-orange-500/30" }
         };
 
         // ============================================
@@ -1120,72 +1680,414 @@
         tools.forEach(t => {
             const el = document.createElement('div');
             const bc = catStyles[t.cat] || "border-slate-700";
-            el.className = `draggable-tool bg-slate-800 border-l-4 ${bc} border-y border-r border-slate-700 p-3 rounded-r-lg flex items-center justify-between gap-3 hover:bg-slate-700 mb-2`;
+            el.className = `draggable-tool bg-slate-800 border-l-4 ${bc} border-y border-r border-slate-700 p-2.5 rounded-r-lg flex items-center justify-between gap-2 hover:bg-slate-700 cursor-grab active:cursor-grabbing mb-1.5 transition`;
             el.draggable = true;
-            el.innerHTML = `<div class="flex items-center gap-3"><i class="fa-solid ${t.icon} ${t.color}"></i><div><span class="text-sm font-bold block">${t.name}</span><span class="text-[10px] text-slate-500 block">${t.tag}</span></div></div><i class="fa-solid fa-grip-vertical text-slate-600 text-xs"></i>`;
+            el.innerHTML = `<div class="flex items-center gap-2"><i class="fa-solid ${t.icon} ${t.color} text-sm"></i><div><span class="text-xs font-bold block">${t.name}</span></div></div><i class="fa-solid fa-plus text-slate-600 text-[10px]"></i>`;
             el.ondragstart = (ev) => { ev.dataTransfer.setData("toolId", t.id); ev.dataTransfer.effectAllowed = "copy"; };
+            el.onclick = () => addNodeToCanvas(t.id);
             toolbox.appendChild(el);
         });
 
-        canvas.ondragover = (ev) => { ev.preventDefault(); ev.dataTransfer.dropEffect = "copy"; };
-        canvas.ondrop = (ev) => { ev.preventDefault(); const toolId = ev.dataTransfer.getData("toolId"); if(toolId) addNodeToCanvas(toolId); };
+        // ============================================
+        // PIPELINE BUILDER - SISTEMA DE NODOS v8.0
+        // ============================================
+        const nodesContainer = document.getElementById('nodes-container');
+        const connectionsSvg = document.getElementById('connections-svg');
+        const pipelineCanvas = document.getElementById('pipeline-canvas');
 
-        function addNodeToCanvas(toolId) { const tool = tools.find(t => t.id === toolId); if(tool) { canvasNodes.push(tool); renderCanvas(); } }
-        function removeNode(index) { canvasNodes.splice(index, 1); renderCanvas(); }
+        // Configurar drag & drop en el canvas
+        if (nodesContainer) {
+            nodesContainer.ondragover = (ev) => { ev.preventDefault(); ev.dataTransfer.dropEffect = "copy"; };
+            nodesContainer.ondrop = (ev) => {
+                ev.preventDefault();
+                const toolId = ev.dataTransfer.getData("toolId");
+                if(toolId) addNodeToCanvas(toolId);
+            };
+        }
+
+        function addNodeToCanvas(toolId) {
+            const tool = tools.find(t => t.id === toolId);
+            if(tool && !canvasNodes.find(n => n.id === toolId)) {
+                canvasNodes.push({...tool});
+                renderCanvas();
+                validateFlowRealtime();
+            }
+        }
+
+        function removeNode(index) {
+            canvasNodes.splice(index, 1);
+            renderCanvas();
+            validateFlowRealtime();
+        }
+
+        function clearCanvas() {
+            if (canvasNodes.length === 0) return;
+            if (confirm('¿Limpiar todo el canvas?')) {
+                canvasNodes = [];
+                renderCanvas();
+                addLog("INFO", "Canvas limpiado");
+            }
+        }
 
         function renderCanvas() {
-            canvas.innerHTML = '';
+            if (!nodesContainer) return;
+            const placeholder = document.getElementById('canvas-placeholder');
+
             if (canvasNodes.length === 0) {
-                canvas.innerHTML = `<div id="canvas-placeholder" class="border-2 border-dashed border-slate-800 rounded-xl p-12 text-center text-slate-600 animate-in fade-in duration-300"><i class="fa-solid fa-hand-pointer text-2xl mb-2"></i><p>Arrastra herramientas aquí</p></div>`;
+                nodesContainer.innerHTML = `<div id="canvas-placeholder" class="absolute inset-8 border-2 border-dashed border-slate-800 rounded-2xl flex flex-col items-center justify-center text-slate-600">
+                    <i class="fa-solid fa-diagram-project text-4xl mb-3 text-slate-700"></i>
+                    <p class="text-sm font-medium">Arrastra herramientas aquí</p>
+                    <p class="text-xs mt-1 text-slate-700">o selecciona un patrón predefinido</p>
+                </div>`;
+                connectionsSvg.innerHTML = '<defs><marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/></marker></defs>';
                 document.getElementById('node-count').textContent = '0';
+                document.getElementById('connection-count').textContent = '0';
                 return;
             }
+
+            nodesContainer.innerHTML = '';
+
+            // Calcular posiciones en grid
+            const cols = Math.min(3, canvasNodes.length);
+            const nodeWidth = 280;
+            const nodeHeight = 100;
+            const gapX = 80;
+            const gapY = 60;
+
             canvasNodes.forEach((node, index) => {
+                const col = index % cols;
+                const row = Math.floor(index / cols);
+                const x = 40 + col * (nodeWidth + gapX);
+                const y = 40 + row * (nodeHeight + gapY);
+
                 const bc = catStyles[node.cat] || "border-slate-600";
                 const el = document.createElement('div');
-                el.className = "flow-node relative group animate-in fade-in slide-in-from-bottom-2 duration-300";
+                el.className = "pipeline-node absolute transition-all duration-300";
+                el.style.left = `${x}px`;
+                el.style.top = `${y}px`;
+                el.style.width = `${nodeWidth}px`;
+                el.dataset.index = index;
+
                 el.innerHTML = `
-                    <div class="bg-slate-800 border border-slate-600 border-l-4 ${bc} p-4 rounded-xl flex items-center justify-between shadow-lg relative z-10">
-                        <div class="flex items-center gap-4"><div class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center border border-slate-700 font-mono text-xs text-slate-500">${index + 1}</div><div class="flex items-center gap-3"><i class="fa-solid ${node.icon} ${node.color} text-2xl"></i><div><h4 class="font-bold text-white text-lg leading-tight">${node.name}</h4><p class="text-[10px] text-slate-400 uppercase tracking-widest bg-slate-900/50 px-1 rounded inline-block mt-1">${node.tag}</p></div></div></div>
-                        <button onclick="removeNode(${index})" class="text-slate-600 hover:text-red-400 transition p-2"><i class="fa-solid fa-trash"></i></button>
-                    </div>
-                    <div class="flow-arrow h-8 border-l-2 border-dashed border-slate-700 ml-8 relative"></div>`;
-                canvas.appendChild(el);
+                    <div class="bg-slate-800/90 backdrop-blur border border-slate-600 border-l-4 ${bc} p-4 rounded-xl shadow-xl hover:shadow-2xl hover:border-slate-500 transition group">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center border border-slate-700">
+                                    <i class="fa-solid ${node.icon} ${node.color} text-lg"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-white text-sm leading-tight">${node.name}</h4>
+                                    <span class="text-[10px] text-slate-500 uppercase tracking-wider">${node.tag}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+                                <span class="text-[10px] text-slate-600 mr-2">#${index + 1}</span>
+                                <button onclick="removeNode(${index})" class="text-slate-600 hover:text-red-400 transition p-1.5 hover:bg-red-500/10 rounded">
+                                    <i class="fa-solid fa-times text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Puntos de conexión -->
+                        <div class="connection-point connection-out absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-blue-500 rounded-full border-2 border-slate-900 opacity-50 group-hover:opacity-100 transition cursor-crosshair" title="Arrastrar para conectar"></div>
+                        <div class="connection-point connection-in absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-900 opacity-50 group-hover:opacity-100 transition" title="Entrada"></div>
+                    </div>`;
+                nodesContainer.appendChild(el);
             });
+
+            // Dibujar conexiones (línea secuencial)
+            drawConnections();
             document.getElementById('node-count').textContent = canvasNodes.length;
+            document.getElementById('connection-count').textContent = Math.max(0, canvasNodes.length - 1);
         }
 
-        // --- FEATURES EXTRA ---
-        function exportDiagram() {
-            html2canvas(document.getElementById('architect-canvas'), { backgroundColor: "#0f172a" }).then(c => { const l = document.createElement('a'); l.download = 'arquitectura.png'; l.href = c.toDataURL(); l.click(); });
+        function drawConnections() {
+            if (!connectionsSvg || canvasNodes.length < 2) {
+                connectionsSvg.innerHTML = '<defs><marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/></marker></defs>';
+                return;
+            }
+
+            let paths = '<defs><marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/></marker></defs>';
+
+            const nodes = nodesContainer.querySelectorAll('.pipeline-node');
+            for (let i = 0; i < nodes.length - 1; i++) {
+                const from = nodes[i];
+                const to = nodes[i + 1];
+
+                const fromRect = from.getBoundingClientRect();
+                const toRect = to.getBoundingClientRect();
+                const canvasRect = pipelineCanvas.getBoundingClientRect();
+
+                const x1 = fromRect.right - canvasRect.left + pipelineCanvas.scrollLeft;
+                const y1 = fromRect.top + fromRect.height/2 - canvasRect.top + pipelineCanvas.scrollTop;
+                const x2 = toRect.left - canvasRect.left + pipelineCanvas.scrollLeft;
+                const y2 = toRect.top + toRect.height/2 - canvasRect.top + pipelineCanvas.scrollTop;
+
+                // Curva bezier
+                const midX = (x1 + x2) / 2;
+                paths += `<path d="M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}"
+                    stroke="#3b82f6" stroke-width="2" fill="none" marker-end="url(#arrowhead)"
+                    class="connection-line" style="filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.3));"/>`;
+            }
+            connectionsSvg.innerHTML = paths;
         }
-        function saveArchitecture() {
-            if(canvasNodes.length === 0) return alert("Nada que guardar.");
-            const n = prompt("Nombre:", "Flujo " + new Date().toLocaleTimeString());
-            if(n) { localStorage.setItem(`arch_${n}`, JSON.stringify(canvasNodes.map(n => n.id))); alert("Guardado."); }
+
+        function autoLayoutNodes() {
+            if (canvasNodes.length === 0) return;
+            renderCanvas();
+            setTimeout(drawConnections, 100);
+            addLog("SUCCESS", "Nodos reorganizados automáticamente");
         }
-        function loadArchitectureModal() {
-            const l = document.getElementById('load-list'); l.innerHTML = '';
-            Object.keys(localStorage).filter(k => k.startsWith('arch_')).forEach(k => {
-                const i = document.createElement('div');
-                i.className = "p-2 hover:bg-slate-800 rounded cursor-pointer text-sm text-slate-300 flex justify-between";
-                i.innerHTML = `<span>${k.replace('arch_','')}</span> <i class="fa-solid fa-chevron-right"></i>`;
-                i.onclick = () => { 
-                    try { canvasNodes = []; JSON.parse(localStorage.getItem(k)).forEach(id => { const t=tools.find(x=>x.id===id); if(t) canvasNodes.push(t); }); renderCanvas(); closeModal('load-modal'); } catch(e){} 
-                };
-                l.appendChild(i);
-            });
-            document.getElementById('load-modal').classList.remove('hidden');
-        }
-        function validateFlow() {
+
+        // Validación en tiempo real
+        function validateFlowRealtime() {
+            const panel = document.getElementById('validation-panel');
+            const messages = document.getElementById('validation-messages');
+            const statusEl = document.getElementById('flow-status');
+            if (!panel || !messages) return;
+
             const ids = canvasNodes.map(n => n.id);
-            const errs = [];
-            if (ids.includes('whisper') && !ids.includes('ffmpeg')) errs.push("⚠️ Whisper necesita FFmpeg.");
-            if (ids.includes('clip') && !ids.includes('pillow') && !ids.includes('opencv')) errs.push("⚠️ CLIP necesita Pillow/OpenCV.");
-            if (ids.length > 0 && !ids.some(id => ['chroma', 'sqlite'].includes(id))) errs.push("⚠️ Falta persistencia (DB).");
-            alert(errs.length > 0 ? "Aviso:\n" + errs.join('\n') : "✅ Flujo válido.");
+            const errors = [];
+            const warnings = [];
+            const tips = [];
+
+            // Validaciones
+            if (ids.includes('whisper') && !ids.includes('ffmpeg'))
+                warnings.push({ icon: 'fa-triangle-exclamation', color: 'yellow', msg: 'Whisper necesita FFmpeg para procesar audio' });
+            if (ids.includes('clip') && !ids.includes('pillow'))
+                warnings.push({ icon: 'fa-triangle-exclamation', color: 'yellow', msg: 'CLIP necesita Pillow para pre-procesar imágenes' });
+            if (ids.length > 0 && !ids.some(id => ['chroma', 'sqlite'].includes(id)))
+                tips.push({ icon: 'fa-lightbulb', color: 'blue', msg: 'Considera añadir persistencia (ChromaDB o SQLite)' });
+            if (ids.includes('fastapi') && !ids.includes('pydantic'))
+                tips.push({ icon: 'fa-lightbulb', color: 'blue', msg: 'FastAPI funciona mejor con Pydantic para validación' });
+            if (ids.length > 5)
+                tips.push({ icon: 'fa-info-circle', color: 'slate', msg: `Pipeline complejo: ${ids.length} componentes` });
+
+            const allMessages = [...errors, ...warnings, ...tips];
+
+            if (allMessages.length > 0) {
+                messages.innerHTML = allMessages.map(m => `
+                    <div class="flex items-start gap-2 p-2 bg-${m.color}-500/10 border border-${m.color}-500/30 rounded-lg">
+                        <i class="fa-solid ${m.icon} text-${m.color}-400 text-xs mt-0.5"></i>
+                        <span class="text-xs text-slate-300">${m.msg}</span>
+                    </div>
+                `).join('');
+                panel.classList.remove('hidden');
+
+                statusEl.innerHTML = errors.length > 0
+                    ? '<span class="px-3 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400 border border-red-500/30"><i class="fa-solid fa-times-circle mr-1"></i> Errores</span>'
+                    : warnings.length > 0
+                    ? '<span class="px-3 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"><i class="fa-solid fa-exclamation-circle mr-1"></i> Avisos</span>'
+                    : '<span class="px-3 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400 border border-green-500/30"><i class="fa-solid fa-check-circle mr-1"></i> OK</span>';
+                statusEl.classList.remove('hidden');
+            } else if (ids.length > 0) {
+                messages.innerHTML = '<div class="text-center py-4"><i class="fa-solid fa-check-circle text-green-400 text-2xl mb-2"></i><p class="text-xs text-slate-400">Pipeline válido</p></div>';
+                panel.classList.remove('hidden');
+                statusEl.innerHTML = '<span class="px-3 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400 border border-green-500/30"><i class="fa-solid fa-check-circle mr-1"></i> Válido</span>';
+                statusEl.classList.remove('hidden');
+            } else {
+                panel.classList.add('hidden');
+                statusEl.classList.add('hidden');
+            }
         }
-        function estimateComplexity() { alert(`Complejidad estimada: ${canvasNodes.length * 2} puntos.`); }
+
+        // Redibujar conexiones al hacer scroll
+        if (pipelineCanvas) {
+            pipelineCanvas.addEventListener('scroll', () => setTimeout(drawConnections, 10));
+            window.addEventListener('resize', () => setTimeout(drawConnections, 100));
+        }
+
+        // --- SCAFFOLD / CREAR PROYECTO ---
+        function generateScaffold() {
+            if (canvasNodes.length === 0) return alert("Añade herramientas al canvas primero");
+
+            // Generar nombre sugerido
+            const mainTool = canvasNodes[0]?.name.toLowerCase().replace(/\s+/g, '_') || 'proyecto';
+            document.getElementById('project-name').value = `${mainTool}_pipeline`;
+
+            // Generar preview de estructura
+            updateScaffoldPreview();
+            document.getElementById('scaffold-modal').classList.remove('hidden');
+        }
+
+        function updateScaffoldPreview() {
+            const name = document.getElementById('project-name').value || 'mi_proyecto';
+            const hasApi = canvasNodes.some(n => n.id === 'fastapi');
+            const hasDb = canvasNodes.some(n => ['sqlite', 'chroma'].includes(n.id));
+            const hasAi = canvasNodes.some(n => ['clip', 'whisper', 'ollama', 'claude'].includes(n.id));
+
+            let structure = `${name}/
+├── main.py
+├── requirements.txt
+├── .env.example
+├── .gitignore`;
+
+            if (hasApi) structure += `
+├── routers/
+│   └── api.py`;
+
+            structure += `
+├── services/`;
+
+            canvasNodes.forEach(n => {
+                if (!['fastapi', 'python', 'html', 'css'].includes(n.id)) {
+                    structure += `
+│   └── ${n.id}_service.py`;
+                }
+            });
+
+            if (hasDb) structure += `
+├── db/
+│   └── connection.py`;
+
+            if (hasAi) structure += `
+├── models/
+│   └── schemas.py`;
+
+            structure += `
+├── utils/
+│   └── logger.py
+└── tests/
+    └── test_main.py`;
+
+            document.getElementById('scaffold-preview').textContent = structure;
+        }
+
+        // Escuchar cambios en el nombre
+        document.getElementById('project-name')?.addEventListener('input', updateScaffoldPreview);
+
+        function copyScaffoldCommand() {
+            const name = document.getElementById('project-name').value || 'mi_proyecto';
+            const path = document.getElementById('project-path').value || '~/Desktop';
+            const withGit = document.getElementById('opt-git').checked;
+            const withVenv = document.getElementById('opt-venv').checked;
+
+            let cmd = `cd ${path} && mkdir -p ${name}/{routers,services,db,models,utils,tests} && cd ${name}`;
+            cmd += ` && touch main.py requirements.txt .env.example .gitignore`;
+            if (withVenv) cmd += ` && python3 -m venv venv`;
+            if (withGit) cmd += ` && git init`;
+            cmd += ` && echo "Proyecto creado!"`;
+
+            navigator.clipboard.writeText(cmd);
+            addLog("SUCCESS", "Comando copiado al portapapeles");
+            closeModal('scaffold-modal');
+        }
+
+        function downloadScaffoldScript() {
+            const name = document.getElementById('project-name').value || 'mi_proyecto';
+            const path = document.getElementById('project-path').value || '~/Desktop';
+            const withGit = document.getElementById('opt-git').checked;
+            const withVenv = document.getElementById('opt-venv').checked;
+            const withReadme = document.getElementById('opt-readme').checked;
+
+            // Generar requirements.txt basado en el stack
+            const deps = [];
+            canvasNodes.forEach(n => {
+                if (n.id === 'fastapi') deps.push('fastapi', 'uvicorn[standard]');
+                if (n.id === 'chroma') deps.push('chromadb');
+                if (n.id === 'sqlite') deps.push('aiosqlite');
+                if (n.id === 'clip') deps.push('transformers', 'torch', 'pillow');
+                if (n.id === 'whisper') deps.push('openai-whisper');
+                if (n.id === 'ollama') deps.push('ollama');
+                if (n.id === 'pydantic') deps.push('pydantic');
+                if (n.id === 'loguru') deps.push('loguru');
+                if (n.id === 'httpx') deps.push('httpx');
+                if (n.id === 'bs4') deps.push('beautifulsoup4', 'lxml');
+            });
+
+            let script = `#!/bin/bash
+# DirectOS Pipeline Scaffold - ${name}
+# Generado automáticamente
+
+set -e
+
+PROJECT_NAME="${name}"
+BASE_PATH="${path}"
+
+echo "🚀 Creando proyecto $PROJECT_NAME..."
+
+cd "$BASE_PATH"
+mkdir -p "$PROJECT_NAME"/{routers,services,db,models,utils,tests}
+cd "$PROJECT_NAME"
+
+# Archivos base
+touch main.py .env.example
+
+# requirements.txt
+cat > requirements.txt << 'EOF'
+${[...new Set(deps)].join('\n')}
+python-dotenv
+EOF
+
+# .gitignore
+cat > .gitignore << 'EOF'
+venv/
+__pycache__/
+*.pyc
+.env
+*.db
+.DS_Store
+EOF
+
+# main.py base
+cat > main.py << 'EOF'
+"""
+${name} - Pipeline generado con DirectOS
+Stack: ${canvasNodes.map(n => n.name).join(' → ')}
+"""
+from loguru import logger
+
+def main():
+    logger.info("Pipeline iniciado")
+    # TODO: Implementar lógica
+
+if __name__ == "__main__":
+    main()
+EOF
+`;
+
+            if (withReadme) {
+                script += `
+# README.md
+cat > README.md << 'EOF'
+# ${name}
+
+Pipeline generado con DirectOS v8.0
+
+## Stack
+${canvasNodes.map(n => `- **${n.name}**: ${n.tag}`).join('\n')}
+
+## Instalación
+\`\`\`bash
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+\`\`\`
+
+## Uso
+\`\`\`bash
+python main.py
+\`\`\`
+EOF
+`;
+            }
+
+            if (withVenv) script += `\n# Crear entorno virtual\npython3 -m venv venv\necho "✅ venv creado"`;
+            if (withGit) script += `\n# Inicializar git\ngit init\ngit add .\ngit commit -m "Initial commit - ${name} scaffold"\necho "✅ Git inicializado"`;
+
+            script += `\n\necho ""\necho "✅ Proyecto $PROJECT_NAME creado en $BASE_PATH"\necho "📁 cd $BASE_PATH/$PROJECT_NAME"\necho "🐍 source venv/bin/activate && pip install -r requirements.txt"`;
+
+            // Descargar como archivo .sh
+            const blob = new Blob([script], { type: 'text/x-shellscript' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `create_${name}.sh`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            addLog("SUCCESS", `Script create_${name}.sh descargado`);
+            closeModal('scaffold-modal');
+        }
 
         // --- PRESETS ---
         function initPresets() {
@@ -1224,11 +2126,179 @@
 
         // --- CORE UI ---
         function compileArchitecture() {
-            if(canvasNodes.length===0) return alert("Lienzo vacío");
+            if(canvasNodes.length===0) return alert("Añade herramientas al canvas primero");
+
+            // Generar código Python real basado en el stack
+            const ids = canvasNodes.map(n => n.id);
             const stack = [...new Set(canvasNodes.map(n => n.name))].join(", ");
-            const prompt = `**ROL:** Arquitecto Software.\n**OBJETIVO:** Pipeline datos.\n**FLUJO:**\n${canvasNodes.map((n, i) => `${i+1}. [${n.name}] (${n.tag})`).join('\n')}\n**STACK:** ${stack}\n**SALIDA:** Script Python modular.`;
-            document.getElementById('architect-prompt-output').textContent = prompt;
+
+            let imports = `"""
+Pipeline generado con DirectOS v8.0
+Stack: ${stack}
+"""
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+`;
+            let code = '';
+
+            // Añadir imports según el stack
+            if (ids.includes('loguru')) imports += `from loguru import logger\n`;
+            if (ids.includes('fastapi')) imports += `from fastapi import FastAPI, HTTPException, Depends\nfrom fastapi.middleware.cors import CORSMiddleware\n`;
+            if (ids.includes('pydantic')) imports += `from pydantic import BaseModel, Field\n`;
+            if (ids.includes('chroma')) imports += `import chromadb\nfrom chromadb.config import Settings\n`;
+            if (ids.includes('sqlite')) imports += `import sqlite3\nfrom contextlib import contextmanager\n`;
+            if (ids.includes('httpx')) imports += `import httpx\n`;
+            if (ids.includes('clip')) imports += `from transformers import CLIPProcessor, CLIPModel\nfrom PIL import Image\nimport torch\n`;
+            if (ids.includes('whisper')) imports += `import whisper\n`;
+            if (ids.includes('ollama')) imports += `import ollama\n`;
+
+            imports += `\nload_dotenv()\n\n`;
+
+            // Generar código según componentes
+            if (ids.includes('fastapi')) {
+                code += `# ============================================
+# FastAPI App
+# ============================================
+app = FastAPI(
+    title="Pipeline API",
+    description="Generado con DirectOS",
+    version="1.0.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+`;
+            }
+
+            if (ids.includes('chroma')) {
+                code += `# ============================================
+# ChromaDB Client
+# ============================================
+def get_chroma_client():
+    return chromadb.PersistentClient(path="./db/chroma")
+
+def get_collection(name: str = "default"):
+    client = get_chroma_client()
+    return client.get_or_create_collection(name)
+
+`;
+            }
+
+            if (ids.includes('sqlite')) {
+                code += `# ============================================
+# SQLite Connection
+# ============================================
+DB_PATH = Path("./db/data.db")
+
+@contextmanager
+def get_db():
+    DB_PATH.parent.mkdir(exist_ok=True)
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    try:
+        yield conn
+    finally:
+        conn.close()
+
+`;
+            }
+
+            if (ids.includes('clip')) {
+                code += `# ============================================
+# CLIP Model
+# ============================================
+DEVICE = "mps" if torch.backends.mps.is_available() else "cpu"
+clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(DEVICE)
+clip_processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+
+def get_image_embedding(image_path: str):
+    image = Image.open(image_path).convert("RGB")
+    inputs = clip_processor(images=image, return_tensors="pt").to(DEVICE)
+    with torch.no_grad():
+        embedding = clip_model.get_image_features(**inputs)
+    return embedding.cpu().numpy().flatten().tolist()
+
+`;
+            }
+
+            if (ids.includes('whisper')) {
+                code += `# ============================================
+# Whisper Model
+# ============================================
+whisper_model = whisper.load_model("base")
+
+def transcribe_audio(audio_path: str) -> str:
+    result = whisper_model.transcribe(audio_path)
+    return result["text"]
+
+`;
+            }
+
+            if (ids.includes('ollama')) {
+                code += `# ============================================
+# Ollama LLM
+# ============================================
+def query_llm(prompt: str, model: str = "llama3") -> str:
+    response = ollama.chat(model=model, messages=[
+        {"role": "user", "content": prompt}
+    ])
+    return response["message"]["content"]
+
+`;
+            }
+
+            // Añadir endpoints si hay FastAPI
+            if (ids.includes('fastapi')) {
+                code += `# ============================================
+# API Endpoints
+# ============================================
+@app.get("/health")
+async def health_check():
+    return {"status": "ok", "stack": "${stack}"}
+
+@app.get("/")
+async def root():
+    return {"message": "Pipeline API - DirectOS v8.0"}
+
+`;
+                if (ids.includes('chroma')) {
+                    code += `@app.post("/search")
+async def semantic_search(query: str, limit: int = 5):
+    collection = get_collection()
+    results = collection.query(query_texts=[query], n_results=limit)
+    return {"results": results}
+
+`;
+                }
+            }
+
+            // Main
+            code += `# ============================================
+# Main
+# ============================================
+if __name__ == "__main__":
+`;
+            if (ids.includes('fastapi')) {
+                code += `    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+`;
+            } else {
+                code += `    ${ids.includes('loguru') ? 'logger.info("Pipeline iniciado")' : 'print("Pipeline iniciado")'}
+    # TODO: Implementar lógica del pipeline
+    pass
+`;
+            }
+
+            const fullCode = imports + code;
+            document.getElementById('architect-prompt-output').textContent = fullCode;
             document.getElementById('architect-output-modal').classList.remove('hidden');
+            addLog("SUCCESS", "Código Python generado");
         }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
         function copyArchitectPrompt() { navigator.clipboard.writeText(document.getElementById('architect-prompt-output').textContent); }
@@ -1246,36 +2316,166 @@
             const headerTools = document.getElementById('header-tools');
             if(view === 'architect') headerTools.classList.remove('hidden'); else headerTools.classList.add('hidden');
             
-            document.getElementById('page-title').textContent = { 'architect': 'Arquitecto Pro', 'generator': 'Generador', 'grid': 'Glosario', 'flow': 'Flujos', 'monitor': 'Monitor' }[view];
+            document.getElementById('page-title').textContent = { 'architect': 'Pipeline Builder', 'generator': 'Generador', 'grid': 'Glosario', 'flow': 'Recetas', 'monitor': 'Monitor' }[view];
         }
 
         // Monitor & Generator
         let isOnline = false; const term = document.getElementById('terminal-window');
         function addLog(t,m){const time=new Date().toLocaleTimeString('es-ES',{hour12:false});let c="text-slate-300";if(t==="SUCCESS")c="text-green-400";if(t==="ERROR")c="text-red-400";term.innerHTML+=`<div class="terminal-line"><span class="text-slate-600">[${time}]</span> <span class="${c} font-bold w-16 inline-block">${t}</span> ${m}</div>`;term.scrollTop=term.scrollHeight;}
-        setTimeout(()=>{addLog("INFO","Conectado a DirectOS v7.0 - Knowledge Base Edition")},1000);
+        setTimeout(()=>{addLog("INFO","Conectado a DirectOS v8.0 - Pipeline Builder")},1000);
         
-        // Render Grid
-        const grid = document.getElementById('tools-grid');
-        tools.forEach(t => {
-            const card = document.createElement('div');
-            card.className = `bg-slate-900 border border-slate-800 border-l-4 ${catStyles[t.cat]} p-5 rounded-xl flex flex-col justify-between hover:border-slate-600 transition card-hover cursor-pointer`;
-            card.onclick = () => openToolModal(t.id);
-            card.innerHTML = `
-                <div>
-                    <div class="flex justify-between items-start mb-3">
-                        <i class="fa-solid ${t.icon} ${t.color} text-xl"></i>
-                        <span class="status-badge status-${t.status}">${statusLabels[t.status]}</span>
+        // ============================================
+        // GLOSARIO - FILTROS, BÚSQUEDA Y PERSISTENCIA
+        // ============================================
+
+        // Cargar estados desde localStorage
+        function loadToolStates() {
+            const saved = localStorage.getItem('directos_tool_states');
+            if (saved) {
+                const states = JSON.parse(saved);
+                tools.forEach(t => {
+                    if (states[t.id]) t.status = states[t.id];
+                });
+            }
+        }
+
+        // Guardar estados en localStorage
+        function saveToolStates() {
+            const states = {};
+            tools.forEach(t => states[t.id] = t.status);
+            localStorage.setItem('directos_tool_states', JSON.stringify(states));
+        }
+
+        // Cambiar estado de herramienta
+        function changeToolStatus(toolId, newStatus) {
+            const tool = tools.find(t => t.id === toolId);
+            if (tool) {
+                tool.status = newStatus;
+                saveToolStates();
+                renderToolsGrid();
+                updateProgress();
+                // Actualizar modal si está abierto
+                if (currentTool && currentTool.id === toolId) {
+                    currentTool.status = newStatus;
+                    const statusEl = document.getElementById('tool-modal-status');
+                    statusEl.textContent = statusLabels[newStatus];
+                    statusEl.className = `status-badge status-${newStatus}`;
+                }
+                addLog("SUCCESS", `"${tool.name}" marcada como ${statusLabels[newStatus]}`);
+            }
+        }
+
+        // Filtrar herramientas
+        function filterTools() {
+            renderToolsGrid();
+        }
+
+        // Filtro rápido por estado
+        function setStatusFilter(status) {
+            document.getElementById('filter-status').value = status;
+            // Actualizar botones activos
+            document.querySelectorAll('.status-filter-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white', 'border-blue-500');
+                btn.classList.add('bg-slate-800', 'text-slate-300', 'border-slate-700');
+            });
+            const activeBtn = document.querySelector(`.status-filter-btn[data-status="${status}"]`);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-slate-800', 'text-slate-300', 'border-slate-700');
+                activeBtn.classList.add('bg-blue-600', 'text-white', 'border-blue-500');
+            }
+            filterTools();
+        }
+
+        // Renderizar grid con filtros
+        function renderToolsGrid() {
+            const grid = document.getElementById('tools-grid');
+            const noResults = document.getElementById('no-results');
+            if (!grid) return;
+
+            const searchTerm = (document.getElementById('tools-search')?.value || '').toLowerCase();
+            const categoryFilter = document.getElementById('filter-category')?.value || 'all';
+            const statusFilter = document.getElementById('filter-status')?.value || 'all';
+
+            grid.innerHTML = '';
+
+            const filteredTools = tools.filter(t => {
+                const matchSearch = t.name.toLowerCase().includes(searchTerm) ||
+                                   t.desc.toLowerCase().includes(searchTerm) ||
+                                   t.tag.toLowerCase().includes(searchTerm);
+                const matchCategory = categoryFilter === 'all' || t.cat === categoryFilter;
+                const matchStatus = statusFilter === 'all' || t.status === statusFilter;
+                return matchSearch && matchCategory && matchStatus;
+            });
+
+            if (filteredTools.length === 0) {
+                noResults?.classList.remove('hidden');
+            } else {
+                noResults?.classList.add('hidden');
+            }
+
+            filteredTools.forEach(t => {
+                const card = document.createElement('div');
+                card.className = `bg-slate-900 border border-slate-800 border-l-4 ${catStyles[t.cat]} p-5 rounded-xl flex flex-col justify-between hover:border-slate-600 transition card-hover cursor-pointer`;
+                card.onclick = () => openToolModal(t.id);
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-3">
+                            <i class="fa-solid ${t.icon} ${t.color} text-xl"></i>
+                            <span class="status-badge status-${t.status}">${statusLabels[t.status]}</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-1">${t.name}</h3>
+                        <span class="text-[10px] bg-slate-950 px-2 py-0.5 rounded text-slate-500 uppercase tracking-wider">${t.tag}</span>
+                        <p class="text-sm text-slate-400 mt-3 leading-relaxed">${t.desc}</p>
                     </div>
-                    <h3 class="text-lg font-bold text-white mb-1">${t.name}</h3>
-                    <span class="text-[10px] bg-slate-950 px-2 py-0.5 rounded text-slate-500 uppercase tracking-wider">${t.tag}</span>
-                    <p class="text-sm text-slate-400 mt-3 leading-relaxed">${t.desc}</p>
-                </div>
-                <div class="mt-4 pt-3 border-t border-slate-800 flex flex-wrap gap-1">
-                    ${t.cases.slice(0, 2).map(c => `<span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded">${c}</span>`).join('')}
-                    ${t.cases.length > 2 ? `<span class="text-[10px] text-slate-600">+${t.cases.length - 2}</span>` : ''}
-                </div>`;
-            grid.appendChild(card);
-        });
+                    <div class="mt-4 pt-3 border-t border-slate-800 flex flex-wrap gap-1">
+                        ${t.cases.slice(0, 2).map(c => `<span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded">${c}</span>`).join('')}
+                        ${t.cases.length > 2 ? `<span class="text-[10px] text-slate-600">+${t.cases.length - 2}</span>` : ''}
+                    </div>`;
+                grid.appendChild(card);
+            });
+
+            updateCounts();
+        }
+
+        // Actualizar contadores
+        function updateCounts() {
+            const counts = { all: tools.length, used: 0, learning: 0, new: 0 };
+            tools.forEach(t => counts[t.status]++);
+
+            document.getElementById('count-all').textContent = counts.all;
+            document.getElementById('count-used').textContent = counts.used;
+            document.getElementById('count-learning').textContent = counts.learning;
+            document.getElementById('count-new').textContent = counts.new;
+        }
+
+        // Actualizar progreso
+        function updateProgress() {
+            const total = tools.length;
+            const dominated = tools.filter(t => t.status === 'used').length;
+            const percent = Math.round((dominated / total) * 100);
+
+            document.getElementById('progress-count').textContent = dominated;
+            document.getElementById('progress-total').textContent = total;
+            document.getElementById('progress-percent').textContent = `${percent}%`;
+
+            // Actualizar círculo SVG (circunferencia = 2 * PI * 24 = 150.8)
+            const circle = document.getElementById('progress-circle');
+            if (circle) {
+                const offset = 150.8 - (150.8 * percent / 100);
+                circle.style.strokeDashoffset = offset;
+            }
+        }
+
+        // Inicializar Glosario
+        function initGlosario() {
+            loadToolStates();
+            renderToolsGrid();
+            updateProgress();
+            setStatusFilter('all');
+        }
+
+        // Render inicial (se llamará desde init)
+        initGlosario();
 
         // Render Stack Selector
         const stackContainer = document.getElementById('stack-selector');
@@ -1325,9 +2525,188 @@
         function loadProjectPreset() { const v=document.getElementById('project-select').value; canvasNodes=[]; if(v==='videomine')['fastapi','ffmpeg','whisper','clip','chroma'].forEach(id=>addNodeToCanvas(id)); else if(v==='docmine')['fastapi','python','clip','chroma','sqlite'].forEach(id=>addNodeToCanvas(id)); renderCanvas(); }
 
         setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); }, 1000);
-        initPresets(); // Cargar patrones de arquitectura
-        initPatternsAccordion(); // Cargar biblioteca de patrones
-        switchView('architect'); renderCanvas();
+
+        // ============================================
+        // FLUJOS TÁCTICOS - FUNCIONES
+        // ============================================
+        let currentFlow = null;
+        let currentFlowFilter = 'all';
+
+        function initFlowsGallery() {
+            renderFlowsGrid('all');
+        }
+
+        function renderFlowsGrid(filter) {
+            currentFlowFilter = filter;
+            const grid = document.getElementById('flows-grid');
+            if (!grid) return;
+
+            grid.innerHTML = '';
+
+            // Filtrar flujos
+            const flowEntries = Object.entries(FLOWS_DATA).filter(([key, flow]) => {
+                return filter === 'all' || flow.category === filter;
+            });
+
+            // Renderizar tarjetas
+            flowEntries.forEach(([flowId, flow]) => {
+                const cat = FLOW_CATEGORIES[flow.category];
+                const complexity = COMPLEXITY_LABELS[flow.complexity];
+                const cost = COST_LABELS[flow.cost];
+
+                const card = document.createElement('div');
+                card.className = `flow-card bg-slate-900 border border-slate-800 rounded-xl overflow-hidden hover:border-slate-600 transition-all duration-300 cursor-pointer group hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1`;
+                card.setAttribute('data-category', flow.category);
+                card.onclick = () => openFlowModal(flowId);
+
+                card.innerHTML = `
+                    <!-- Header con emoji y badges -->
+                    <div class="p-4 border-b border-slate-800 ${cat.bg}">
+                        <div class="flex items-start justify-between">
+                            <span class="text-3xl">${flow.emoji}</span>
+                            <div class="flex flex-col gap-1 items-end">
+                                <span class="text-[10px] px-2 py-0.5 rounded border ${complexity.class}">${complexity.icon} ${complexity.label}</span>
+                                <span class="text-[10px] px-2 py-0.5 rounded border ${cost.class}">${cost.icon} ${cost.label}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="p-4">
+                        <h3 class="text-lg font-bold text-white mb-2 group-hover:text-blue-400 transition">${flow.title}</h3>
+                        <p class="text-sm text-slate-400 mb-4 line-clamp-2">${flow.desc}</p>
+
+                        <!-- Stack visual -->
+                        <div class="flex flex-wrap gap-1 mb-4">
+                            ${flow.stack.slice(0, 4).map(toolId => {
+                                const tool = tools.find(t => t.id === toolId);
+                                if (!tool) return '';
+                                return `<span class="inline-flex items-center gap-1 bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded text-[10px]">
+                                    <i class="fa-solid ${tool.icon} ${tool.color}"></i>
+                                </span>`;
+                            }).join('')}
+                            ${flow.stack.length > 4 ? `<span class="text-[10px] text-slate-500 px-1">+${flow.stack.length - 4}</span>` : ''}
+                        </div>
+
+                        <!-- Categoría -->
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid ${cat.icon} ${cat.color} text-xs"></i>
+                            <span class="text-[10px] text-slate-500 uppercase tracking-wider">${cat.name}</span>
+                        </div>
+                    </div>
+
+                    <!-- Footer con acción rápida -->
+                    <div class="px-4 pb-4">
+                        <button onclick="event.stopPropagation(); quickCloneFlow('${flowId}')" class="w-full bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white text-xs py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 border border-slate-700 hover:border-blue-500">
+                            <i class="fa-solid fa-clone"></i> Clonar al Arquitecto
+                        </button>
+                    </div>
+                `;
+
+                grid.appendChild(card);
+            });
+        }
+
+        function filterFlows(category) {
+            // Actualizar botones
+            document.querySelectorAll('.flow-filter-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white');
+                btn.classList.add('bg-slate-800', 'text-slate-300', 'border', 'border-slate-700');
+            });
+
+            const activeBtn = document.getElementById(`flow-filter-${category}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-slate-800', 'text-slate-300', 'border', 'border-slate-700');
+                activeBtn.classList.add('bg-blue-600', 'text-white');
+            }
+
+            renderFlowsGrid(category);
+        }
+
+        function openFlowModal(flowId) {
+            const flow = FLOWS_DATA[flowId];
+            if (!flow) return;
+
+            currentFlow = { id: flowId, ...flow };
+
+            const cat = FLOW_CATEGORIES[flow.category];
+            const complexity = COMPLEXITY_LABELS[flow.complexity];
+            const cost = COST_LABELS[flow.cost];
+
+            // Rellenar datos
+            document.getElementById('flow-modal-emoji').textContent = flow.emoji;
+            document.getElementById('flow-modal-title').textContent = flow.title;
+            document.getElementById('flow-modal-desc').textContent = flow.desc;
+            document.getElementById('flow-modal-usecase').textContent = flow.useCase;
+            document.getElementById('flow-modal-flowdesc').textContent = flow.flowDesc;
+            document.getElementById('flow-modal-prompt').textContent = flow.prompt;
+
+            // Badges
+            const catEl = document.getElementById('flow-modal-category');
+            catEl.textContent = cat.name;
+            catEl.className = `text-xs px-2 py-0.5 rounded border ${cat.bg} ${cat.border} ${cat.color}`;
+
+            const complexEl = document.getElementById('flow-modal-complexity');
+            complexEl.textContent = `${complexity.icon} ${complexity.label}`;
+            complexEl.className = `text-xs px-2 py-0.5 rounded border ${complexity.class}`;
+
+            const costEl = document.getElementById('flow-modal-cost');
+            costEl.textContent = `${cost.icon} ${cost.label}`;
+            costEl.className = `text-xs px-2 py-0.5 rounded border ${cost.class}`;
+
+            // Stack visual
+            const stackContainer = document.getElementById('flow-modal-stack');
+            stackContainer.innerHTML = flow.stack.map(toolId => {
+                const tool = tools.find(t => t.id === toolId);
+                if (!tool) return '';
+                return `<span class="inline-flex items-center gap-1.5 bg-slate-800 border border-slate-700 px-2 py-1 rounded text-xs">
+                    <i class="fa-solid ${tool.icon} ${tool.color}"></i>
+                    <span class="text-slate-300">${tool.name}</span>
+                </span>`;
+            }).join('<span class="text-slate-600 mx-1">→</span>');
+
+            document.getElementById('flow-detail-modal').classList.remove('hidden');
+        }
+
+        function cloneFlowToArchitect() {
+            if (!currentFlow) return;
+
+            // Limpiar canvas y cargar herramientas del flujo
+            canvasNodes = [];
+            currentFlow.stack.forEach(toolId => {
+                const tool = tools.find(t => t.id === toolId);
+                if (tool) canvasNodes.push(tool);
+            });
+            renderCanvas();
+
+            closeModal('flow-detail-modal');
+            switchView('architect');
+
+            // Notificación
+            addLog("SUCCESS", `Flujo "${currentFlow.title}" clonado al Arquitecto`);
+        }
+
+        function quickCloneFlow(flowId) {
+            const flow = FLOWS_DATA[flowId];
+            if (!flow) return;
+
+            // Limpiar canvas y cargar herramientas
+            canvasNodes = [];
+            flow.stack.forEach(toolId => {
+                const tool = tools.find(t => t.id === toolId);
+                if (tool) canvasNodes.push(tool);
+            });
+            renderCanvas();
+
+            switchView('architect');
+            addLog("SUCCESS", `Flujo "${flow.title}" clonado al Arquitecto`);
+        }
+
+        function copyFlowPrompt() {
+            if (!currentFlow) return;
+            navigator.clipboard.writeText(currentFlow.prompt);
+            addLog("SUCCESS", `Prompt de "${currentFlow.title}" copiado al portapapeles`);
+        }
 
         // ============================================
         // BIBLIOTECA DE PATRONES - FUNCIONES
@@ -1620,6 +2999,15 @@
         // Check health on load
         setTimeout(checkHealth, 1500);
         setInterval(checkHealth, 30000); // cada 30s
+
+        // ============================================
+        // INICIALIZACIÓN
+        // ============================================
+        initPresets();
+        initPatternsAccordion();
+        initFlowsGallery();
+        switchView('architect');
+        renderCanvas();
     </script>
 </body>
 </html>
