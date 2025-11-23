@@ -1,0 +1,17 @@
+# DirectOS Backend v6.0
+# =====================
+
+# API Server
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# Knowledge Base (RAG)
+sentence-transformers==2.2.2
+chromadb==0.4.18
+
+# Scout (Claude API)
+anthropic==0.7.8
+
+# Utilities
+python-dotenv==1.0.0
+loguru==0.7.2

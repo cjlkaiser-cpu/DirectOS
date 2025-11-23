@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🛠️ Director's Dashboard v5.3</title>
+    <title>🛠️ DirectOS v6.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -57,7 +57,7 @@
                 <i class="fa-solid fa-layer-group text-blue-500"></i>
                 Director<span class="text-slate-500">OS</span>
             </h1>
-            <p class="text-xs text-slate-500 mt-1">v5.3 - Polished</p>
+            <p class="text-xs text-slate-500 mt-1">v6.0 - RAG + Scout</p>
         </div>
         
         <nav class="flex-1 overflow-y-auto p-4 space-y-2">
@@ -147,6 +147,7 @@
         <div id="view-monitor" class="hidden flex-1 overflow-y-auto p-8 bg-slate-950 relative">
             <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="lg:col-span-1 space-y-6">
+                    <!-- Health Check -->
                     <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 relative overflow-hidden group">
                         <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition"><i class="fa-solid fa-heart-pulse text-6xl text-blue-500"></i></div>
                         <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Salud Backend</h3>
@@ -154,10 +155,23 @@
                         <p id="health-msg" class="text-xs text-slate-500">Conectando...</p>
                         <div class="mt-4 h-1 w-full bg-slate-800 rounded-full overflow-hidden"><div id="health-bar" class="h-full bg-blue-500 w-0 transition-all duration-500"></div></div>
                     </div>
+                    <!-- Scout Panel -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+                        <div class="flex items-center gap-2 mb-4">
+                            <i class="fa-solid fa-robot text-purple-400"></i>
+                            <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest">Scout</h3>
+                            <span class="text-[10px] bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">IA</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mb-3">Pega un error y Scout te sugerirá la solución</p>
+                        <textarea id="scout-input" rows="4" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-xs font-mono text-slate-300 placeholder-slate-600" placeholder="TypeError: 'NoneType' object..."></textarea>
+                        <button onclick="analyzeWithScout()" id="scout-btn" class="mt-3 w-full bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold py-2 rounded-lg transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-magnifying-glass-chart"></i> Analizar Error
+                        </button>
+                    </div>
                 </div>
                 <div class="lg:col-span-2 flex flex-col h-[600px]">
                     <div class="bg-slate-950 border border-slate-800 rounded-t-xl p-3 flex justify-between items-center bg-slate-900/50">
-                        <div class="flex gap-2"><div class="w-3 h-3 rounded-full bg-red-500/20"></div><div class="w-3 h-3 rounded-full bg-yellow-500/20"></div><div class="w-3 h-3 rounded-full bg-green-500/20"></div></div><span class="text-xs font-mono text-slate-500">minerOSd.log</span>
+                        <div class="flex gap-2"><div id="term-dot" class="w-3 h-3 rounded-full bg-red-500/20"></div><div class="w-3 h-3 rounded-full bg-yellow-500/20"></div><div class="w-3 h-3 rounded-full bg-green-500/20"></div></div><span class="text-xs font-mono text-slate-500">directos.log</span>
                     </div>
                     <div id="terminal-window" class="flex-1 bg-black/80 border-x border-b border-slate-800 rounded-b-xl p-4 font-mono text-xs overflow-y-auto space-y-1 shadow-inner"></div>
                 </div>
@@ -263,8 +277,30 @@
             </div>
         </div>
 
-        <!-- VISTA 4: GLOSARIO -->
+        <!-- VISTA 4: GLOSARIO + KNOWLEDGE BASE -->
         <div id="view-grid" class="hidden flex-1 overflow-y-auto p-6">
+            <!-- Barra de búsqueda semántica -->
+            <div class="max-w-2xl mx-auto mb-8">
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                    <div class="flex items-center gap-3 mb-3">
+                        <i class="fa-solid fa-brain text-blue-400"></i>
+                        <h3 class="text-sm font-bold text-white">Knowledge Base</h3>
+                        <span class="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">RAG</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" id="kb-search" class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-sm text-slate-300 placeholder-slate-600" placeholder="Buscar en tus notas... (ej: ¿cómo funciona RAG?)">
+                        <button onclick="searchKnowledgeBase()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                            <i class="fa-solid fa-search"></i> Buscar
+                        </button>
+                        <button onclick="indexKnowledgeBase()" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg text-sm transition" title="Indexar archivos">
+                            <i class="fa-solid fa-rotate"></i>
+                        </button>
+                    </div>
+                    <!-- Resultados de búsqueda -->
+                    <div id="kb-results" class="hidden mt-4 space-y-3"></div>
+                </div>
+            </div>
+            <!-- Grid de herramientas -->
             <div id="tools-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"></div>
         </div>
     </main>
@@ -471,6 +507,129 @@
 
         setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); }, 1000);
         switchView('architect'); renderCanvas();
+
+        // ============================================
+        // 6. BACKEND API CONNECTION
+        // ============================================
+        const API_URL = 'http://localhost:8000';
+
+        // Health Check
+        async function checkHealth() {
+            try {
+                const start = Date.now();
+                const res = await fetch(`${API_URL}/api/health`);
+                const latency = Date.now() - start;
+                const data = await res.json();
+
+                document.getElementById('health-metric').textContent = latency;
+                document.getElementById('health-msg').textContent = `Online - v${data.version}`;
+                document.getElementById('health-bar').style.width = Math.min(100, 100 - latency/5) + '%';
+                document.getElementById('term-dot').classList.add('bg-green-500');
+                document.getElementById('term-dot').classList.remove('bg-red-500/20');
+                addLog("SUCCESS", `Backend conectado (${latency}ms)`);
+
+                // Mostrar estado de módulos
+                if (data.modules) {
+                    addLog("INFO", `Knowledge: ${data.modules.knowledge ? '✓' : '✗'} | Scout: ${data.modules.scout ? '✓' : '✗'}`);
+                }
+            } catch (e) {
+                document.getElementById('health-metric').textContent = '--';
+                document.getElementById('health-msg').textContent = 'Backend offline';
+                document.getElementById('health-bar').style.width = '0%';
+                addLog("ERROR", "No se pudo conectar al backend. Ejecuta: ./start.sh");
+            }
+        }
+
+        // Knowledge Base - Búsqueda Semántica
+        async function searchKnowledgeBase() {
+            const query = document.getElementById('kb-search').value.trim();
+            if (!query) return;
+
+            const resultsDiv = document.getElementById('kb-results');
+            resultsDiv.innerHTML = '<p class="text-slate-500 text-sm">Buscando...</p>';
+            resultsDiv.classList.remove('hidden');
+
+            try {
+                const res = await fetch(`${API_URL}/api/search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query, limit: 5 })
+                });
+                const results = await res.json();
+
+                if (results.length === 0) {
+                    resultsDiv.innerHTML = '<p class="text-slate-500 text-sm">No se encontraron resultados. ¿Has indexado tus archivos?</p>';
+                    return;
+                }
+
+                resultsDiv.innerHTML = results.map(r => `
+                    <div class="bg-slate-950 border border-slate-800 rounded-lg p-3">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-[10px] text-slate-500 font-mono">${r.source.split('/').pop()}</span>
+                            <span class="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded">${Math.round(r.score * 100)}% match</span>
+                        </div>
+                        <p class="text-sm text-slate-300 leading-relaxed">${r.text.substring(0, 300)}${r.text.length > 300 ? '...' : ''}</p>
+                    </div>
+                `).join('');
+                addLog("SUCCESS", `Búsqueda: "${query}" → ${results.length} resultados`);
+            } catch (e) {
+                resultsDiv.innerHTML = '<p class="text-red-400 text-sm">Error: Backend no disponible</p>';
+                addLog("ERROR", "Knowledge Base no disponible");
+            }
+        }
+
+        // Knowledge Base - Indexar
+        async function indexKnowledgeBase() {
+            addLog("INFO", "Indexando archivos markdown del Desktop...");
+            try {
+                const res = await fetch(`${API_URL}/api/index`, { method: 'POST' });
+                const data = await res.json();
+                addLog("SUCCESS", `Indexados ${data.indexed} chunks de ${data.path}`);
+                alert(`Indexación completada: ${data.indexed} fragmentos`);
+            } catch (e) {
+                addLog("ERROR", "Error al indexar");
+            }
+        }
+
+        // Scout - Analizar Error
+        async function analyzeWithScout() {
+            const errorText = document.getElementById('scout-input').value.trim();
+            if (!errorText) return alert("Pega un error para analizar");
+
+            const btn = document.getElementById('scout-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Analizando...';
+            addLog("INFO", "Scout analizando error...");
+
+            try {
+                const res = await fetch(`${API_URL}/api/scout/analyze`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ error_text: errorText, context: "DirectOS / minerOS stack" })
+                });
+                const data = await res.json();
+
+                // Mostrar resultado en terminal
+                addLog("SUCCESS", "Scout encontró una solución:");
+                term.innerHTML += `<div class="terminal-line mt-2 p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg"><pre class="text-purple-300 whitespace-pre-wrap">${data.analysis}</pre></div>`;
+                term.scrollTop = term.scrollHeight;
+
+            } catch (e) {
+                addLog("ERROR", "Scout no disponible. ¿Configuraste ANTHROPIC_API_KEY?");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-magnifying-glass-chart"></i> Analizar Error';
+            }
+        }
+
+        // Enter para buscar
+        document.getElementById('kb-search')?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') searchKnowledgeBase();
+        });
+
+        // Check health on load
+        setTimeout(checkHealth, 1500);
+        setInterval(checkHealth, 30000); // cada 30s
     </script>
 </body>
 </html>

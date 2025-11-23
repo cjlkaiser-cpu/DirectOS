@@ -1,10 +1,19 @@
-# DirectOS v5.3
+# DirectOS v6.0
 
-> Arquitecto visual de pipelines para el ecosistema minerOS
+> Arquitecto visual de pipelines + Knowledge Base + Scout para el ecosistema minerOS
 
 ## Qué es
 
-DirectOS es una herramienta web de archivo único que permite diseñar arquitecturas de software visualmente, validar dependencias entre herramientas, y generar prompts estructurados para Claude Code.
+DirectOS es tu centro de operaciones para diseñar arquitecturas visualmente, buscar en tu knowledge base con IA, y analizar errores automáticamente. Evolución de una herramienta de un archivo a una aplicación con backend.
+
+## Novedades v6.0
+
+| Feature | Descripción |
+|---------|-------------|
+| **Knowledge Base (RAG)** | Búsqueda semántica en tus notas markdown |
+| **Scout** | Analiza errores y sugiere soluciones con Claude |
+| **Backend FastAPI** | API para embeddings y análisis |
+| **Health Monitor** | Estado del sistema en tiempo real |
 
 ## El problema que resuelve
 
@@ -13,8 +22,8 @@ ANTES                          DESPUÉS
 ──────                         ───────
 Planificas en tu cabeza   →    Planificas visualmente
 Escribes prompt desde 0   →    Generas desde diagrama
-Olvidas dependencias      →    Sistema valida (Whisper→FFmpeg)
-Claude Code sin contexto  →    Recibe arquitectura completa
+Buscas en archivos        →    Búsqueda semántica con IA
+Copias errores a Claude   →    Scout analiza automáticamente
 ```
 
 ## Posición en el Workflow minerOS
@@ -29,89 +38,119 @@ Claude Code sin contexto  →    Recibe arquitectura completa
 7. DOCUMENTAR  → Knowledge base
 ```
 
+## Inicio rápido
+
+```bash
+# 1. Configurar API key (opcional, para Scout)
+cp .env.example .env
+# Editar .env y añadir ANTHROPIC_API_KEY
+
+# 2. Arrancar
+./start.sh
+
+# 3. Abrir
+# → Frontend: http://localhost:8000
+# → API Docs: http://localhost:8000/docs
+```
+
 ## Funcionalidades
 
 ### Arquitecto Pro
 - Drag & drop de herramientas al canvas
 - Validación de dependencias (ej: "Whisper necesita FFmpeg")
-- Estimación de complejidad
 - Compilar a prompt estructurado
-- Guardar/cargar arquitecturas (localStorage)
+- Guardar/cargar arquitecturas
 - Exportar diagrama a PNG
 
+### Knowledge Base (RAG) 🆕
+- Indexa automáticamente tus archivos `.md` del Desktop
+- Búsqueda semántica: "¿cómo funciona RAG?"
+- Usa embeddings (sentence-transformers) + ChromaDB
+- Tu propio "Perplexity" local
+
+### Scout 🆕
+- Pega un error en el Monitor
+- Scout lo analiza con Claude API
+- Sugiere la solución directamente
+- Contexto de tu stack (minerOS)
+
+### Monitor Sistema
+- Health check del backend en tiempo real
+- Logs del sistema
+- Estado de módulos (Knowledge ✓ / Scout ✓)
+
 ### Flujos Tácticos
-- Diagrama interactivo del pipeline multimedia
+- Diagrama interactivo del pipeline
 - Click en nodos para ver detalles y código
-- Saltar directamente al Generador con contexto
+- Saltar al Generador con contexto
 
 ### Generador de Prompts
-- Seleccionar rol (Arquitecto, Ingeniero IA, etc.)
-- Definir objetivo
+- Seleccionar rol y objetivo
 - Seleccionar stack
-- Generar prompt formateado para LLMs
+- Generar prompt formateado
 
 ### Glosario
 - Catálogo de herramientas con tips
-- Categorizado: Frontend, Backend, IA, Storage, Process
+- Integrado con Knowledge Base
 
-## Stack técnico
-
-- HTML5 único archivo (~475 líneas)
-- Tailwind CSS (CDN)
-- JavaScript vanilla
-- html2canvas (exportación PNG)
-- Font Awesome (iconos)
-- localStorage (persistencia)
-
-## Uso
-
-```bash
-# Opción 1: Abrir directamente
-open index.html
-
-# Opción 2: Servidor local (para desarrollo)
-python3 -m http.server 8080
-# Abrir http://localhost:8080
-```
-
-## Estructura
+## Arquitectura
 
 ```
 DirectOS/
-├── index.html      ← aplicación principal
-├── README.md       ← este archivo
-└── versions/       ← histórico de versiones
-    ├── v1-directoOs.html
-    ├── v2-director.html
-    ├── v4.2-director.html
-    ├── v4.4-DirecOS.html
-    ├── v5.3-DirectOS.html
-    └── proto-*.html (prototipos)
+├── frontend/
+│   └── index.html          ← UI (Tailwind + JS)
+├── backend/
+│   ├── main.py             ← FastAPI server
+│   ├── modules/
+│   │   ├── knowledge.py    ← RAG: embeddings + ChromaDB
+│   │   └── scout.py        ← Análisis con Claude
+│   └── requirements.txt
+├── data/
+│   ├── vectors/            ← ChromaDB persistence
+│   └── logs/               ← Logs del sistema
+├── versions/               ← Histórico de versiones
+├── start.sh                ← Script de arranque
+├── .env.example            ← Variables de entorno
+└── README.md
 ```
 
-## Herramientas incluidas
+## Stack técnico
 
-| Herramienta | Categoría | Tag |
-|-------------|-----------|-----|
-| HTML5 | Frontend | Estructura |
-| Tailwind | Frontend | Estilos |
-| HTMX | Frontend | Interactividad |
-| FastAPI | Backend | API Server |
-| Python | Backend | Lenguaje Core |
-| Loguru | Backend | Logging |
-| OpenCV | Process | Visión Artificial |
-| FFmpeg | Process | Motor Multimedia |
-| CLIP | IA Model | Embeddings |
-| Whisper | IA Model | Speech-to-Text |
-| ChromaDB | Storage | Vector DB |
-| SQLite | Storage | Relacional |
+### Frontend
+- HTML5 + Tailwind CSS (CDN)
+- JavaScript vanilla
+- html2canvas (exportación PNG)
+- Font Awesome (iconos)
+
+### Backend
+- FastAPI + Uvicorn
+- sentence-transformers (all-MiniLM-L6-v2)
+- ChromaDB (vector database)
+- Anthropic SDK (Claude API)
+- Loguru (logging)
+
+## API Endpoints
+
+| Endpoint | Método | Descripción |
+|----------|--------|-------------|
+| `/api/health` | GET | Estado del sistema |
+| `/api/search` | POST | Búsqueda semántica |
+| `/api/index` | POST | Indexar archivos markdown |
+| `/api/stats` | GET | Estadísticas de la KB |
+| `/api/scout/analyze` | POST | Analizar error con Claude |
+
+## Requisitos
+
+- Python 3.11+
+- ~2GB RAM (para embeddings)
+- ANTHROPIC_API_KEY (opcional, para Scout)
 
 ## Filosofía
 
-- **KISS**: Un archivo, sin dependencias de build
-- **Local-first**: Todo en el navegador
-- **Modular**: Fácil de extender
 - **minerOS style**: Herramienta que aporta valor real
+- **Local-first**: Tu data en tu máquina
+- **Incremental**: Funciona sin backend (modo básico)
+- **KISS**: Simple, debuggeable, modular
 
 ---
 
