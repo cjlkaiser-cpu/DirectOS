@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛠️ Director's Dashboard v4.1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* UI Utilities */
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+        .flow-line { background: linear-gradient(90deg, #334155 0%, #3b82f6 50%, #334155 100%); background-size: 200% 100%; animation: flowAnimation 2s infinite linear; }
+        @keyframes flowAnimation { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        .tool-checkbox:checked + div { border-color: #3b82f6; background-color: rgba(59, 130, 246, 0.1); }
+        .tool-checkbox:checked + div .check-icon { opacity: 1; }
+
+        /* ARQUITECTO VISUAL STYLES */
+        .draggable-tool { cursor: grab; user-select: none; }
+        .draggable-tool:active { cursor: grabbing; }
+        
+        .canvas-slot {
+            transition: all 0.2s;
+            border: 2px dashed #334155;
+        }
+        .canvas-slot.drag-over {
+            border-color: #3b82f6;
+            background-color: rgba(59, 130, 246, 0.1);
+            transform: scale(1.02);
+        }
+        
+        /* Flecha de conexión entre nodos */
+        .flow-arrow::after {
+            content: '⬇';
+            display: block;
+            text-align: center;
+            color: #64748b;
+            font-size: 1.2rem;
+            margin: 0.5rem 0;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-5px);}
+            60% {transform: translateY(-3px);}
+        }
+        /* Ocultar flecha en el último elemento */
+        .flow-node:last-child .flow-arrow::after { display: none; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200 h-screen flex overflow-hidden selection:bg-blue-500 selection:text-white">
+
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-slate-900 border-r border-slate-800 flex-shrink-0 flex flex-col transition-all duration-300">
+        <div class="p-6 border-b border-slate-800">
+            <h1 class="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                <i class="fa-solid fa-layer-group text-blue-500"></i>
+                Director<span class="text-slate-500">OS</span>
+            </h1>
+            <p class="text-xs text-slate-500 mt-1">v4.1 - Architect Edition</p>
+        </div>
+        
+        <nav class="flex-1 overflow-y-auto p-4 space-y-2">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 pl-2">Modos</p>
+            
+            <button onclick="switchView('architect')" id="btn-architect" class="w-full text-left px-3 py-2.5 rounded-lg text-sm transition font-medium flex items-center gap-3 bg-blue-600 text-white shadow-lg shadow-blue-900/20">
+                <i class="fa-solid fa-pen-ruler"></i> Arquitecto Visual
+            </button>
+
+            <button onclick="switchView('flow')" id="btn-flow" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3">
+                <i class="fa-solid fa-diagram-project"></i> Flujos Tácticos
+            </button>
+
+            <button onclick="switchView('generator')" id="btn-generator" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Generador Prompts
+            </button>
+
+            <button onclick="switchView('grid')" id="btn-grid" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3">
+                <i class="fa-solid fa-boxes-stacked"></i> Glosario
+            </button>
+        </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col min-w-0 relative bg-slate-950">
+        
+        <!-- Header -->
+        <header class="bg-slate-900/50 backdrop-blur border-b border-slate-800 p-4 h-16 flex justify-between items-center sticky top-0 z-20">
+            <div class="flex items-center gap-4">
+                <h2 id="page-title" class="text-lg font-semibold text-white">Arquitecto Visual</h2>
+                
+                <!-- Project Selector (Solo visible en Architect) -->
+                <div id="project-selector-wrapper" class="hidden">
+                    <select id="project-select" onchange="loadProjectPreset()" class="bg-slate-800 border border-slate-700 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-500 text-slate-300">
+                        <option value="empty">Nuevo Proyecto...</option>
+                        <option value="videomine">📽️ VideoMine Pipeline</option>
+                        <option value="docmine">📄 DocMine Pipeline</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="flex gap-3 items-center">
+                <span class="text-xs font-mono text-slate-500 bg-slate-900 px-2 py-1 rounded border border-slate-800" id="clock">00:00</span>
+            </div>
+        </header>
+
+
+        <!-- VISTA 0: ARQUITECTO VISUAL -->
+        <div id="view-architect" class="flex-1 overflow-hidden flex relative">
+            
+            <!-- Paleta de Herramientas (Izquierda) -->
+            <div class="w-64 bg-slate-900 border-r border-slate-800 p-4 overflow-y-auto flex-shrink-0">
+                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Caja de Herramientas</h3>
+                <p class="text-[10px] text-slate-500 mb-4">Arrastra al lienzo derecho</p>
+                
+                <div id="architect-toolbox" class="space-y-3">
+                    <!-- Se llena con JS -->
+                </div>
+            </div>
+
+            <!-- Lienzo / Canvas (Derecha) -->
+            <div class="flex-1 bg-slate-950 p-8 overflow-y-auto relative bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px]">
+                
+                <div class="max-w-2xl mx-auto">
+                    <!-- Área de Drop -->
+                    <div id="architect-canvas" class="min-h-[400px] pb-32 space-y-2">
+                        <!-- El contenido inicial se gestiona por JS -->
+                    </div>
+
+                    <!-- Botón Flotante de Generación -->
+                    <div class="fixed bottom-8 right-8 left-72 max-w-2xl mx-auto z-30">
+                        <div class="bg-slate-900/90 backdrop-blur border border-slate-700 p-4 rounded-xl shadow-2xl flex gap-4 items-center justify-between">
+                            <div class="text-xs text-slate-400">
+                                <span id="node-count" class="font-bold text-white">0</span> nodos conectados
+                            </div>
+                            <button onclick="compileArchitecture()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 text-white font-bold py-2 px-6 rounded-lg shadow-lg flex items-center gap-2 transition transform active:scale-95">
+                                <i class="fa-solid fa-code"></i> Compilar a Código
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal de Resultado (Prompt) -->
+                <div id="architect-output-modal" class="hidden absolute inset-0 bg-slate-950/90 z-40 flex items-center justify-center p-8 backdrop-blur-sm">
+                    <div class="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-3xl shadow-2xl flex flex-col max-h-full">
+                        <div class="p-4 border-b border-slate-800 flex justify-between items-center">
+                            <h3 class="font-bold text-white"><i class="fa-solid fa-scroll text-blue-500 mr-2"></i>Especificación Técnica Generada</h3>
+                            <button onclick="closeArchitectModal()" class="text-slate-500 hover:text-white"><i class="fa-solid fa-times"></i></button>
+                        </div>
+                        <div class="p-6 overflow-y-auto flex-1 bg-slate-950">
+                            <pre id="architect-prompt-output" class="font-mono text-xs text-slate-300 whitespace-pre-wrap leading-relaxed"></pre>
+                        </div>
+                        <div class="p-4 border-t border-slate-800 bg-slate-900 flex justify-end">
+                            <button onclick="copyArchitectPrompt()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-4 py-2 rounded-lg font-medium transition">Copiar al Portapapeles</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+        <!-- VISTA 1: FLUJO TÁCTICO (Read-Only) -->
+        <div id="view-flow" class="hidden flex-1 overflow-y-auto p-8 bg-slate-950 relative">
+             <div class="max-w-5xl mx-auto">
+                <div class="text-center mb-10"><h2 class="text-2xl font-bold text-white mb-2">Ingesta Inteligente (Referencia)</h2><p class="text-slate-400">Haz clic en los nodos para ver detalles.</p></div>
+                <div class="relative flex flex-col items-center space-y-8">
+                    <div class="relative group z-10" onclick="openNodeDetails('fastapi')"><div class="interactive-node bg-slate-800 border border-slate-600 p-4 rounded-xl shadow-lg w-64 text-center"><span class="text-xs font-mono text-yellow-400 mb-1 block">🌐 ENTRADA</span><h3 class="text-lg font-bold text-white">FastAPI + Upload</h3></div></div>
+                    <div class="w-1 h-8 bg-slate-700"></div>
+                    <div class="bg-slate-800 border border-slate-600 px-4 py-2 rounded-full text-xs text-slate-300">Router</div>
+                    <div class="w-full max-w-2xl flex justify-between relative">
+                        <div class="absolute top-0 left-1/4 right-1/4 h-1 bg-slate-700 -mt-1"></div><div class="absolute top-0 left-1/4 h-8 w-1 bg-slate-700"></div><div class="absolute top-0 right-1/4 h-8 w-1 bg-slate-700"></div>
+                        <div class="w-5/12 flex flex-col items-center mt-8 space-y-6"><div class="interactive-node bg-slate-800 border border-slate-600 p-4 rounded-xl w-full text-center relative" onclick="openNodeDetails('pillow')"><h3 class="font-bold text-white">Pillow</h3></div><div class="w-1 h-6 flow-line"></div><div class="interactive-node bg-gradient-to-b from-slate-800 to-slate-900 border border-blue-500/50 p-4 rounded-xl w-full text-center" onclick="openNodeDetails('clip')"><h3 class="font-bold text-blue-400">CLIP</h3></div></div>
+                        <div class="w-5/12 flex flex-col items-center mt-8 space-y-6"><div class="interactive-node bg-slate-800 border border-slate-600 p-4 rounded-xl w-full text-center relative" onclick="openNodeDetails('ffmpeg')"><h3 class="font-bold text-white">FFmpeg</h3></div><div class="w-1 h-6 flow-line"></div><div class="interactive-node bg-gradient-to-b from-slate-800 to-slate-900 border border-purple-500/50 p-4 rounded-xl w-full text-center" onclick="openNodeDetails('whisper')"><h3 class="font-bold text-purple-400">Whisper</h3></div></div>
+                    </div>
+                    <div class="w-full max-w-2xl h-1 bg-slate-700 mt-4 relative"><div class="absolute left-1/2 -translate-x-1/2 -top-0 w-1 h-8 bg-slate-700"></div></div>
+                    <div class="mt-8 interactive-node bg-slate-900 border-2 border-dashed border-slate-600 p-6 rounded-xl w-full max-w-lg text-center relative" onclick="openNodeDetails('chroma')"><h4 class="font-bold text-green-400">ChromaDB</h4></div>
+                </div>
+            </div>
+            <!-- Modal Detalles -->
+            <div id="node-modal" class="hidden absolute top-0 right-0 h-full w-96 bg-slate-900/95 backdrop-blur border-l border-slate-700 shadow-2xl p-6 overflow-y-auto transform transition-transform translate-x-full z-50">
+                <button onclick="closeNodeDetails()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-times text-xl"></i></button><div id="modal-content"></div>
+            </div>
+        </div>
+
+        <!-- VISTA 2: GENERADOR -->
+        <div id="view-generator" class="hidden flex-1 overflow-y-auto p-8 relative">
+             <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div class="lg:col-span-4 space-y-6">
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5"><h3 class="font-bold text-white text-sm mb-2">Rol</h3><select id="prompt-role" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-300"><option>Arquitecto de Software Senior</option><option>Ingeniero de Datos</option></select></div>
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5"><h3 class="font-bold text-white text-sm mb-2">Objetivo</h3><textarea id="prompt-goal" rows="4" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-sm text-slate-300"></textarea></div>
+                    <button onclick="generatePrompt()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl">Generar Orden</button>
+                </div>
+                <div class="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col h-[calc(100vh-8rem)]"><div id="stack-selector" class="overflow-y-auto"></div></div>
+                <div class="lg:col-span-4 flex flex-col h-[calc(100vh-8rem)]"><div class="bg-slate-950 border border-slate-800 rounded-xl p-4 flex-1 overflow-y-auto text-xs font-mono text-slate-300" id="prompt-output"></div></div>
+            </div>
+        </div>
+
+        <!-- VISTA 3: GLOSARIO -->
+        <div id="view-grid" class="hidden flex-1 overflow-y-auto p-6">
+            <div id="tools-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"></div>
+        </div>
+    </main>
+
+    <script>
+        // ============================================
+        // 1. DATA TOOLS
+        // ============================================
+        const tools = [
+            { name: "HTML5", cat: "Frontend", id:"html", icon: "fa-html5", color: "text-orange-500" }, 
+            { name: "Tailwind", cat: "Frontend", id:"css", icon: "fa-css3", color: "text-blue-400" }, 
+            { name: "HTMX", cat: "Frontend", id:"htmx", icon: "fa-bolt", color: "text-yellow-400" },
+            { name: "FastAPI", cat: "Backend", id:"fastapi", icon: "fa-server", color: "text-green-400" }, 
+            { name: "Python", cat: "Backend", id:"python", icon: "fa-brands fa-python", color: "text-blue-500" },
+            { name: "Loguru", cat: "Backend", id:"loguru", icon: "fa-list-ul", color: "text-slate-400" },
+            { name: "OpenCV", cat: "Process", id:"opencv", icon: "fa-eye", color: "text-red-400" },
+            { name: "FFmpeg", cat: "Process", id:"ffmpeg", icon: "fa-film", color: "text-pink-400" },
+            { name: "CLIP", cat: "IA Model", id:"clip", icon: "fa-brain", color: "text-purple-400" }, 
+            { name: "Whisper", cat: "IA Model", id:"whisper", icon: "fa-ear-listen", color: "text-indigo-400" }, 
+            { name: "ChromaDB", cat: "Storage", id:"chroma", icon: "fa-database", color: "text-emerald-400" }, 
+            { name: "SQLite", cat: "Storage", id:"sqlite", icon: "fa-table", color: "text-blue-300" }
+        ];
+
+        // Detalles para modal
+        const nodeDetails = {
+            fastapi: { title: "FastAPI", role: "Arquitecto", code: "@app.post('/ingest')\nasync def ingest..." },
+            clip: { title: "CLIP Model", role: "Ingeniero IA", code: "model.get_image_features(**inputs)" },
+            chroma: { title: "ChromaDB", role: "Arquitecto", code: "client = chromadb.PersistentClient()" }
+        };
+
+        // ============================================
+        // 2. LOGICA ARQUITECTO VISUAL (FIXED)
+        // ============================================
+        
+        let canvasNodes = [];
+
+        // Inicializar Toolbox
+        const toolbox = document.getElementById('architect-toolbox');
+        tools.forEach(t => {
+            const el = document.createElement('div');
+            el.className = "draggable-tool bg-slate-800 border border-slate-700 p-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition hover:border-blue-500";
+            el.draggable = true;
+            el.innerHTML = `<i class="fa-solid ${t.icon} ${t.color}"></i> <span class="text-sm font-bold">${t.name}</span>`;
+            el.ondragstart = (ev) => {
+                ev.dataTransfer.setData("toolId", t.id);
+                ev.dataTransfer.effectAllowed = "copy";
+            };
+            toolbox.appendChild(el);
+        });
+
+        // Configurar Drop Zone
+        const canvas = document.getElementById('architect-canvas');
+        canvas.ondragover = (ev) => { ev.preventDefault(); ev.dataTransfer.dropEffect = "copy"; };
+        
+        canvas.ondrop = (ev) => {
+            ev.preventDefault();
+            const toolId = ev.dataTransfer.getData("toolId");
+            if(toolId) addNodeToCanvas(toolId);
+        };
+
+        function addNodeToCanvas(toolId) {
+            const tool = tools.find(t => t.id === toolId);
+            if(!tool) return;
+            canvasNodes.push(tool);
+            renderCanvas();
+        }
+
+        function removeNode(index) {
+            canvasNodes.splice(index, 1);
+            renderCanvas();
+        }
+
+        // --- FIX: Renderizado Robustecido ---
+        function renderCanvas() {
+            const container = document.getElementById('architect-canvas');
+            const count = document.getElementById('node-count');
+
+            container.innerHTML = ''; // Limpiar siempre primero
+
+            // Si está vacío, regeneramos el HTML del placeholder
+            if (canvasNodes.length === 0) {
+                container.innerHTML = `
+                    <div id="canvas-placeholder" class="border-2 border-dashed border-slate-800 rounded-xl p-12 text-center text-slate-600 animate-in fade-in duration-300">
+                        <i class="fa-solid fa-hand-pointer text-2xl mb-2"></i>
+                        <p>Arrastra herramientas aquí para diseñar tu flujo</p>
+                    </div>`;
+                count.textContent = '0';
+                return;
+            }
+
+            // Si hay nodos, los pintamos
+            canvasNodes.forEach((node, index) => {
+                const nodeEl = document.createElement('div');
+                nodeEl.className = "flow-node relative group animate-in fade-in slide-in-from-bottom-2 duration-300";
+                
+                nodeEl.innerHTML = `
+                    <div class="bg-slate-800 border border-slate-600 p-4 rounded-xl flex items-center justify-between shadow-lg relative z-10">
+                        <div class="flex items-center gap-4">
+                            <div class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center border border-slate-700">
+                                <span class="text-xs text-slate-500 font-mono">${index + 1}</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid ${node.icon} ${node.color} text-xl"></i>
+                                <div>
+                                    <h4 class="font-bold text-white">${node.name}</h4>
+                                    <p class="text-[10px] text-slate-400 uppercase tracking-wider">${node.cat}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="removeNode(${index})" class="text-slate-600 hover:text-red-400 transition p-2">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                    <!-- Flecha conectora (CSS la oculta si es el último) -->
+                    <div class="flow-arrow h-8 border-l-2 border-dashed border-slate-700 ml-8 relative"></div>
+                `;
+                container.appendChild(nodeEl);
+            });
+            count.textContent = canvasNodes.length;
+        }
+
+        // Presets
+        function loadProjectPreset() {
+            const val = document.getElementById('project-select').value;
+            canvasNodes = [];
+            
+            if(val === 'videomine') {
+                ['fastapi', 'ffmpeg', 'whisper', 'clip', 'chroma'].forEach(id => {
+                    const t = tools.find(tool => tool.id === id);
+                    if(t) canvasNodes.push(t);
+                });
+            } else if (val === 'docmine') {
+                ['fastapi', 'python', 'clip', 'chroma', 'sqlite'].forEach(id => {
+                     const t = tools.find(tool => tool.id === id);
+                    if(t) canvasNodes.push(t);
+                });
+            }
+            renderCanvas();
+        }
+
+        // COMPILADOR "MAGIC BUTTON"
+        function compileArchitecture() {
+            if(canvasNodes.length === 0) return alert("El lienzo está vacío.");
+
+            const flowNames = canvasNodes.map(n => n.name).join(" -> ");
+            const stackList = [...new Set(canvasNodes.map(n => n.name))].join(", ");
+            
+            const prompt = `
+**ROL:** Actúa como un Arquitecto de Software Senior y Experto en Integración de Sistemas.
+
+**OBJETIVO:** Crear un pipeline de procesamiento de datos robusto y modular.
+
+**FLUJO DE TRABAJO DISEÑADO (Secuencia):**
+${canvasNodes.map((n, i) => `${i+1}. [${n.name}] (${n.cat})`).join('\n')}
+
+**STACK TECNOLÓGICO:**
+${stackList}
+
+**INSTRUCCIONES:**
+Genera el código Python/Sistema necesario para implementar este flujo secuencial.
+1. La entrada debe ser gestionada por el primer nodo (${canvasNodes[0].name}).
+2. Cada paso debe pasar los datos procesados al siguiente nodo de forma explícita.
+3. El resultado final debe persistirse en el último nodo (${canvasNodes[canvasNodes.length-1].name}).
+4. Asegura manejo de errores entre cada paso.
+
+**SALIDA:**
+Provee un script único (o estructura de módulos) que orqueste este pipeline.
+`.trim();
+
+            document.getElementById('architect-prompt-output').textContent = prompt;
+            document.getElementById('architect-output-modal').classList.remove('hidden');
+        }
+
+        function closeArchitectModal() { document.getElementById('architect-output-modal').classList.add('hidden'); }
+        function copyArchitectPrompt() { navigator.clipboard.writeText(document.getElementById('architect-prompt-output').textContent); }
+
+
+        // ============================================
+        // 3. UI GENERAL
+        // ============================================
+        function switchView(view) {
+            ['architect', 'generator', 'grid', 'flow'].forEach(v => {
+                const el = document.getElementById(`view-${v}`);
+                const btn = document.getElementById(`btn-${v}`);
+                if(el) el.classList.add('hidden');
+                if(btn) {
+                    btn.classList.remove('bg-blue-600', 'text-white', 'shadow-lg');
+                    btn.classList.add('text-slate-400', 'hover:bg-slate-800');
+                }
+            });
+            document.getElementById(`view-${view}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`btn-${view}`);
+            activeBtn.classList.remove('text-slate-400', 'hover:bg-slate-800');
+            activeBtn.classList.add('bg-blue-600', 'text-white', 'shadow-lg');
+
+            // Toggle Project Selector
+            const projSel = document.getElementById('project-selector-wrapper');
+            if(view === 'architect') projSel.classList.remove('hidden'); else projSel.classList.add('hidden');
+
+            const titles = { 'architect': 'Arquitecto Visual', 'generator': 'Generador', 'grid': 'Glosario', 'flow': 'Flujos (Referencia)' };
+            document.getElementById('page-title').textContent = titles[view];
+        }
+
+        // Logic para otras vistas (heredada)
+        function openNodeDetails(id) { /* ... same as before ... */ }
+        function closeNodeDetails() { /* ... same as before ... */ }
+        
+        // Reloj
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('clock').textContent = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }, 1000);
+
+        // Inicializar Glosario (Grid)
+        const grid = document.getElementById('tools-grid');
+        tools.forEach(t => {
+            const card = document.createElement('div');
+            card.className = "bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center gap-3";
+            card.innerHTML = `<i class="fa-solid ${t.icon} ${t.color}"></i> <span class="font-bold text-slate-200">${t.name}</span>`;
+            grid.appendChild(card);
+        });
+        
+        // Initial View
+        switchView('architect');
+        // Render initial empty state correctly
+        renderCanvas();
+
+    </script>
+</body>
+</html>

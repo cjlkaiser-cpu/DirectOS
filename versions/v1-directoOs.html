@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛠️ Director's Dashboard v3.1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Iconos FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Efectos Hover */
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+        
+        /* Animación de Flujo (Tuberías) */
+        .flow-line {
+            background: linear-gradient(90deg, #334155 0%, #3b82f6 50%, #334155 100%);
+            background-size: 200% 100%;
+            animation: flowAnimation 2s infinite linear;
+        }
+        @keyframes flowAnimation { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+        
+        /* Scrollbar Personalizada */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* Checkbox personalizado */
+        .tool-checkbox:checked + div {
+            border-color: #3b82f6;
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+        .tool-checkbox:checked + div .check-icon {
+            opacity: 1;
+        }
+
+        /* Nodos Interactivos del Diagrama */
+        .interactive-node {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .interactive-node:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+            border-color: #60a5fa;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200 h-screen flex overflow-hidden selection:bg-blue-500 selection:text-white">
+
+    <!-- BARRA LATERAL (SIDEBAR) -->
+    <aside class="w-64 bg-slate-900 border-r border-slate-800 flex-shrink-0 flex flex-col transition-all duration-300">
+        <div class="p-6 border-b border-slate-800">
+            <h1 class="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                <i class="fa-solid fa-layer-group text-blue-500"></i>
+                Director<span class="text-slate-500">OS</span>
+            </h1>
+            <p class="text-xs text-slate-500 mt-1">v3.1 - Interactive Ops</p>
+        </div>
+        
+        <nav class="flex-1 overflow-y-auto p-4 space-y-2">
+            
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 pl-2">Vistas</p>
+            
+            <button onclick="switchView('flow')" id="btn-flow" class="w-full text-left px-3 py-2.5 rounded-lg text-sm transition font-medium flex items-center gap-3 bg-blue-600 text-white shadow-lg shadow-blue-900/20">
+                <i class="fa-solid fa-diagram-project"></i> Flujos Tácticos
+            </button>
+
+            <button onclick="switchView('generator')" id="btn-generator" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Generador Prompts
+            </button>
+
+            <button onclick="switchView('grid')" id="btn-grid" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3">
+                <i class="fa-solid fa-boxes-stacked"></i> Glosario Herramientas
+            </button>
+        </nav>
+    </aside>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="flex-1 flex flex-col min-w-0 relative bg-slate-950">
+        
+        <!-- Header Superior -->
+        <header class="bg-slate-900/50 backdrop-blur border-b border-slate-800 p-4 h-16 flex justify-between items-center sticky top-0 z-20">
+            <h2 id="page-title" class="text-lg font-semibold text-white">Flujos Tácticos</h2>
+            <div class="flex gap-3 items-center">
+                <span class="text-xs font-mono text-slate-500 bg-slate-900 px-2 py-1 rounded border border-slate-800" id="clock">00:00</span>
+            </div>
+        </header>
+
+        <!-- VISTA 1: FLUJO INTERACTIVO (DIAGRAMA) -->
+        <div id="view-flow" class="flex-1 overflow-y-auto p-8 bg-slate-950 relative">
+             <div class="max-w-5xl mx-auto">
+                <div class="text-center mb-10">
+                    <h2 class="text-2xl font-bold text-white mb-2">Ingesta Inteligente</h2>
+                    <p class="text-slate-400">Haz clic en cualquier nodo para ver la estrategia y el código.</p>
+                </div>
+
+                <!-- EL DIAGRAMA VISUAL -->
+                <div class="relative flex flex-col items-center space-y-8">
+                    
+                    <!-- Nivel 1: Entrada -->
+                    <div class="relative group z-10" onclick="openNodeDetails('fastapi')">
+                        <div class="interactive-node bg-slate-800 border border-slate-600 p-4 rounded-xl shadow-lg w-64 text-center">
+                            <span class="text-xs font-mono text-yellow-400 mb-1 block">🌐 ENTRADA</span>
+                            <h3 class="text-lg font-bold text-white">FastAPI + Upload</h3>
+                            <p class="text-xs text-slate-400 mt-2">El "Portero" asíncrono.</p>
+                        </div>
+                    </div>
+
+                    <!-- Conector -->
+                    <div class="w-1 h-8 bg-slate-700"></div>
+
+                    <!-- Bifurcación -->
+                    <div class="bg-slate-800 border border-slate-600 px-4 py-2 rounded-full text-xs text-slate-300">Router Lógico</div>
+                    <div class="w-full max-w-2xl flex justify-between relative">
+                        <!-- Líneas Tubería -->
+                        <div class="absolute top-0 left-1/4 right-1/4 h-1 bg-slate-700 -mt-1"></div>
+                        <div class="absolute top-0 left-1/4 h-8 w-1 bg-slate-700"></div>
+                        <div class="absolute top-0 right-1/4 h-8 w-1 bg-slate-700"></div>
+
+                        <!-- CAMINO A: IMAGEN -->
+                        <div class="w-5/12 flex flex-col items-center mt-8 space-y-6">
+                            <div class="interactive-node bg-slate-800 border border-slate-600 p-4 rounded-xl w-full text-center relative" onclick="openNodeDetails('pillow')">
+                                <div class="absolute -right-3 -top-3 bg-blue-600 text-white text-xs px-2 py-1 rounded-full shadow">Pre-proceso</div>
+                                <h3 class="font-bold text-white">Pillow / OpenCV</h3>
+                                <p class="text-xs text-slate-400 mt-1">Normalización visual.</p>
+                            </div>
+                            
+                            <div class="w-1 h-6 flow-line"></div> 
+
+                            <div class="interactive-node bg-gradient-to-b from-slate-800 to-slate-900 border border-blue-500/50 p-4 rounded-xl w-full text-center shadow-[0_0_15px_rgba(59,130,246,0.2)]" onclick="openNodeDetails('clip')">
+                                <h3 class="font-bold text-blue-400">CLIP (OpenAI)</h3>
+                                <p class="text-xs text-slate-300 mt-1">Embedding Vectorial.</p>
+                            </div>
+                        </div>
+
+                        <!-- CAMINO B: VIDEO -->
+                        <div class="w-5/12 flex flex-col items-center mt-8 space-y-6">
+                            <div class="interactive-node bg-slate-800 border border-slate-600 p-4 rounded-xl w-full text-center relative" onclick="openNodeDetails('ffmpeg')">
+                                <div class="absolute -right-3 -top-3 bg-purple-600 text-white text-xs px-2 py-1 rounded-full shadow">Pre-proceso</div>
+                                <h3 class="font-bold text-white">FFmpeg</h3>
+                                <p class="text-xs text-slate-400 mt-1">Extracción de Audio.</p>
+                            </div>
+
+                            <div class="w-1 h-6 flow-line"></div> 
+
+                            <div class="interactive-node bg-gradient-to-b from-slate-800 to-slate-900 border border-purple-500/50 p-4 rounded-xl w-full text-center shadow-[0_0_15px_rgba(168,85,247,0.2)]" onclick="openNodeDetails('whisper')">
+                                <h3 class="font-bold text-purple-400">Whisper</h3>
+                                <p class="text-xs text-slate-300 mt-1">Transcripción.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Convergencia -->
+                    <div class="w-full max-w-2xl h-1 bg-slate-700 mt-4 relative">
+                         <div class="absolute left-1/2 -translate-x-1/2 -top-0 w-1 h-8 bg-slate-700"></div>
+                    </div>
+
+                    <!-- Nivel 3: Memoria -->
+                    <div class="mt-8 interactive-node bg-slate-900 border-2 border-dashed border-slate-600 p-6 rounded-xl w-full max-w-lg text-center relative" onclick="openNodeDetails('chroma')">
+                        <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-slate-800 px-3 text-xs text-slate-400 uppercase tracking-widest">Persistencia</span>
+                        <div class="flex gap-4 justify-center">
+                            <div class="flex-1 bg-slate-800 p-3 rounded border border-slate-700">
+                                <h4 class="font-bold text-green-400">ChromaDB</h4>
+                                <p class="text-xs text-slate-500">Vectores</p>
+                            </div>
+                            <div class="flex-1 bg-slate-800 p-3 rounded border border-slate-700">
+                                <h4 class="font-bold text-slate-200">SQLite</h4>
+                                <p class="text-xs text-slate-500">Metadatos</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODAL DE DETALLES (FLOTANTE) -->
+            <div id="node-modal" class="hidden absolute top-0 right-0 h-full w-96 bg-slate-900/95 backdrop-blur border-l border-slate-700 shadow-2xl p-6 overflow-y-auto transform transition-transform translate-x-full z-50">
+                <button onclick="closeNodeDetails()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
+                
+                <div id="modal-content">
+                    <!-- El contenido se llena dinámicamente con JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA 2: GENERADOR DE PROMPTS -->
+        <div id="view-generator" class="hidden flex-1 overflow-y-auto p-8 relative">
+             <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Columna Izquierda: Inputs -->
+                <div class="lg:col-span-4 space-y-6">
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="bg-blue-500/10 text-blue-400 text-xs font-bold px-2 py-1 rounded">1</span>
+                            <h3 class="font-bold text-white text-sm">Define el Rol</h3>
+                        </div>
+                        <select id="prompt-role" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-300 focus:border-blue-500 outline-none">
+                            <option value="Arquitecto de Software Senior">🏛️ Arquitecto Senior</option>
+                            <option value="Ingeniero de Datos y RAG">🧠 Ingeniero IA/RAG</option>
+                            <option value="Experto en Debugging">🐛 Cazador de Bugs</option>
+                            <option value="Desarrollador Frontend">🎨 Frontend UX/UI</option>
+                        </select>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="bg-blue-500/10 text-blue-400 text-xs font-bold px-2 py-1 rounded">2</span>
+                            <h3 class="font-bold text-white text-sm">Objetivo</h3>
+                        </div>
+                        <textarea id="prompt-goal" rows="4" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-sm text-slate-300 focus:border-blue-500 outline-none resize-none" placeholder="¿Qué quieres conseguir?"></textarea>
+                    </div>
+                     <button onclick="generatePrompt()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2 transition active:scale-95">
+                        <i class="fa-solid fa-bolt"></i> Generar Orden
+                    </button>
+                </div>
+                <!-- Columna Central: Stack -->
+                <div class="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col h-[calc(100vh-8rem)]">
+                    <div class="flex items-center justify-between mb-4 flex-shrink-0">
+                        <h3 class="font-bold text-white text-sm">Stack</h3>
+                        <button onclick="clearSelection()" class="text-xs text-slate-500 hover:text-white transition">Limpiar</button>
+                    </div>
+                    <div class="overflow-y-auto pr-2 space-y-2 flex-1" id="stack-selector"></div>
+                </div>
+                <!-- Columna Derecha: Output -->
+                <div class="lg:col-span-4 flex flex-col h-[calc(100vh-8rem)]">
+                    <div class="bg-slate-800 border border-slate-700 rounded-xl p-1 flex-1 flex flex-col relative group">
+                        <div class="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition">
+                            <button onclick="copyToClipboard()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-md shadow-lg font-medium transition">Copiar</button>
+                        </div>
+                        <div class="bg-slate-950 rounded-lg p-4 flex-1 overflow-y-auto font-mono text-xs text-slate-300 leading-relaxed border border-slate-900" id="prompt-output">
+                            <span class="text-slate-600 italic">// Tu prompt de Director aparecerá aquí...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA 3: GLOSARIO (GRID) -->
+        <div id="view-grid" class="hidden flex-1 overflow-y-auto p-6">
+            <div id="tools-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"></div>
+        </div>
+    </main>
+
+    <script>
+        // ============================================
+        // 1. BASE DE CONOCIMIENTOS (DATA)
+        // ============================================
+        const tools = [
+            { name: "HTML5", cat: "Frontend", id:"html" }, { name: "Tailwind", cat: "Frontend", id:"css" }, { name: "JS Vanilla", cat: "Frontend", id:"js" }, { name: "HTMX", cat: "Frontend", id:"htmx" },
+            { name: "Python", cat: "Backend", id:"python" }, { name: "FastAPI", cat: "Backend", id:"fastapi" }, { name: "Loguru", cat: "Backend", id:"loguru" }, { name: "SQLite", cat: "Backend", id:"sqlite" },
+            { name: "ChromaDB", cat: "IA & RAG", id:"chroma" }, { name: "CLIP", cat: "IA & RAG", id:"clip" }, { name: "Whisper", cat: "IA & RAG", id:"whisper" }, { name: "Docker", cat: "DevOps", id:"docker" }
+        ];
+
+        // Datos enriquecidos para el Diagrama Interactivo
+        const nodeDetails = {
+            fastapi: {
+                title: "FastAPI + Asynchio",
+                role: "Arquitecto de Software Senior",
+                desc: "El punto de entrada. Debe ser no-bloqueante para permitir múltiples subidas simultáneas.",
+                code: `@app.post("/ingest")\nasync def ingest(file: UploadFile):\n    # No bloquea mientras espera IO\n    await process_file(file)\n    return {"status": "ok"}`,
+                goal: "Optimizar el endpoint de ingesta para manejar archivos grandes con StreamingResponse y validar tipos MIME de forma estricta."
+            },
+            pillow: {
+                title: "Pillow (PIL) / OpenCV",
+                role: "Ingeniero de Datos y RAG",
+                desc: "Normalización de imágenes. Redimensionar a 224x224 (estándar CLIP) y convertir a RGB antes de procesar.",
+                code: `image = Image.open(file.file)\n# Pre-procesamiento para IA\nimg_res = image.resize((224, 224))\nimg_norm = normalize(img_res)`,
+                goal: "Crear una función robusta que limpie metadatos EXIF, rote la imagen según orientación y la convierta a formato compatible con tensores."
+            },
+            clip: {
+                title: "OpenAI CLIP",
+                role: "Ingeniero de Datos y RAG",
+                desc: "Transforma píxeles en vectores semánticos. Permite buscar 'perro' y encontrar una foto de un perro.",
+                code: `inputs = processor(images=image, return_tensors="pt")\nembeddings = model.get_image_features(**inputs)\nvector = embeddings.tolist()`,
+                goal: "Implementar la carga del modelo CLIP localmente usando HuggingFace Transformers y generar una función para extraer embeddings en lotes (batch)."
+            },
+            whisper: {
+                title: "OpenAI Whisper",
+                role: "Ingeniero de Datos y RAG",
+                desc: "Speech-to-Text de alta precisión. Convierte el audio del video en texto buscable.",
+                code: `model = whisper.load_model("base")\nresult = model.transcribe("audio.mp3")\ntext = result["text"]`,
+                goal: "Configurar Whisper para correr en CPU eficientemente, dividiendo audios largos en chunks de 30 segundos para no saturar memoria."
+            },
+            chroma: {
+                title: "ChromaDB (Persistente)",
+                role: "Arquitecto de Software Senior",
+                desc: "Almacén de vectores. Aquí guardamos la 'comprensión' de la IA para buscarla después.",
+                code: `client = chromadb.PersistentClient(path="./db")\ncollection.add(\n    embeddings=[vector],\n    metadatas=[{"source": "img1.jpg"}],\n    ids=["id1"]\n)`,
+                goal: "Diseñar el esquema de metadatos de ChromaDB para permitir filtrado híbrido (por fecha + similitud semántica) y configurar copias de seguridad."
+            },
+            ffmpeg: {
+                title: "FFmpeg Wrapper",
+                role: "Ingeniero de Datos y RAG",
+                desc: "La navaja suiza multimedia. Extrae audio de video o genera thumbnails.",
+                code: `subprocess.run([\n    "ffmpeg", "-i", input, \n    "-vn", "-acodec", "libmp3lame", output\n])`,
+                goal: "Escribir un wrapper de Python seguro para FFmpeg que extraiga el audio de archivos MP4 subidos con control de errores."
+            }
+        };
+
+        // ============================================
+        // 2. LÓGICA DEL DIAGRAMA (INTERACTIVIDAD)
+        // ============================================
+        function openNodeDetails(nodeId) {
+            const data = nodeDetails[nodeId];
+            if(!data) return;
+
+            const modal = document.getElementById('node-modal');
+            const content = document.getElementById('modal-content');
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('translate-x-full'), 10);
+
+            content.innerHTML = `
+                <div class="mb-6">
+                    <span class="text-xs font-mono text-blue-400 border border-blue-500/30 px-2 py-1 rounded bg-blue-500/10 mb-2 inline-block">NODE INSPECTOR</span>
+                    <h2 class="text-2xl font-bold text-white">${data.title}</h2>
+                    <p class="text-slate-400 mt-2 text-sm leading-relaxed">${data.desc}</p>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Código Táctico</h3>
+                    <div class="bg-slate-950 border border-slate-800 rounded-lg p-3 font-mono text-xs text-green-400 overflow-x-auto">
+                        <pre>${data.code}</pre>
+                    </div>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-slate-800">
+                    <button onclick="jumpToGenerator('${nodeId}')" class="w-full bg-slate-800 hover:bg-blue-600 text-white p-3 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 group">
+                        <i class="fa-solid fa-wand-magic-sparkles text-yellow-400 group-hover:text-white"></i>
+                        Optimizar con IA
+                    </button>
+                    <p class="text-[10px] text-center text-slate-500 mt-2">Envía configuración al Generador</p>
+                </div>
+            `;
+        }
+
+        function closeNodeDetails() {
+            const modal = document.getElementById('node-modal');
+            modal.classList.add('translate-x-full');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function jumpToGenerator(nodeId) {
+            const data = nodeDetails[nodeId];
+            closeNodeDetails();
+            switchView('generator');
+            
+            // Rellenar automáticamente el generador con los datos del nodo
+            document.getElementById('prompt-role').value = data.role;
+            document.getElementById('prompt-goal').value = data.goal;
+        }
+
+
+        // ============================================
+        // 3. UI GENERAL Y NAVEGACIÓN
+        // ============================================
+        function switchView(view) {
+            // Ocultar todas las vistas
+            ['generator', 'grid', 'flow'].forEach(v => {
+                document.getElementById(`view-${v}`).classList.add('hidden');
+                const btn = document.getElementById(`btn-${v}`);
+                if(btn) {
+                    btn.classList.remove('bg-blue-600', 'text-white', 'shadow-lg');
+                    btn.classList.add('text-slate-400', 'hover:bg-slate-800');
+                }
+            });
+            
+            // Mostrar vista activa
+            document.getElementById(`view-${view}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`btn-${view}`);
+            activeBtn.classList.remove('text-slate-400', 'hover:bg-slate-800');
+            activeBtn.classList.add('bg-blue-600', 'text-white', 'shadow-lg');
+            
+            const titles = { 'generator': 'Generador de Prompts', 'grid': 'Glosario', 'flow': 'Flujos Tácticos' };
+            document.getElementById('page-title').textContent = titles[view];
+        }
+
+        // Reloj
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('clock').textContent = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }, 1000);
+
+
+        // ============================================
+        // 4. GENERADOR Y STACK (Lógica Visual)
+        // ============================================
+        const stackContainer = document.getElementById('stack-selector');
+        const categories = {};
+        
+        // Agrupar herramientas por categoría
+        tools.forEach(t => { if(!categories[t.cat]) categories[t.cat] = []; categories[t.cat].push(t); });
+        
+        // Renderizar checkboxes
+        for (const [cat, items] of Object.entries(categories)) {
+            const group = document.createElement('div'); group.className = "mb-4";
+            group.innerHTML = `<h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 sticky top-0 bg-slate-900 py-1">${cat}</h4>`;
+            items.forEach(t => {
+                const item = document.createElement('label'); item.className = "flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-slate-800/50 transition group";
+                item.innerHTML = `
+                    <input type="checkbox" value="${t.name}" class="peer sr-only tool-checkbox">
+                    <div class="w-4 h-4 rounded border border-slate-600 bg-slate-900 peer-checked:bg-blue-500 flex items-center justify-center transition">
+                        <i class="fa-solid fa-check text-[10px] text-white opacity-0 check-icon"></i>
+                    </div>
+                    <span class="text-sm text-slate-300 peer-checked:text-white transition">${t.name}</span>
+                `;
+                group.appendChild(item);
+            });
+            stackContainer.appendChild(group);
+        }
+
+        // Renderizar Grid (Glosario)
+        const grid = document.getElementById('tools-grid');
+        tools.forEach(t => {
+            const card = document.createElement('div');
+            card.className = "bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between hover:border-blue-500/30 transition";
+            card.innerHTML = `<span class="font-bold text-slate-200">${t.name}</span><span class="text-xs text-slate-500 bg-slate-950 px-2 py-1 rounded">${t.cat}</span>`;
+            grid.appendChild(card);
+        });
+
+        function generatePrompt() {
+            const role = document.getElementById('prompt-role').value;
+            const goal = document.getElementById('prompt-goal').value || "[Describe tu objetivo]";
+            const selectedTools = Array.from(document.querySelectorAll('.tool-checkbox:checked')).map(cb => cb.value);
+            const stackText = selectedTools.length > 0 ? selectedTools.join(", ") : "mi stack actual";
+            
+            const prompt = `**ROL:**\nActúa como un ${role}.\n\n**CONTEXTO:**\nProyecto local 'minerOS'. Stack: ${stackText}.\n\n**OBJETIVO:**\n${goal}\n\n**ESTILO:**\nSolución pragmática, código modular y local-first.`;
+            document.getElementById('prompt-output').textContent = prompt;
+        }
+        
+        function clearSelection() { document.querySelectorAll('.tool-checkbox').forEach(c => c.checked = false); }
+        function copyToClipboard() { navigator.clipboard.writeText(document.getElementById('prompt-output').textContent); }
+    </script>
+</body>
+</html>

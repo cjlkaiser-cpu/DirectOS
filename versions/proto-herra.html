@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛠️ minerOS Stack - Guía de Referencia v2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+        
+        /* Animación de Flujo de Datos */
+        .flow-line {
+            background: linear-gradient(90deg, #334155 0%, #3b82f6 50%, #334155 100%);
+            background-size: 200% 100%;
+            animation: flowAnimation 2s infinite linear;
+        }
+        @keyframes flowAnimation {
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-200 h-screen flex overflow-hidden">
+
+    <aside class="w-64 bg-slate-800 border-r border-slate-700 flex-shrink-0 flex flex-col transition-all duration-300">
+        <div class="p-6 border-b border-slate-700">
+            <h1 class="text-2xl font-bold text-white tracking-tight">miner<span class="text-blue-500">OS</span> <span class="text-xs text-slate-400 font-normal block mt-1">Manual Técnico v2.0</span></h1>
+        </div>
+        
+        <nav class="flex-1 overflow-y-auto p-4 space-y-6">
+            <div>
+                <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Vistas</h3>
+                <div class="space-y-1">
+                    <button onclick="switchView('grid')" id="btn-grid" class="w-full text-left px-3 py-2 rounded bg-slate-700 text-white text-sm transition border-l-2 border-blue-500 font-medium">
+                        📦 Herramientas
+                    </button>
+                    <button onclick="switchView('flow')" id="btn-flow" class="w-full text-left px-3 py-2 rounded hover:bg-slate-700 text-slate-300 text-sm transition border-l-2 border-transparent">
+                        🧩 Flujos (Pipeline)
+                    </button>
+                </div>
+            </div>
+
+            <div id="sidebar-filters">
+                <div class="mt-6">
+                    <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Prioridad</h3>
+                    <div class="space-y-1">
+                        <button onclick="filterByPriority('all')" class="w-full text-left px-3 py-2 rounded hover:bg-slate-700 text-sm transition border-l-2 border-transparent">Todas</button>
+                        <button onclick="filterByPriority('Alta')" class="w-full text-left px-3 py-2 rounded hover:bg-slate-700 text-sm transition border-l-2 border-transparent text-yellow-400">⭐ Alta</button>
+                        <button onclick="filterByPriority('Media')" class="w-full text-left px-3 py-2 rounded hover:bg-slate-700 text-sm transition border-l-2 border-transparent text-blue-400">🔵 Media</button>
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Categoría</h3>
+                    <div class="space-y-1" id="category-filters"></div>
+                </div>
+            </div>
+        </nav>
+    </aside>
+
+    <main class="flex-1 flex flex-col min-w-0 relative">
+        
+        <header class="bg-slate-800/50 backdrop-blur border-b border-slate-700 p-4 flex justify-between items-center sticky top-0 z-10">
+            <div class="relative w-full max-w-md" id="search-container">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">🔍</span>
+                <input type="text" id="searchInput" placeholder="Buscar herramienta..." 
+                    class="w-full bg-slate-900 text-white border border-slate-600 rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder-slate-500 transition">
+            </div>
+            <div class="flex gap-3">
+                <span class="text-sm bg-slate-700 px-3 py-1 rounded-full text-slate-300" id="status-display">Vista General</span>
+            </div>
+        </header>
+
+        <div id="view-grid" class="flex-1 overflow-y-auto p-6">
+            <div id="tools-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                </div>
+        </div>
+
+        <div id="view-flow" class="hidden flex-1 overflow-y-auto p-8 bg-slate-900">
+            <div class="max-w-5xl mx-auto">
+                <h2 class="text-2xl font-bold text-white mb-2">Flujo de Ingesta Inteligente</h2>
+                <p class="text-slate-400 mb-8">Visualiza cómo `minerOS` procesa un archivo multimedia desde la subida hasta la búsqueda.</p>
+
+                <div class="relative flex flex-col items-center space-y-8">
+                    
+                    <div class="relative group z-10">
+                        <div class="bg-slate-800 border border-slate-600 p-4 rounded-xl shadow-lg w-64 text-center cursor-pointer hover:border-blue-500 hover:bg-slate-750 transition">
+                            <span class="text-xs font-mono text-yellow-400 mb-1 block">🌐 WEB / API</span>
+                            <h3 class="text-lg font-bold text-white">FastAPI + Upload</h3>
+                            <p class="text-xs text-slate-400 mt-2 group-hover:text-white transition">El "Portero". Recibe el archivo de forma asíncrona sin bloquear la UI.</p>
+                        </div>
+                    </div>
+
+                    <div class="w-1 h-8 bg-slate-700"></div>
+
+                    <div class="bg-slate-800 border border-slate-600 px-4 py-2 rounded-full text-xs text-slate-300">
+                        ¿Es Imagen o Video?
+                    </div>
+
+                    <div class="w-full max-w-2xl flex justify-between relative">
+                        <div class="absolute top-0 left-1/4 right-1/4 h-1 bg-slate-700 -mt-1"></div>
+                        <div class="absolute top-0 left-1/4 h-8 w-1 bg-slate-700"></div>
+                        <div class="absolute top-0 right-1/4 h-8 w-1 bg-slate-700"></div>
+
+                        <div class="w-5/12 flex flex-col items-center mt-8 space-y-6">
+                            <div class="bg-slate-800 border border-slate-600 p-4 rounded-xl w-full text-center group cursor-help relative">
+                                <div class="absolute -right-3 -top-3 bg-blue-600 text-white text-xs px-2 py-1 rounded-full shadow">Vision</div>
+                                <h3 class="font-bold text-white">Pillow / OpenCV</h3>
+                                <p class="text-xs text-slate-400 mt-1">Redimensionar, limpiar ruido, normalizar.</p>
+                            </div>
+                            
+                            <div class="w-1 h-6 flow-line"></div> <div class="bg-gradient-to-b from-slate-800 to-slate-900 border border-blue-500/50 p-4 rounded-xl w-full text-center shadow-[0_0_15px_rgba(59,130,246,0.2)]">
+                                <h3 class="font-bold text-blue-400">CLIP (OpenAI)</h3>
+                                <p class="text-xs text-slate-300 mt-1">El "Traductor". Convierte píxeles en vector numérico.</p>
+                                <p class="text-[10px] font-mono text-slate-500 mt-2">[0.12, -0.45, 0.99...]</p>
+                            </div>
+                        </div>
+
+                        <div class="w-5/12 flex flex-col items-center mt-8 space-y-6">
+                            <div class="bg-slate-800 border border-slate-600 p-4 rounded-xl w-full text-center group cursor-help relative">
+                                <div class="absolute -right-3 -top-3 bg-purple-600 text-white text-xs px-2 py-1 rounded-full shadow">Audio</div>
+                                <h3 class="font-bold text-white">FFmpeg</h3>
+                                <p class="text-xs text-slate-400 mt-1">Extraer pista de audio y dividir en chunks.</p>
+                            </div>
+
+                            <div class="w-1 h-6 flow-line"></div> <div class="bg-gradient-to-b from-slate-800 to-slate-900 border border-purple-500/50 p-4 rounded-xl w-full text-center shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+                                <h3 class="font-bold text-purple-400">Whisper</h3>
+                                <p class="text-xs text-slate-300 mt-1">El "Oído". Transcribe audio a texto preciso.</p>
+                                <p class="text-[10px] font-mono text-slate-500 mt-2">"Hola, esto es una prueba..."</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="w-full max-w-2xl h-1 bg-slate-700 mt-4 relative">
+                         <div class="absolute left-1/2 -translate-x-1/2 -top-0 w-1 h-8 bg-slate-700"></div>
+                    </div>
+
+                    <div class="mt-8 bg-slate-900 border-2 border-dashed border-slate-600 p-6 rounded-xl w-full max-w-lg text-center relative">
+                        <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-slate-800 px-3 text-xs text-slate-400 uppercase tracking-widest">Almacenamiento</span>
+                        <div class="flex gap-4 justify-center">
+                            <div class="flex-1 bg-slate-800 p-3 rounded border border-slate-700">
+                                <h4 class="font-bold text-green-400">ChromaDB</h4>
+                                <p class="text-xs text-slate-500">Vectores y Embeddings</p>
+                            </div>
+                            <div class="flex-1 bg-slate-800 p-3 rounded border border-slate-700">
+                                <h4 class="font-bold text-slate-200">SQLite</h4>
+                                <p class="text-xs text-slate-500">Metadatos, Rutas, Fechas</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="w-1 h-8 flow-line"></div>
+                    <div class="bg-blue-600 text-white px-6 py-3 rounded-lg font-bold shadow-lg shadow-blue-500/30">
+                        🚀 Listo para RAG / Búsqueda
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // DATOS (Mismos de antes + Streamlit/Loguru)
+        const tools = [
+            { name: "HTML5", cat: "Frontend", pri: "Alta", desc: "Estructura semántica fundamental.", tip: "Usar tags como <article> y <section>." },
+            { name: "CSS3 (Grid/Flex)", cat: "Frontend", pri: "Alta", desc: "Maquetación moderna.", tip: "Flex para 1D, Grid para 2D." },
+            { name: "JS Vanilla", cat: "Frontend", pri: "Alta", desc: "Lógica básica.", tip: "Modulos ES6 para organización." },
+            { name: "LocalStorage", cat: "Frontend", pri: "Alta", desc: "Persistencia simple.", tip: "Guardar preferencias de UI." },
+            { name: "Tailwind CSS", cat: "Frontend", pri: "Media", desc: "Estilos rápidos.", tip: "Usar @apply para limpiar HTML." },
+            { name: "HTMX", cat: "Frontend", pri: "Media", desc: "AJAX vía HTML.", tip: "Apps dinámicas sin React." },
+            
+            { name: "Python", cat: "Backend", pri: "Alta", desc: "Core language.", tip: "Virtualenvs obligatorios." },
+            { name: "Flask", cat: "Backend", pri: "Alta", desc: "API Simple.", tip: "Ideal para MVPs." },
+            { name: "FastAPI", cat: "Backend", pri: "Media", desc: "API Asíncrona.", tip: "El estándar para servir IA." },
+            { name: "Loguru", cat: "Backend", pri: "Media", desc: "Logging humano.", tip: "Adiós a print(), hola logger.info()." },
+            { name: "Streamlit", cat: "Backend", pri: "Media", desc: "UI de Datos rápida.", tip: "Dashboards IA en 5 mins." },
+            { name: "SQLite", cat: "Backend", pri: "Alta", desc: "BD local.", tip: "Perfecta hasta 100k registros." },
+
+            { name: "CLIP (OpenAI)", cat: "IA & Visión", pri: "Alta", desc: "Embeddings Visuales.", tip: "Buscar 'gato' en fotos sin etiquetas." },
+            { name: "Whisper", cat: "IA & Visión", pri: "Media", desc: "Speech-to-Text.", tip: "Subtítulos automáticos." },
+            { name: "ChromaDB", cat: "LLMs & RAG", pri: "Alta", desc: "BD Vectorial.", tip: "El cerebro de la búsqueda semántica." },
+            { name: "RAG", cat: "LLMs & RAG", pri: "Alta", desc: "Contexto para LLMs.", tip: "Tus datos + ChatGPT." },
+            { name: "Docker", cat: "Infra", pri: "Alta", desc: "Contenedores.", tip: "Reproducibilidad total." },
+            { name: "Git", cat: "Infra", pri: "Alta", desc: "Versiones.", tip: "Commits atómicos." }
+        ];
+
+        // RENDER GRID
+        const grid = document.getElementById('tools-grid');
+        const searchInput = document.getElementById('searchInput');
+        const categoryContainer = document.getElementById('category-filters');
+        let currentPriority = 'all';
+        let currentCategory = 'all';
+
+        // Inicializar Categorías
+        const categories = [...new Set(tools.map(t => t.cat))];
+        const allBtn = document.createElement('button');
+        allBtn.className = "w-full text-left px-3 py-2 rounded hover:bg-slate-700 text-sm transition border-l-2 border-blue-500 text-white font-medium cat-btn";
+        allBtn.textContent = "Todas";
+        allBtn.onclick = () => filterByCategory('all', allBtn);
+        categoryContainer.appendChild(allBtn);
+
+        categories.forEach(cat => {
+            const btn = document.createElement('button');
+            btn.className = "w-full text-left px-3 py-2 rounded hover:bg-slate-700 text-sm transition border-l-2 border-transparent text-slate-300 cat-btn";
+            btn.textContent = cat;
+            btn.onclick = () => filterByCategory(cat, btn);
+            categoryContainer.appendChild(btn);
+        });
+
+        function renderTools() {
+            grid.innerHTML = '';
+            const searchTerm = searchInput.value.toLowerCase();
+
+            const filtered = tools.filter(t => {
+                const matchPri = currentPriority === 'all' || t.pri === currentPriority;
+                const matchCat = currentCategory === 'all' || t.cat === currentCategory;
+                const matchSearch = t.name.toLowerCase().includes(searchTerm) || t.desc.toLowerCase().includes(searchTerm);
+                return matchPri && matchCat && matchSearch;
+            });
+
+            document.getElementById('status-display').textContent = `Mostrando ${filtered.length}`;
+
+            filtered.forEach(t => {
+                let priColor = "text-slate-400 border-slate-600";
+                let priIcon = "";
+                if(t.pri === "Alta") { priColor = "text-yellow-400 border-yellow-400/30 bg-yellow-400/10"; priIcon="⭐"; }
+                if(t.pri === "Media") { priColor = "text-blue-400 border-blue-400/30 bg-blue-400/10"; priIcon="🔵"; }
+
+                const card = document.createElement('div');
+                card.className = "bg-slate-800 border border-slate-700 rounded-xl p-5 flex flex-col justify-between card-hover transition duration-200";
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="text-xs font-mono text-slate-500 uppercase tracking-wider">${t.cat}</span>
+                            <span class="text-xs px-2 py-1 rounded-full border ${priColor}">${priIcon} ${t.pri}</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">${t.name}</h3>
+                        <p class="text-sm text-slate-400 mb-4 leading-relaxed">${t.desc}</p>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-slate-700/50">
+                        <p class="text-xs font-semibold text-blue-400 mb-1">💡 Director's Tip:</p>
+                        <p class="text-xs text-slate-300 italic">"${t.tip}"</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterByPriority(pri) { currentPriority = pri; renderTools(); }
+        function filterByCategory(cat, btn) {
+            currentCategory = cat;
+            document.querySelectorAll('.cat-btn').forEach(b => {
+                b.classList.remove('border-blue-500', 'text-white', 'font-medium');
+                b.classList.add('border-transparent', 'text-slate-300');
+            });
+            btn.classList.remove('border-transparent', 'text-slate-300');
+            btn.classList.add('border-blue-500', 'text-white', 'font-medium');
+            renderTools();
+        }
+
+        // GESTIÓN DE VISTAS
+        function switchView(viewName) {
+            const viewGrid = document.getElementById('view-grid');
+            const viewFlow = document.getElementById('view-flow');
+            const btnGrid = document.getElementById('btn-grid');
+            const btnFlow = document.getElementById('btn-flow');
+            const sidebarFilters = document.getElementById('sidebar-filters');
+            const searchContainer = document.getElementById('search-container');
+
+            if (viewName === 'grid') {
+                viewGrid.classList.remove('hidden');
+                viewFlow.classList.add('hidden');
+                
+                // Estilos botones
+                btnGrid.classList.remove('text-slate-300', 'bg-transparent', 'border-transparent');
+                btnGrid.classList.add('bg-slate-700', 'text-white', 'border-blue-500');
+                btnFlow.classList.add('text-slate-300', 'border-transparent');
+                btnFlow.classList.remove('bg-slate-700', 'text-white', 'border-blue-500');
+
+                sidebarFilters.classList.remove('hidden'); // Mostrar filtros
+                searchContainer.classList.remove('invisible'); 
+            } else {
+                viewGrid.classList.add('hidden');
+                viewFlow.classList.remove('hidden');
+
+                // Estilos botones
+                btnFlow.classList.remove('text-slate-300', 'bg-transparent', 'border-transparent');
+                btnFlow.classList.add('bg-slate-700', 'text-white', 'border-blue-500');
+                btnGrid.classList.add('text-slate-300', 'border-transparent');
+                btnGrid.classList.remove('bg-slate-700', 'text-white', 'border-blue-500');
+
+                sidebarFilters.classList.add('hidden'); // Ocultar filtros (no aplican al diagrama)
+                searchContainer.classList.add('invisible');
+            }
+        }
+
+        searchInput.addEventListener('input', renderTools);
+        renderTools();
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛠️ Director's Dashboard v4.4</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* UI Utilities */
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+        .flow-line { background: linear-gradient(90deg, #334155 0%, #3b82f6 50%, #334155 100%); background-size: 200% 100%; animation: flowAnimation 2s infinite linear; }
+        @keyframes flowAnimation { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        .tool-checkbox:checked + div { border-color: #3b82f6; background-color: rgba(59, 130, 246, 0.1); }
+        .tool-checkbox:checked + div .check-icon { opacity: 1; }
+
+        /* ARQUITECTO VISUAL STYLES */
+        .draggable-tool { cursor: grab; user-select: none; transition: all 0.2s; }
+        .draggable-tool:active { cursor: grabbing; transform: scale(0.98); }
+        
+        /* Estilos de Categorías (Bordes y Fondos sutiles) */
+        .cat-frontend { border-left-color: #f97316; } /* Naranja */
+        .cat-backend { border-left-color: #22c55e; }  /* Verde */
+        .cat-ai { border-left-color: #a855f7; }       /* Morado */
+        .cat-storage { border-left-color: #eab308; }  /* Amarillo */
+        .cat-process { border-left-color: #ec4899; }  /* Rosa */
+
+        .flow-arrow::after { content: '⬇'; display: block; text-align: center; color: #64748b; font-size: 1.2rem; margin: 0.5rem 0; animation: bounce 2s infinite; }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-5px);} 60% {transform: translateY(-3px);} }
+        .flow-node:last-child .flow-arrow::after { display: none; }
+
+        /* Nodos Interactivos */
+        .interactive-node { cursor: pointer; transition: all 0.3s ease; }
+        .interactive-node:hover { transform: scale(1.03); box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); border-color: #60a5fa; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200 h-screen flex overflow-hidden selection:bg-blue-500 selection:text-white">
+
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-slate-900 border-r border-slate-800 flex-shrink-0 flex flex-col transition-all duration-300">
+        <div class="p-6 border-b border-slate-800">
+            <h1 class="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                <i class="fa-solid fa-layer-group text-blue-500"></i>
+                Director<span class="text-slate-500">OS</span>
+            </h1>
+            <p class="text-xs text-slate-500 mt-1">v4.4 - Didactic Edition</p>
+        </div>
+        
+        <nav class="flex-1 overflow-y-auto p-4 space-y-2">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 pl-2">Modos</p>
+            <button onclick="switchView('architect')" id="btn-architect" class="w-full text-left px-3 py-2.5 rounded-lg text-sm transition font-medium flex items-center gap-3 bg-blue-600 text-white shadow-lg shadow-blue-900/20"><i class="fa-solid fa-pen-ruler"></i> Arquitecto Visual</button>
+            <button onclick="switchView('flow')" id="btn-flow" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3"><i class="fa-solid fa-diagram-project"></i> Flujos Tácticos</button>
+            <button onclick="switchView('generator')" id="btn-generator" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3"><i class="fa-solid fa-wand-magic-sparkles"></i> Generador Prompts</button>
+            <button onclick="switchView('grid')" id="btn-grid" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3"><i class="fa-solid fa-boxes-stacked"></i> Glosario</button>
+        </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col min-w-0 relative bg-slate-950">
+        
+        <!-- Header -->
+        <header class="bg-slate-900/50 backdrop-blur border-b border-slate-800 p-4 h-16 flex justify-between items-center sticky top-0 z-20">
+            <div class="flex items-center gap-4">
+                <h2 id="page-title" class="text-lg font-semibold text-white">Arquitecto Visual</h2>
+                <!-- Project Selector -->
+                <div id="project-selector-wrapper" class="hidden">
+                    <select id="project-select" onchange="loadProjectPreset()" class="bg-slate-800 border border-slate-700 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-500 text-slate-300">
+                        <option value="empty">Nuevo Proyecto...</option>
+                        <option value="videomine">📽️ VideoMine Pipeline</option>
+                        <option value="docmine">📄 DocMine Pipeline</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex gap-3 items-center">
+                <span class="text-xs font-mono text-slate-500 bg-slate-900 px-2 py-1 rounded border border-slate-800" id="clock">00:00</span>
+            </div>
+        </header>
+
+        <!-- VISTA 0: ARQUITECTO VISUAL -->
+        <div id="view-architect" class="flex-1 overflow-hidden flex relative">
+            <div class="w-64 bg-slate-900 border-r border-slate-800 p-4 overflow-y-auto flex-shrink-0">
+                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Herramientas</h3>
+                <p class="text-[10px] text-slate-500 mb-4">Arrastra al lienzo para construir</p>
+                <div id="architect-toolbox" class="space-y-3"></div>
+            </div>
+            <div class="flex-1 bg-slate-950 p-8 overflow-y-auto relative bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px]">
+                <div class="max-w-2xl mx-auto">
+                    <!-- Leyenda Didáctica -->
+                    <div class="flex gap-4 justify-center mb-8 text-[10px] uppercase font-bold tracking-wider text-slate-500">
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-orange-500"></span> Frontend</span>
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span> Backend</span>
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-500"></span> IA</span>
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-yellow-500"></span> Datos</span>
+                    </div>
+
+                    <div id="architect-canvas" class="min-h-[400px] pb-32 space-y-2"></div>
+                    
+                    <div class="fixed bottom-8 right-8 left-72 max-w-2xl mx-auto z-30">
+                        <div class="bg-slate-900/90 backdrop-blur border border-slate-700 p-4 rounded-xl shadow-2xl flex gap-4 items-center justify-between">
+                            <div class="text-xs text-slate-400"><span id="node-count" class="font-bold text-white">0</span> nodos conectados</div>
+                            <button onclick="compileArchitecture()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 text-white font-bold py-2 px-6 rounded-lg shadow-lg flex items-center gap-2 transition transform active:scale-95"><i class="fa-solid fa-code"></i> Compilar a Código</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Modal Output -->
+                <div id="architect-output-modal" class="hidden absolute inset-0 bg-slate-950/90 z-40 flex items-center justify-center p-8 backdrop-blur-sm">
+                    <div class="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-3xl shadow-2xl flex flex-col max-h-full">
+                        <div class="p-4 border-b border-slate-800 flex justify-between items-center"><h3 class="font-bold text-white">Especificación Técnica</h3><button onclick="closeArchitectModal()" class="text-slate-500 hover:text-white"><i class="fa-solid fa-times"></i></button></div>
+                        <div class="p-6 overflow-y-auto flex-1 bg-slate-950"><pre id="architect-prompt-output" class="font-mono text-xs text-slate-300 whitespace-pre-wrap leading-relaxed"></pre></div>
+                        <div class="p-4 border-t border-slate-800 bg-slate-900 flex justify-end"><button onclick="copyArchitectPrompt()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-4 py-2 rounded-lg font-medium transition">Copiar al Portapapeles</button></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA 1: FLUJO TÁCTICO (Completo) -->
+        <div id="view-flow" class="hidden flex-1 overflow-y-auto p-8 bg-slate-950 relative">
+             <div class="max-w-5xl mx-auto">
+                <div class="text-center mb-10"><h2 class="text-2xl font-bold text-white mb-2">Ingesta Inteligente</h2><p class="text-slate-400">Haz clic en los nodos para ver detalles.</p></div>
+                <div class="relative flex flex-col items-center space-y-8">
+                    <div class="relative group z-10" onclick="openNodeDetails('fastapi')"><div class="interactive-node bg-slate-800 border border-slate-600 p-4 rounded-xl shadow-lg w-64 text-center border-l-4 border-l-green-500"><span class="text-xs font-mono text-green-400 mb-1 block">🌐 BACKEND</span><h3 class="text-lg font-bold text-white">FastAPI</h3><p class="text-[10px] text-slate-400 mt-1">API Server Async</p></div></div>
+                    <div class="w-1 h-8 bg-slate-700"></div>
+                    <div class="bg-slate-800 border border-slate-600 px-4 py-2 rounded-full text-xs text-slate-300">Router</div>
+                    <div class="w-full max-w-2xl flex justify-between relative">
+                        <div class="absolute top-0 left-1/4 right-1/4 h-1 bg-slate-700 -mt-1"></div><div class="absolute top-0 left-1/4 h-8 w-1 bg-slate-700"></div><div class="absolute top-0 right-1/4 h-8 w-1 bg-slate-700"></div>
+                        <div class="w-5/12 flex flex-col items-center mt-8 space-y-6"><div class="interactive-node bg-slate-800 border border-slate-600 p-4 rounded-xl w-full text-center relative border-l-4 border-l-pink-500" onclick="openNodeDetails('pillow')"><h3 class="font-bold text-white">Pillow</h3><p class="text-[10px] text-slate-400">Procesado Imagen</p></div><div class="w-1 h-6 flow-line"></div><div class="interactive-node bg-gradient-to-b from-slate-800 to-slate-900 border border-purple-500/50 p-4 rounded-xl w-full text-center border-l-4 border-l-purple-500" onclick="openNodeDetails('clip')"><h3 class="font-bold text-purple-400">CLIP</h3><p class="text-[10px] text-slate-400">Embeddings IA</p></div></div>
+                        <div class="w-5/12 flex flex-col items-center mt-8 space-y-6"><div class="interactive-node bg-slate-800 border border-slate-600 p-4 rounded-xl w-full text-center relative border-l-4 border-l-pink-500" onclick="openNodeDetails('ffmpeg')"><h3 class="font-bold text-white">FFmpeg</h3><p class="text-[10px] text-slate-400">Motor Multimedia</p></div><div class="w-1 h-6 flow-line"></div><div class="interactive-node bg-gradient-to-b from-slate-800 to-slate-900 border border-purple-500/50 p-4 rounded-xl w-full text-center border-l-4 border-l-purple-500" onclick="openNodeDetails('whisper')"><h3 class="font-bold text-purple-400">Whisper</h3><p class="text-[10px] text-slate-400">Audio a Texto</p></div></div>
+                    </div>
+                    <div class="w-full max-w-2xl h-1 bg-slate-700 mt-4 relative"><div class="absolute left-1/2 -translate-x-1/2 -top-0 w-1 h-8 bg-slate-700"></div></div>
+                    <div class="mt-8 interactive-node bg-slate-900 border-2 border-dashed border-slate-600 p-6 rounded-xl w-full max-w-lg text-center relative border-l-4 border-l-yellow-500" onclick="openNodeDetails('chroma')"><h4 class="font-bold text-green-400">ChromaDB</h4><p class="text-[10px] text-slate-400 mt-1">Memoria Vectorial</p></div>
+                </div>
+            </div>
+            <!-- Modal Detalles -->
+            <div id="node-modal" class="hidden absolute top-0 right-0 h-full w-96 bg-slate-900/95 backdrop-blur border-l border-slate-700 shadow-2xl p-6 overflow-y-auto transform transition-transform translate-x-full z-50">
+                <button onclick="closeNodeDetails()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-times text-xl"></i></button><div id="modal-content"></div>
+            </div>
+        </div>
+
+        <!-- VISTA 2: GENERADOR -->
+        <div id="view-generator" class="hidden flex-1 overflow-y-auto p-8 relative">
+             <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div class="lg:col-span-4 space-y-6">
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+                        <h3 class="font-bold text-white text-sm mb-2">Rol</h3>
+                        <select id="prompt-role" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-300">
+                            <option value="Arquitecto de Software Senior">🏛️ Arquitecto Senior</option>
+                            <option value="Ingeniero de Datos y RAG">🧠 Ingeniero IA/RAG</option>
+                            <option value="Experto en Debugging">🐛 Cazador de Bugs</option>
+                            <option value="Desarrollador Frontend">🎨 Frontend UX/UI</option>
+                        </select>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+                        <h3 class="font-bold text-white text-sm mb-2">Objetivo</h3>
+                        <textarea id="prompt-goal" rows="4" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-sm text-slate-300" placeholder="¿Qué quieres conseguir?"></textarea>
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            <button onclick="setGoal('Generar andamiaje (scaffold) inicial de proyecto')" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-400 px-2 py-1 rounded border border-slate-700 transition">🏗️ Scaffold</button>
+                            <button onclick="setGoal('Explicar este código línea por línea')" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-400 px-2 py-1 rounded border border-slate-700 transition">📖 Explicar</button>
+                            <button onclick="setGoal('Optimizar para rendimiento y concurrencia')" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-400 px-2 py-1 rounded border border-slate-700 transition">🚀 Optimizar</button>
+                        </div>
+                    </div>
+                    <button onclick="generatePrompt()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition active:scale-95">Generar Orden</button>
+                </div>
+                <div class="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col h-[calc(100vh-8rem)]">
+                    <div class="flex items-center justify-between mb-4 flex-shrink-0"><h3 class="font-bold text-white text-sm">Stack</h3><button onclick="clearSelection()" class="text-xs text-slate-500 hover:text-white">Limpiar</button></div>
+                    <div id="stack-selector" class="overflow-y-auto pr-2 space-y-2 flex-1"></div>
+                </div>
+                <div class="lg:col-span-4 flex flex-col h-[calc(100vh-8rem)]">
+                    <div class="bg-slate-800 border border-slate-700 rounded-xl p-1 flex-1 flex flex-col relative group">
+                        <div class="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition"><button onclick="copyToClipboard()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-md shadow-lg font-medium transition">Copiar</button></div>
+                        <div class="bg-slate-950 rounded-lg p-4 flex-1 overflow-y-auto text-xs font-mono text-slate-300 whitespace-pre-wrap" id="prompt-output">// Tu prompt aparecerá aquí...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA 3: GLOSARIO -->
+        <div id="view-grid" class="hidden flex-1 overflow-y-auto p-6">
+            <div id="tools-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"></div>
+        </div>
+    </main>
+
+    <script>
+        // ============================================
+        // 1. DATA TOOLS ENRIQUECIDA + TAGS DIDÁCTICOS
+        // ============================================
+        const tools = [
+            // FRONTEND (Naranja)
+            { name: "HTML5", cat: "Frontend", id:"html", icon: "fa-html5", color: "text-orange-500", tag: "Estructura Web", pri: "Alta", desc: "Esqueleto semántico.", tip: "Usar tags semánticos." }, 
+            { name: "Tailwind", cat: "Frontend", id:"css", icon: "fa-css3", color: "text-blue-400", tag: "Estilos CSS", pri: "Media", desc: "Diseño rápido.", tip: "Mobile-first." }, 
+            { name: "HTMX", cat: "Frontend", id:"htmx", icon: "fa-bolt", color: "text-yellow-400", tag: "Interactividad", pri: "Alta", desc: "AJAX sin JS.", tip: "Usar hx-swap." },
+            // BACKEND (Verde)
+            { name: "FastAPI", cat: "Backend", id:"fastapi", icon: "fa-server", color: "text-green-400", tag: "API Server", pri: "Alta", desc: "Servidor asíncrono.", tip: "Docs automáticos." }, 
+            { name: "Python", cat: "Backend", id:"python", icon: "fa-brands fa-python", color: "text-blue-500", tag: "Lenguaje Core", pri: "Alta", desc: "Lógica negocio.", tip: "Type hints." },
+            { name: "Loguru", cat: "Backend", id:"loguru", icon: "fa-list-ul", color: "text-slate-400", tag: "Logging", pri: "Media", desc: "Logs claros.", tip: "Rotación logs." },
+            // PROCESS (Rosa)
+            { name: "OpenCV", cat: "Process", id:"opencv", icon: "fa-eye", color: "text-red-400", tag: "Visión Artificial", pri: "Media", desc: "Procesa píxeles.", tip: "Optimizar arrays." },
+            { name: "FFmpeg", cat: "Process", id:"ffmpeg", icon: "fa-film", color: "text-pink-400", tag: "Motor Video", pri: "Media", desc: "Codificación A/V.", tip: "Subprocess." },
+            // AI (Morado)
+            { name: "CLIP", cat: "IA Model", id:"clip", icon: "fa-brain", color: "text-purple-400", tag: "Embeddings Img", pri: "Alta", desc: "Ojos de la IA.", tip: "Batch processing." }, 
+            { name: "Whisper", cat: "IA Model", id:"whisper", icon: "fa-ear-listen", color: "text-indigo-400", tag: "Speech-to-Text", pri: "Media", desc: "Oídos de la IA.", tip: "Modelo 'base'." }, 
+            // STORAGE (Amarillo)
+            { name: "ChromaDB", cat: "Storage", id:"chroma", icon: "fa-database", color: "text-emerald-400", tag: "Vector DB", pri: "Alta", desc: "Memoria IA.", tip: "Persistencia." }, 
+            { name: "SQLite", cat: "Storage", id:"sqlite", icon: "fa-table", color: "text-blue-300", tag: "Datos Relacionales", pri: "Alta", desc: "Metadatos.", tip: "SQL ligero." }
+        ];
+
+        // Mapeo de Categoría a Clase CSS de Borde
+        const catStyles = {
+            "Frontend": "cat-frontend",
+            "Backend": "cat-backend",
+            "IA Model": "cat-ai",
+            "Storage": "cat-storage",
+            "Process": "cat-process"
+        };
+
+        const nodeDetails = {
+            fastapi: { title: "FastAPI", role: "Arquitecto", desc: "Punto de entrada asíncrono.", code: "@app.post...", goal: "Optimizar ingesta." },
+            pillow: { title: "Pillow", role: "Ingeniero Datos", desc: "Manipulación de imágenes.", code: "Image.open...", goal: "Normalizar imágenes." },
+            clip: { title: "CLIP", role: "Ingeniero IA", desc: "Busca similitud visual.", code: "model.encode...", goal: "Cargar modelo local." },
+            whisper: { title: "Whisper", role: "Ingeniero IA", desc: "Transcribe audio.", code: "model.transcribe...", goal: "Configurar CPU." },
+            ffmpeg: { title: "FFmpeg", role: "Ingeniero Datos", desc: "Procesa video/audio.", code: "subprocess.run...", goal: "Wrapper seguro." },
+            chroma: { title: "ChromaDB", role: "Arquitecto", desc: "Guarda vectores.", code: "client.add...", goal: "Esquema metadatos." }
+        };
+
+        // ============================================
+        // 2. LOGICA ARQUITECTO VISUAL (MEJORADA)
+        // ============================================
+        let canvasNodes = [];
+        const toolbox = document.getElementById('architect-toolbox');
+        const canvas = document.getElementById('architect-canvas');
+
+        // Init Toolbox
+        tools.forEach(t => {
+            const el = document.createElement('div');
+            const borderClass = catStyles[t.cat] || "border-slate-700";
+            
+            // TOOLBOX CARD MEJORADA
+            el.className = `draggable-tool bg-slate-800 border-l-4 ${borderClass} border-y border-r border-slate-700 p-3 rounded-r-lg flex items-center justify-between gap-3 hover:bg-slate-700`;
+            el.draggable = true;
+            el.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid ${t.icon} ${t.color}"></i>
+                    <div>
+                        <span class="text-sm font-bold block">${t.name}</span>
+                        <span class="text-[10px] text-slate-500 uppercase font-mono tracking-wider block">${t.tag}</span>
+                    </div>
+                </div>
+                <i class="fa-solid fa-grip-vertical text-slate-600 text-xs"></i>
+            `;
+            el.ondragstart = (ev) => { ev.dataTransfer.setData("toolId", t.id); ev.dataTransfer.effectAllowed = "copy"; };
+            toolbox.appendChild(el);
+        });
+
+        canvas.ondragover = (ev) => { ev.preventDefault(); ev.dataTransfer.dropEffect = "copy"; };
+        canvas.ondrop = (ev) => { ev.preventDefault(); const toolId = ev.dataTransfer.getData("toolId"); if(toolId) addNodeToCanvas(toolId); };
+
+        function addNodeToCanvas(toolId) {
+            const tool = tools.find(t => t.id === toolId);
+            if(tool) { canvasNodes.push(tool); renderCanvas(); }
+        }
+        function removeNode(index) { canvasNodes.splice(index, 1); renderCanvas(); }
+
+        function renderCanvas() {
+            canvas.innerHTML = '';
+            if (canvasNodes.length === 0) {
+                canvas.innerHTML = `<div id="canvas-placeholder" class="border-2 border-dashed border-slate-800 rounded-xl p-12 text-center text-slate-600 animate-in fade-in duration-300"><i class="fa-solid fa-hand-pointer text-2xl mb-2"></i><p>Arrastra herramientas para diseñar</p></div>`;
+                document.getElementById('node-count').textContent = '0';
+                return;
+            }
+            canvasNodes.forEach((node, index) => {
+                const borderClass = catStyles[node.cat] || "border-slate-600";
+                
+                // CANVAS NODE MEJORADO
+                const nodeEl = document.createElement('div');
+                nodeEl.className = "flow-node relative group animate-in fade-in slide-in-from-bottom-2 duration-300";
+                nodeEl.innerHTML = `
+                    <div class="bg-slate-800 border border-slate-600 border-l-4 ${borderClass} p-4 rounded-xl flex items-center justify-between shadow-lg relative z-10">
+                        <div class="flex items-center gap-4">
+                            <div class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center border border-slate-700 font-mono text-xs text-slate-500">${index + 1}</div>
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid ${node.icon} ${node.color} text-2xl"></i>
+                                <div>
+                                    <h4 class="font-bold text-white text-lg leading-tight">${node.name}</h4>
+                                    <p class="text-[10px] text-slate-400 uppercase tracking-widest bg-slate-900/50 px-1 rounded inline-block mt-1">${node.tag}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="removeNode(${index})" class="text-slate-600 hover:text-red-400 transition p-2"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                    <div class="flow-arrow h-8 border-l-2 border-dashed border-slate-700 ml-8 relative"></div>`;
+                canvas.appendChild(nodeEl);
+            });
+            document.getElementById('node-count').textContent = canvasNodes.length;
+        }
+
+        // Resto de funciones (Presets, Compile, UI Switch, Generator...)
+        function loadProjectPreset() {
+            const val = document.getElementById('project-select').value;
+            canvasNodes = [];
+            if(val === 'videomine') ['fastapi', 'ffmpeg', 'whisper', 'clip', 'chroma'].forEach(id => addNodeToCanvas(id));
+            else if (val === 'docmine') ['fastapi', 'python', 'clip', 'chroma', 'sqlite'].forEach(id => addNodeToCanvas(id));
+            renderCanvas();
+        }
+        function compileArchitecture() {
+            if(canvasNodes.length === 0) return alert("Lienzo vacío");
+            const stack = [...new Set(canvasNodes.map(n => n.name))].join(", ");
+            const prompt = `**ROL:** Arquitecto Software.\n**OBJETIVO:** Pipeline datos.\n**FLUJO:**\n${canvasNodes.map((n, i) => `${i+1}. [${n.name}] (${n.tag})`).join('\n')}\n**STACK:** ${stack}\n**SALIDA:** Script Python modular.`;
+            document.getElementById('architect-prompt-output').textContent = prompt;
+            document.getElementById('architect-output-modal').classList.remove('hidden');
+        }
+        function closeArchitectModal() { document.getElementById('architect-output-modal').classList.add('hidden'); }
+        function copyArchitectPrompt() { navigator.clipboard.writeText(document.getElementById('architect-prompt-output').textContent); }
+
+        function switchView(view) {
+            ['architect', 'generator', 'grid', 'flow'].forEach(v => {
+                document.getElementById(`view-${v}`).classList.add('hidden');
+                const b = document.getElementById(`btn-${v}`);
+                b.classList.replace('bg-blue-600', 'text-slate-400');
+                b.classList.replace('text-white', 'hover:bg-slate-800');
+                b.classList.remove('shadow-lg');
+            });
+            document.getElementById(`view-${view}`).classList.remove('hidden');
+            const btn = document.getElementById(`btn-${view}`);
+            btn.classList.replace('text-slate-400', 'bg-blue-600');
+            btn.classList.replace('hover:bg-slate-800', 'text-white');
+            btn.classList.add('shadow-lg');
+            
+            const projSel = document.getElementById('project-selector-wrapper');
+            if(view === 'architect') projSel.classList.remove('hidden'); else projSel.classList.add('hidden');
+            document.getElementById('page-title').textContent = { 'architect': 'Arquitecto Visual', 'generator': 'Generador', 'grid': 'Glosario', 'flow': 'Flujos' }[view];
+        }
+
+        // Generator logic
+        function setGoal(t) { document.getElementById('prompt-goal').value = t; }
+        function clearSelection() { document.querySelectorAll('.tool-checkbox').forEach(c => c.checked = false); }
+        function copyToClipboard() { navigator.clipboard.writeText(document.getElementById('prompt-output').textContent); }
+        function generatePrompt() {
+            const role = document.getElementById('prompt-role').value;
+            const goal = document.getElementById('prompt-goal').value || "[Objetivo]";
+            const stack = Array.from(document.querySelectorAll('.tool-checkbox:checked')).map(cb => cb.value).join(", ") || "mi stack";
+            document.getElementById('prompt-output').textContent = `**ROL:** ${role}\n**CONTEXTO:** minerOS. Stack: ${stack}\n**OBJETIVO:** ${goal}\n**ESTILO:** Local-first.`;
+        }
+
+        // Render Stack & Grid
+        const stackContainer = document.getElementById('stack-selector');
+        const grid = document.getElementById('tools-grid');
+        const categories = {};
+        tools.forEach(t => { if(!categories[t.cat]) categories[t.cat] = []; categories[t.cat].push(t); });
+        
+        for (const [cat, items] of Object.entries(categories)) {
+            const group = document.createElement('div'); group.className = "mb-4";
+            group.innerHTML = `<h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 sticky top-0 bg-slate-900 py-1">${cat}</h4>`;
+            items.forEach(t => {
+                const l = document.createElement('label'); l.className = "flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-slate-800/50 transition group";
+                l.innerHTML = `<input type="checkbox" value="${t.name}" class="peer sr-only tool-checkbox"><div class="w-4 h-4 rounded border border-slate-600 bg-slate-900 peer-checked:bg-blue-500 flex items-center justify-center"><i class="fa-solid fa-check text-[10px] text-white opacity-0 check-icon"></i></div><span class="text-sm text-slate-300 peer-checked:text-white">${t.name}</span>`;
+                group.appendChild(l);
+            });
+            stackContainer.appendChild(group);
+        }
+
+        tools.forEach(t => {
+            const borderClass = catStyles[t.cat] || "border-slate-600";
+            const card = document.createElement('div');
+            card.className = `bg-slate-900 border border-slate-800 border-l-4 ${borderClass} p-5 rounded-xl flex flex-col justify-between hover:border-slate-600 transition card-hover`;
+            card.innerHTML = `
+                <div><div class="flex justify-between items-start mb-3"><i class="fa-solid ${t.icon} ${t.color} text-xl"></i><span class="text-[10px] bg-slate-950 px-2 py-1 rounded text-slate-400 uppercase tracking-wider">${t.tag}</span></div><h3 class="text-lg font-bold text-white mb-2">${t.name}</h3><p class="text-sm text-slate-400 mb-4 leading-relaxed">${t.desc}</p></div>
+                <div class="mt-2 pt-3 border-t border-slate-800"><p class="text-xs font-semibold text-blue-400 mb-1">💡 Tip:</p><p class="text-xs text-slate-300 italic">"${t.tip}"</p></div>`;
+            grid.appendChild(card);
+        });
+
+        // Flow interactivity
+        function openNodeDetails(id) {
+            const d = nodeDetails[id]; if(!d) return;
+            const m = document.getElementById('node-modal'); m.classList.remove('hidden'); setTimeout(()=>m.classList.remove('translate-x-full'),10);
+            document.getElementById('modal-content').innerHTML = `
+            <div class="mb-6"><span class="text-xs font-mono text-blue-400 border border-blue-500/30 px-2 py-1 rounded bg-blue-500/10 mb-2 inline-block">INSPECTOR</span><h2 class="text-2xl font-bold text-white">${d.title}</h2><p class="text-slate-400 mt-2 text-sm leading-relaxed">${d.desc}</p></div>
+            <div class="mb-6"><h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Código</h3><div class="bg-slate-950 border border-slate-800 rounded-lg p-3 font-mono text-xs text-green-400 overflow-x-auto"><pre>${d.code}</pre></div></div>
+            <div class="mt-8 pt-6 border-t border-slate-800"><h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Acciones</h3><div class="grid grid-cols-1 gap-2"><button onclick="jumpToGenerator('${id}','scaffold')" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 p-2 rounded-lg text-xs font-bold border border-slate-700 flex items-center gap-2">🏗️ Scaffold</button><button onclick="jumpToGenerator('${id}','explain')" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 p-2 rounded-lg text-xs font-bold border border-slate-700 flex items-center gap-2">📖 Explicar</button></div></div>`;
+        }
+        function closeNodeDetails() { const m=document.getElementById('node-modal'); m.classList.add('translate-x-full'); setTimeout(()=>m.classList.add('hidden'),300); }
+        function jumpToGenerator(id, mode) {
+            closeNodeDetails(); switchView('generator');
+            const d = nodeDetails[id];
+            document.getElementById('prompt-role').value = d.role;
+            let goal = d.goal;
+            if(mode==='scaffold') goal = `Generar scaffold para ${d.title}.`;
+            if(mode==='explain') goal = `Explicar código de ${d.title}.`;
+            document.getElementById('prompt-goal').value = goal;
+        }
+
+        setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); }, 1000);
+        switchView('architect'); renderCanvas();
+    </script>
+</body>
+</html>
