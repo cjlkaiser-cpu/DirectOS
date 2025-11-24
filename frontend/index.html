@@ -982,8 +982,7 @@
                     console.log(`[DUAL-LOAD] ✅ Cargadas ${data.count} herramientas desde API`);
 
                     // Transformar formato API → formato frontend
-                    // La API tiene campos como "category" pero el frontend usa "cat"
-                    toolsData = data.tools.map(t => ({
+                    const toolsFromAPI = data.tools.map(t => ({
                         id: t.id,
                         name: t.name,
                         cat: t.category,
@@ -997,12 +996,19 @@
                         code: extractCodeBlock(t.content) || ''
                     }));
 
+                    // MERGE: Combinar tools de API con las que faltan de FALLBACK
+                    const apiIds = new Set(toolsFromAPI.map(t => t.id));
+                    const remainingFallback = FALLBACK_TOOLS.filter(t => !apiIds.has(t.id));
+
+                    toolsData = [...toolsFromAPI, ...remainingFallback];
+                    console.log(`[DUAL-LOAD] 📦 Total: ${toolsData.length} herramientas (${toolsFromAPI.length} desde API + ${remainingFallback.length} fallback)`);
+
                     return true;
                 }
                 throw new Error('Formato de respuesta inválido');
 
             } catch (error) {
-                console.warn('[DUAL-LOAD] ⚠️ API falló, usando fallback:', error.message);
+                console.warn('[DUAL-LOAD] ⚠️ API falló, usando fallback completo:', error.message);
                 toolsData = FALLBACK_TOOLS;
                 return false;
             }
