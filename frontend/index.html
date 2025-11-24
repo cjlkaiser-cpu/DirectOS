@@ -1763,7 +1763,7 @@ Incluye docker-compose para orquestar.`
         const canvas = document.getElementById('architect-canvas');
 
         // Init Toolbox
-        tools.forEach(t => {
+        getTools().forEach(t => {
             const el = document.createElement('div');
             const bc = catStyles[t.cat] || "border-slate-700";
             el.className = `draggable-tool bg-slate-800 border-l-4 ${bc} border-y border-r border-slate-700 p-2.5 rounded-r-lg flex items-center justify-between gap-2 hover:bg-slate-700 cursor-grab active:cursor-grabbing mb-1.5 transition`;
@@ -1792,7 +1792,7 @@ Incluye docker-compose para orquestar.`
         }
 
         function addNodeToCanvas(toolId) {
-            const tool = tools.find(t => t.id === toolId);
+            const tool = getTools().find(t => t.id === toolId);
             if(tool && !canvasNodes.find(n => n.id === toolId)) {
                 canvasNodes.push({...tool});
                 renderCanvas();
@@ -2204,7 +2204,7 @@ EOF
             // Limpiar canvas y cargar herramientas del preset
             canvasNodes = [];
             preset.tools.forEach(toolId => {
-                const tool = tools.find(t => t.id === toolId);
+                const tool = getTools().find(t => t.id === toolId);
                 if (tool) canvasNodes.push(tool);
             });
             renderCanvas();
@@ -2434,7 +2434,7 @@ if __name__ == "__main__":
 
         // Cambiar estado de herramienta
         function changeToolStatus(toolId, newStatus) {
-            const tool = tools.find(t => t.id === toolId);
+            const tool = getTools().find(t => t.id === toolId);
             if (tool) {
                 tool.status = newStatus;
                 saveToolStates();
@@ -2536,8 +2536,8 @@ if __name__ == "__main__":
 
         // Actualizar progreso
         function updateProgress() {
-            const total = tools.length;
-            const dominated = tools.filter(t => t.status === 'used').length;
+            const total = getTools().length;
+            const dominated = getTools().filter(t => t.status === 'used').length;
             const percent = Math.round((dominated / total) * 100);
 
             document.getElementById('progress-count').textContent = dominated;
@@ -2669,7 +2669,7 @@ if __name__ == "__main__":
                         <!-- Stack visual -->
                         <div class="flex flex-wrap gap-1 mb-4">
                             ${flow.stack.slice(0, 4).map(toolId => {
-                                const tool = tools.find(t => t.id === toolId);
+                                const tool = getTools().find(t => t.id === toolId);
                                 if (!tool) return '';
                                 return `<span class="inline-flex items-center gap-1 bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded text-[10px]">
                                     <i class="fa-solid ${tool.icon} ${tool.color}"></i>
@@ -2747,7 +2747,7 @@ if __name__ == "__main__":
             // Stack visual
             const stackContainer = document.getElementById('flow-modal-stack');
             stackContainer.innerHTML = flow.stack.map(toolId => {
-                const tool = tools.find(t => t.id === toolId);
+                const tool = getTools().find(t => t.id === toolId);
                 if (!tool) return '';
                 return `<span class="inline-flex items-center gap-1.5 bg-slate-800 border border-slate-700 px-2 py-1 rounded text-xs">
                     <i class="fa-solid ${tool.icon} ${tool.color}"></i>
@@ -2764,7 +2764,7 @@ if __name__ == "__main__":
             // Limpiar canvas y cargar herramientas del flujo
             canvasNodes = [];
             currentFlow.stack.forEach(toolId => {
-                const tool = tools.find(t => t.id === toolId);
+                const tool = getTools().find(t => t.id === toolId);
                 if (tool) canvasNodes.push(tool);
             });
             renderCanvas();
@@ -2783,7 +2783,7 @@ if __name__ == "__main__":
             // Limpiar canvas y cargar herramientas
             canvasNodes = [];
             flow.stack.forEach(toolId => {
-                const tool = tools.find(t => t.id === toolId);
+                const tool = getTools().find(t => t.id === toolId);
                 if (tool) canvasNodes.push(tool);
             });
             renderCanvas();
@@ -2872,7 +2872,7 @@ if __name__ == "__main__":
             // Renderizar herramientas del flujo
             const flowContainer = document.getElementById('pattern-modal-flow');
             flowContainer.innerHTML = pattern.flow.map(toolId => {
-                const tool = tools.find(t => t.id === toolId);
+                const tool = getTools().find(t => t.id === toolId);
                 if (!tool) return '';
                 return `<span class="inline-flex items-center gap-1.5 bg-slate-800 border border-slate-700 px-2 py-1 rounded text-xs">
                     <i class="fa-solid ${tool.icon} ${tool.color}"></i>
@@ -2892,7 +2892,7 @@ if __name__ == "__main__":
             // Seleccionar herramientas del stack
             document.querySelectorAll('.tool-checkbox').forEach(cb => {
                 const toolName = cb.value;
-                const tool = tools.find(t => t.name === toolName);
+                const tool = getTools().find(t => t.name === toolName);
                 cb.checked = tool && currentPattern.flow.includes(tool.id);
             });
 
@@ -2908,7 +2908,7 @@ if __name__ == "__main__":
             // Limpiar canvas y cargar herramientas del patrón
             canvasNodes = [];
             currentPattern.flow.forEach(toolId => {
-                const tool = tools.find(t => t.id === toolId);
+                const tool = getTools().find(t => t.id === toolId);
                 if (tool) canvasNodes.push(tool);
             });
             renderCanvas();
@@ -2926,7 +2926,7 @@ if __name__ == "__main__":
         let currentTool = null;
 
         function openToolModal(toolId) {
-            const tool = tools.find(t => t.id === toolId);
+            const tool = getTools().find(t => t.id === toolId);
             if (!tool) return;
             currentTool = tool;
 
