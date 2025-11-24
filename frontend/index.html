@@ -696,7 +696,12 @@
         // ============================================
         // 1. DATA TOOLS & DETAILS (TAGS CON ICONOS AÑADIDOS)
         // ============================================
-        const tools = [
+
+        // Variable global para tools (se carga desde API o fallback)
+        let toolsData = null;
+
+        // FALLBACK: Tools hardcodeados (se usan si API falla)
+        const FALLBACK_TOOLS = [
             // ==========================================
             // 🟧 FRONTEND (La Cara Visible)
             // ==========================================
@@ -953,6 +958,81 @@
                 code: "from rich import print\nfrom rich.table import Table\n\ntable = Table(title='Resultados')\ntable.add_column('Archivo')\ntable.add_row('foto.jpg')\nprint(table)"
             }
         ];
+
+        // ============================================
+        // DUAL-LOAD: API + FALLBACK
+        // ============================================
+
+        /**
+         * Carga herramientas desde /api/tools
+         * Si falla, usa FALLBACK_TOOLS
+         */
+        async function loadToolsFromAPI() {
+            try {
+                console.log('[DUAL-LOAD] Intentando cargar desde /api/tools...');
+                const response = await fetch('/api/tools');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.tools && Array.isArray(data.tools)) {
+                    console.log(`[DUAL-LOAD] ✅ Cargadas ${data.count} herramientas desde API`);
+
+                    // Transformar formato API → formato frontend
+                    // La API tiene campos como "category" pero el frontend usa "cat"
+                    toolsData = data.tools.map(t => ({
+                        id: t.id,
+                        name: t.name,
+                        cat: t.category,
+                        icon: t.icon,
+                        color: t.color,
+                        tag: t.tag,
+                        status: t.status,
+                        desc: t.content?.split('\n\n')[0]?.replace(/^# .*\n/, '') || t.desc || '',
+                        why: extractSection(t.content, 'Por qué en minerOS') || '',
+                        cases: extractListItems(t.content, 'Casos de uso') || [],
+                        code: extractCodeBlock(t.content) || ''
+                    }));
+
+                    return true;
+                }
+                throw new Error('Formato de respuesta inválido');
+
+            } catch (error) {
+                console.warn('[DUAL-LOAD] ⚠️ API falló, usando fallback:', error.message);
+                toolsData = FALLBACK_TOOLS;
+                return false;
+            }
+        }
+
+        // Helpers para parsear markdown
+        function extractSection(content, heading) {
+            if (!content) return '';
+            const regex = new RegExp(`## ${heading}\\s*\\n([^#]+)`, 'i');
+            const match = content.match(regex);
+            return match ? match[1].trim() : '';
+        }
+
+        function extractListItems(content, heading) {
+            if (!content) return [];
+            const section = extractSection(content, heading);
+            const items = section.match(/^- (.+)$/gm);
+            return items ? items.map(i => i.replace(/^- /, '')) : [];
+        }
+
+        function extractCodeBlock(content) {
+            if (!content) return '';
+            const match = content.match(/```(?:python|javascript)?\n([\s\S]+?)\n```/);
+            return match ? match[1] : '';
+        }
+
+        // Getter para usar en vez de acceder directamente a tools
+        function getTools() {
+            return toolsData || FALLBACK_TOOLS;
+        }
 
         // ============================================
         // PATRONES DE ARQUITECTURA (PRESETS)
@@ -2398,7 +2478,7 @@ if __name__ == "__main__":
 
             grid.innerHTML = '';
 
-            const filteredTools = tools.filter(t => {
+            const filteredTools = getTools().filter(t => {
                 const matchSearch = t.name.toLowerCase().includes(searchTerm) ||
                                    t.desc.toLowerCase().includes(searchTerm) ||
                                    t.tag.toLowerCase().includes(searchTerm);
@@ -2439,8 +2519,8 @@ if __name__ == "__main__":
 
         // Actualizar contadores
         function updateCounts() {
-            const counts = { all: tools.length, used: 0, learning: 0, new: 0 };
-            tools.forEach(t => counts[t.status]++);
+            const counts = { all: getTools().length, used: 0, learning: 0, new: 0 };
+            getTools().forEach(t => counts[t.status]++);
 
             document.getElementById('count-all').textContent = counts.all;
             document.getElementById('count-used').textContent = counts.used;
@@ -2466,8 +2546,12 @@ if __name__ == "__main__":
             }
         }
 
-        // Inicializar Glosario
-        function initGlosario() {
+        // Inicializar Glosario (async para cargar desde API)
+        async function initGlosario() {
+            // Primero cargar tools desde API (o fallback)
+            await loadToolsFromAPI();
+
+            // Luego renderizar
             loadToolStates();
             renderToolsGrid();
             updateProgress();
@@ -2479,7 +2563,7 @@ if __name__ == "__main__":
 
         // Render Stack Selector
         const stackContainer = document.getElementById('stack-selector');
-        const categories = {}; tools.forEach(t => { if(!categories[t.cat]) categories[t.cat] = []; categories[t.cat].push(t); });
+        const categories = {}; getTools().forEach(t => { if(!categories[t.cat]) categories[t.cat] = []; categories[t.cat].push(t); });
         for (const [cat, items] of Object.entries(categories)) {
             const g = document.createElement('div'); g.className="mb-4"; g.innerHTML=`<h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 sticky top-0 bg-slate-900 py-1">${cat}</h4>`;
             items.forEach(t=>{ const l=document.createElement('label'); l.className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-slate-800/50 transition group"; l.innerHTML=`<input type="checkbox" value="${t.name}" class="peer sr-only tool-checkbox"><div class="w-4 h-4 rounded border border-slate-600 bg-slate-900 peer-checked:bg-blue-500 flex items-center justify-center"><i class="fa-solid fa-check text-[10px] text-white opacity-0 check-icon"></i></div><span class="text-sm text-slate-300 peer-checked:text-white">${t.name}</span>`; g.appendChild(l); });
