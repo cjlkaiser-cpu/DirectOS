@@ -696,7 +696,12 @@
         // ============================================
         // 1. DATA TOOLS & DETAILS (TAGS CON ICONOS AÑADIDOS)
         // ============================================
-        const tools = [
+
+        // Variable global para tools (se carga desde API o fallback)
+        let toolsData = null;
+
+        // FALLBACK: Tools hardcodeados (se usan si API falla)
+        const FALLBACK_TOOLS = [
             // ==========================================
             // 🟧 FRONTEND (La Cara Visible)
             // ==========================================
@@ -953,6 +958,87 @@
                 code: "from rich import print\nfrom rich.table import Table\n\ntable = Table(title='Resultados')\ntable.add_column('Archivo')\ntable.add_row('foto.jpg')\nprint(table)"
             }
         ];
+
+        // ============================================
+        // DUAL-LOAD: API + FALLBACK
+        // ============================================
+
+        /**
+         * Carga herramientas desde /api/tools
+         * Si falla, usa FALLBACK_TOOLS
+         */
+        async function loadToolsFromAPI() {
+            try {
+                console.log('[DUAL-LOAD] Intentando cargar desde /api/tools...');
+                const response = await fetch('/api/tools');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.tools && Array.isArray(data.tools)) {
+                    console.log(`[DUAL-LOAD] ✅ Cargadas ${data.count} herramientas desde API`);
+
+                    // Transformar formato API → formato frontend
+                    const toolsFromAPI = data.tools.map(t => ({
+                        id: t.id,
+                        name: t.name,
+                        cat: t.category,
+                        icon: t.icon,
+                        color: t.color,
+                        tag: t.tag,
+                        status: t.status,
+                        desc: t.content?.split('\n\n')[0]?.replace(/^# .*\n/, '') || t.desc || '',
+                        why: extractSection(t.content, 'Por qué en minerOS') || '',
+                        cases: extractListItems(t.content, 'Casos de uso') || [],
+                        code: extractCodeBlock(t.content) || ''
+                    }));
+
+                    // MERGE: Combinar tools de API con las que faltan de FALLBACK
+                    const apiIds = new Set(toolsFromAPI.map(t => t.id));
+                    const remainingFallback = FALLBACK_TOOLS.filter(t => !apiIds.has(t.id));
+
+                    toolsData = [...toolsFromAPI, ...remainingFallback];
+                    console.log(`[DUAL-LOAD] 📦 Total: ${toolsData.length} herramientas (${toolsFromAPI.length} desde API + ${remainingFallback.length} fallback)`);
+
+                    return true;
+                }
+                throw new Error('Formato de respuesta inválido');
+
+            } catch (error) {
+                console.warn('[DUAL-LOAD] ⚠️ API falló, usando fallback completo:', error.message);
+                toolsData = FALLBACK_TOOLS;
+                return false;
+            }
+        }
+
+        // Helpers para parsear markdown
+        function extractSection(content, heading) {
+            if (!content) return '';
+            const regex = new RegExp(`## ${heading}\\s*\\n([^#]+)`, 'i');
+            const match = content.match(regex);
+            return match ? match[1].trim() : '';
+        }
+
+        function extractListItems(content, heading) {
+            if (!content) return [];
+            const section = extractSection(content, heading);
+            const items = section.match(/^- (.+)$/gm);
+            return items ? items.map(i => i.replace(/^- /, '')) : [];
+        }
+
+        function extractCodeBlock(content) {
+            if (!content) return '';
+            const match = content.match(/```(?:python|javascript)?\n([\s\S]+?)\n```/);
+            return match ? match[1] : '';
+        }
+
+        // Getter para usar en vez de acceder directamente a tools
+        function getTools() {
+            return toolsData || FALLBACK_TOOLS;
+        }
 
         // ============================================
         // PATRONES DE ARQUITECTURA (PRESETS)
@@ -1677,7 +1763,7 @@ Incluye docker-compose para orquestar.`
         const canvas = document.getElementById('architect-canvas');
 
         // Init Toolbox
-        tools.forEach(t => {
+        getTools().forEach(t => {
             const el = document.createElement('div');
             const bc = catStyles[t.cat] || "border-slate-700";
             el.className = `draggable-tool bg-slate-800 border-l-4 ${bc} border-y border-r border-slate-700 p-2.5 rounded-r-lg flex items-center justify-between gap-2 hover:bg-slate-700 cursor-grab active:cursor-grabbing mb-1.5 transition`;
@@ -1706,7 +1792,7 @@ Incluye docker-compose para orquestar.`
         }
 
         function addNodeToCanvas(toolId) {
-            const tool = tools.find(t => t.id === toolId);
+            const tool = getTools().find(t => t.id === toolId);
             if(tool && !canvasNodes.find(n => n.id === toolId)) {
                 canvasNodes.push({...tool});
                 renderCanvas();
@@ -2118,7 +2204,7 @@ EOF
             // Limpiar canvas y cargar herramientas del preset
             canvasNodes = [];
             preset.tools.forEach(toolId => {
-                const tool = tools.find(t => t.id === toolId);
+                const tool = getTools().find(t => t.id === toolId);
                 if (tool) canvasNodes.push(tool);
             });
             renderCanvas();
@@ -2348,7 +2434,7 @@ if __name__ == "__main__":
 
         // Cambiar estado de herramienta
         function changeToolStatus(toolId, newStatus) {
-            const tool = tools.find(t => t.id === toolId);
+            const tool = getTools().find(t => t.id === toolId);
             if (tool) {
                 tool.status = newStatus;
                 saveToolStates();
@@ -2398,7 +2484,7 @@ if __name__ == "__main__":
 
             grid.innerHTML = '';
 
-            const filteredTools = tools.filter(t => {
+            const filteredTools = getTools().filter(t => {
                 const matchSearch = t.name.toLowerCase().includes(searchTerm) ||
                                    t.desc.toLowerCase().includes(searchTerm) ||
                                    t.tag.toLowerCase().includes(searchTerm);
@@ -2439,8 +2525,8 @@ if __name__ == "__main__":
 
         // Actualizar contadores
         function updateCounts() {
-            const counts = { all: tools.length, used: 0, learning: 0, new: 0 };
-            tools.forEach(t => counts[t.status]++);
+            const counts = { all: getTools().length, used: 0, learning: 0, new: 0 };
+            getTools().forEach(t => counts[t.status]++);
 
             document.getElementById('count-all').textContent = counts.all;
             document.getElementById('count-used').textContent = counts.used;
@@ -2450,8 +2536,8 @@ if __name__ == "__main__":
 
         // Actualizar progreso
         function updateProgress() {
-            const total = tools.length;
-            const dominated = tools.filter(t => t.status === 'used').length;
+            const total = getTools().length;
+            const dominated = getTools().filter(t => t.status === 'used').length;
             const percent = Math.round((dominated / total) * 100);
 
             document.getElementById('progress-count').textContent = dominated;
@@ -2466,8 +2552,12 @@ if __name__ == "__main__":
             }
         }
 
-        // Inicializar Glosario
-        function initGlosario() {
+        // Inicializar Glosario (async para cargar desde API)
+        async function initGlosario() {
+            // Primero cargar tools desde API (o fallback)
+            await loadToolsFromAPI();
+
+            // Luego renderizar
             loadToolStates();
             renderToolsGrid();
             updateProgress();
@@ -2479,7 +2569,7 @@ if __name__ == "__main__":
 
         // Render Stack Selector
         const stackContainer = document.getElementById('stack-selector');
-        const categories = {}; tools.forEach(t => { if(!categories[t.cat]) categories[t.cat] = []; categories[t.cat].push(t); });
+        const categories = {}; getTools().forEach(t => { if(!categories[t.cat]) categories[t.cat] = []; categories[t.cat].push(t); });
         for (const [cat, items] of Object.entries(categories)) {
             const g = document.createElement('div'); g.className="mb-4"; g.innerHTML=`<h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 sticky top-0 bg-slate-900 py-1">${cat}</h4>`;
             items.forEach(t=>{ const l=document.createElement('label'); l.className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-slate-800/50 transition group"; l.innerHTML=`<input type="checkbox" value="${t.name}" class="peer sr-only tool-checkbox"><div class="w-4 h-4 rounded border border-slate-600 bg-slate-900 peer-checked:bg-blue-500 flex items-center justify-center"><i class="fa-solid fa-check text-[10px] text-white opacity-0 check-icon"></i></div><span class="text-sm text-slate-300 peer-checked:text-white">${t.name}</span>`; g.appendChild(l); });
@@ -2579,7 +2669,7 @@ if __name__ == "__main__":
                         <!-- Stack visual -->
                         <div class="flex flex-wrap gap-1 mb-4">
                             ${flow.stack.slice(0, 4).map(toolId => {
-                                const tool = tools.find(t => t.id === toolId);
+                                const tool = getTools().find(t => t.id === toolId);
                                 if (!tool) return '';
                                 return `<span class="inline-flex items-center gap-1 bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded text-[10px]">
                                     <i class="fa-solid ${tool.icon} ${tool.color}"></i>
@@ -2657,7 +2747,7 @@ if __name__ == "__main__":
             // Stack visual
             const stackContainer = document.getElementById('flow-modal-stack');
             stackContainer.innerHTML = flow.stack.map(toolId => {
-                const tool = tools.find(t => t.id === toolId);
+                const tool = getTools().find(t => t.id === toolId);
                 if (!tool) return '';
                 return `<span class="inline-flex items-center gap-1.5 bg-slate-800 border border-slate-700 px-2 py-1 rounded text-xs">
                     <i class="fa-solid ${tool.icon} ${tool.color}"></i>
@@ -2674,7 +2764,7 @@ if __name__ == "__main__":
             // Limpiar canvas y cargar herramientas del flujo
             canvasNodes = [];
             currentFlow.stack.forEach(toolId => {
-                const tool = tools.find(t => t.id === toolId);
+                const tool = getTools().find(t => t.id === toolId);
                 if (tool) canvasNodes.push(tool);
             });
             renderCanvas();
@@ -2693,7 +2783,7 @@ if __name__ == "__main__":
             // Limpiar canvas y cargar herramientas
             canvasNodes = [];
             flow.stack.forEach(toolId => {
-                const tool = tools.find(t => t.id === toolId);
+                const tool = getTools().find(t => t.id === toolId);
                 if (tool) canvasNodes.push(tool);
             });
             renderCanvas();
@@ -2782,7 +2872,7 @@ if __name__ == "__main__":
             // Renderizar herramientas del flujo
             const flowContainer = document.getElementById('pattern-modal-flow');
             flowContainer.innerHTML = pattern.flow.map(toolId => {
-                const tool = tools.find(t => t.id === toolId);
+                const tool = getTools().find(t => t.id === toolId);
                 if (!tool) return '';
                 return `<span class="inline-flex items-center gap-1.5 bg-slate-800 border border-slate-700 px-2 py-1 rounded text-xs">
                     <i class="fa-solid ${tool.icon} ${tool.color}"></i>
@@ -2802,7 +2892,7 @@ if __name__ == "__main__":
             // Seleccionar herramientas del stack
             document.querySelectorAll('.tool-checkbox').forEach(cb => {
                 const toolName = cb.value;
-                const tool = tools.find(t => t.name === toolName);
+                const tool = getTools().find(t => t.name === toolName);
                 cb.checked = tool && currentPattern.flow.includes(tool.id);
             });
 
@@ -2818,7 +2908,7 @@ if __name__ == "__main__":
             // Limpiar canvas y cargar herramientas del patrón
             canvasNodes = [];
             currentPattern.flow.forEach(toolId => {
-                const tool = tools.find(t => t.id === toolId);
+                const tool = getTools().find(t => t.id === toolId);
                 if (tool) canvasNodes.push(tool);
             });
             renderCanvas();
@@ -2836,7 +2926,7 @@ if __name__ == "__main__":
         let currentTool = null;
 
         function openToolModal(toolId) {
-            const tool = tools.find(t => t.id === toolId);
+            const tool = getTools().find(t => t.id === toolId);
             if (!tool) return;
             currentTool = tool;
 

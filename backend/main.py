@@ -16,9 +16,10 @@ from pathlib import Path
 from loguru import logger
 import time
 
-# Importar módulos (se crearán después)
+# Importar módulos
 from modules.knowledge import KnowledgeBase
 from modules.scout import Scout
+from modules.content import ContentManager
 
 # =============================================================================
 # CONFIGURACIÓN
@@ -47,6 +48,7 @@ DATA_DIR = BASE_DIR / "data"
 # Inicializar módulos
 knowledge = KnowledgeBase(data_dir=DATA_DIR / "vectors")
 scout = Scout()
+content = ContentManager(base_dir=DATA_DIR / "content")
 
 # Configurar logging
 logger.add(DATA_DIR / "logs" / "directos.log", rotation="1 MB")
@@ -83,10 +85,11 @@ async def health_check():
     return {
         "status": "online",
         "timestamp": time.time(),
-        "version": "6.0.0",
+        "version": "6.1.0",
         "modules": {
             "knowledge": knowledge.is_ready(),
-            "scout": scout.is_ready()
+            "scout": scout.is_ready(),
+            "content": content.get_stats()
         }
     }
 
@@ -130,6 +133,54 @@ async def analyze_error(request: ScoutRequest):
 
     result = await scout.analyze(request.error_text, request.context)
     return result
+
+# =============================================================================
+# ENDPOINTS - CONTENT (Herramientas, Patrones, Flows)
+# =============================================================================
+
+@app.get("/api/tools")
+async def get_tools():
+    """Obtener todas las herramientas desde archivos .md"""
+    tools = content.get_tools()
+    return {"tools": tools, "count": len(tools)}
+
+@app.get("/api/tools/{tool_id}")
+async def get_tool(tool_id: str):
+    """Obtener una herramienta específica por ID"""
+    tool = content.get_tool(tool_id)
+    if not tool:
+        raise HTTPException(status_code=404, detail=f"Herramienta '{tool_id}' no encontrada")
+    return tool
+
+@app.get("/api/patterns")
+async def get_patterns():
+    """Obtener todos los patrones de prompts"""
+    patterns = content.get_patterns()
+    return {"patterns": patterns, "count": len(patterns)}
+
+@app.get("/api/flows")
+async def get_flows():
+    """Obtener todos los flows del App Store"""
+    flows = content.get_flows()
+    return {"flows": flows, "count": len(flows)}
+
+@app.get("/api/presets")
+async def get_presets():
+    """Obtener todos los presets de arquitectura"""
+    presets = content.get_presets()
+    return {"presets": presets, "count": len(presets)}
+
+@app.post("/api/content/refresh")
+async def refresh_content():
+    """Refrescar cache de contenido (recargar desde disco)"""
+    content.refresh_cache()
+    stats = content.get_stats()
+    return {"status": "refreshed", "stats": stats}
+
+@app.get("/api/content/stats")
+async def content_stats():
+    """Estadísticas del contenido"""
+    return content.get_stats()
 
 # =============================================================================
 # FRONTEND (SERVIR ARCHIVOS ESTÁTICOS)
