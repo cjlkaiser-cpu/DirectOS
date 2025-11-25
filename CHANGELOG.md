@@ -6,6 +6,54 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 ---
 
+## [8.1.0] - 2025-11-25
+
+### Added - Portfolio de Proyectos
+- **Sección Proyectos** en el dashboard con navegación en sidebar
+- **11 proyectos documentados** en markdown con formato estructurado:
+  - Production (6): farmaIA, DirectOS, PhotoMine, DocMine-Fiscal, Web Scraper IA, Simulaciones MAZ
+  - Active (1): Dashboard Seguimiento
+  - Prototype (2): Portfolio Dibujo, minerOS v2
+  - Archived (2): DocMine, Limpiador PDFs
+- **Backend endpoint** `/api/projects` con GET list y GET by ID
+- **Modal interactivo** con stack técnico, repositorio y contenido completo
+- **Copiar documentación** al portapapeles desde modal
+- **Grid responsivo** con tarjetas de proyecto y badges de estado
+
+### Added - Comando /vault Inteligente
+- **Auto-detección de contenido**: Identifica si es herramienta, proyecto o patrón
+- **Plantillas integradas**: Templates para crear nuevos archivos
+- **Lógica condicional**: Crea o actualiza según exista el archivo
+- **Refresh automático**: Invalida cache tras actualizar
+- **Prompt para commit**: Sugiere commitear cambios
+- Documentación completa en FASE6-VAULT.md
+
+### Added - Migración a Markdown
+- **28 herramientas** migradas de JavaScript a markdown con frontmatter
+- **33 patrones** extraídos y documentados en archivos individuales
+- **12 flows** migrados con metadata completa
+- **6 presets** documentados
+- **ContentManager** con cache para performance
+- **API endpoints**: /api/tools, /api/patterns, /api/flows, /api/presets, /api/projects
+- **Dual-load pattern**: API + fallback para robustez
+
+### Fixed
+- **Información inventada corregida** en 4 proyectos:
+  - farmaia.md: Corregido de Python a Node.js + Express
+  - dashboard-seguimiento.md: Corregido a HTML + localStorage
+  - docmine-fiscal.md: Removido ChromaDB/Ollama inventado
+  - directos.md: Versión corregida a v8.0
+- **Modal de herramientas**: Fix para mostrar detalles correctamente
+- **Pipeline Builder**: Fix herramientas y recetas no visibles
+
+### Changed
+- **Total archivos markdown**: 85 (28 tools + 33 patterns + 12 flows + 6 presets + 6 projects)
+- **Backend modular**: ContentManager con reload dinámico
+- **Frontend arquitectura**: MERGE strategy para combinar API + fallback
+- **Getter pattern**: Todos los accesos a datos vía `getTools()`, `getPatterns()`, etc.
+
+---
+
 ## [8.0.0] - 2025-11-23
 
 ### Added - Pipeline Builder

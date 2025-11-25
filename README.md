@@ -1,12 +1,22 @@
-# DirectOS v8.0 - Pipeline Builder
+# DirectOS v8.1 - Portfolio & Projects
 
 > Centro de operaciones para diseñar arquitecturas, aprender herramientas y dominar tu stack
 
 ## Qué es
 
-DirectOS es tu **cockpit de desarrollo** para el ecosistema minerOS. Diseña pipelines visualmente, aprende nuevas herramientas con contexto, y genera código automáticamente desde diagramas.
+DirectOS es tu **cockpit de desarrollo** para el ecosistema minerOS. Diseña pipelines visualmente, aprende nuevas herramientas con contexto, genera código automáticamente, y documenta tus proyectos.
 
-## Novedades v8.0
+## Novedades v8.1
+
+| Feature | Descripción |
+|---------|-------------|
+| **Portfolio de Proyectos** | 11 proyectos documentados con stack, estado y métricas |
+| **Comando /vault Inteligente** | Auto-detecta y actualiza herramientas/proyectos/patrones |
+| **Migración a Markdown** | 85 archivos (tools, patterns, flows, presets, projects) |
+| **Backend API REST** | Endpoints para todos los tipos de contenido |
+| **ContentManager** | Cache inteligente con reload dinámico |
+
+### Novedades v8.0
 
 | Feature | Descripción |
 |---------|-------------|
@@ -15,13 +25,14 @@ DirectOS es tu **cockpit de desarrollo** para el ecosistema minerOS. Diseña pip
 | **Compilar a Python** | Genera código completo desde el diagrama |
 | **Scaffold Proyecto** | Crea estructura de carpetas + script ejecutable |
 | **App Store de Flujos** | 12 recetas de arquitectura listas para clonar |
-| **42 Patrones** | +9 nuevos (RAG Avanzado, DevOps CI/CD) |
+| **33 Patrones** | Biblioteca completa de prompt patterns |
 | **Glosario Mejorado** | Filtros, búsqueda, progreso visual, 28 herramientas |
 
 ### Historial de versiones
 
 | Versión | Highlights |
 |---------|------------|
+| **v8.1** | Portfolio de 11 proyectos + Comando /vault + Migración Markdown |
 | **v8.0** | Pipeline Builder + Scaffold + App Store Flujos |
 | **v7.2** | 42 Patrones (Pack 14-15: RAG Avanzado, DevOps CI/CD) |
 | **v7.1** | 33 Patrones en 13 packs |
@@ -35,7 +46,7 @@ DirectOS es tu **cockpit de desarrollo** para el ecosistema minerOS. Diseña pip
 ANTES                              DESPUÉS
 ──────                             ───────
 Planificas en tu cabeza       →    Pipeline visual con conexiones
-Escribes prompt desde 0       →    42 patrones listos para copiar
+Escribes prompt desde 0       →    33 patrones listos para copiar
 No sabes qué herramienta usar →    Glosario con 28 herramientas
 Copias errores a Claude       →    Scout analiza automáticamente
 Configuras proyecto a mano    →    Scaffold genera todo en 1 click
@@ -133,9 +144,9 @@ cp .env.example .env
 - **Persistencia** en localStorage
 - **6 nuevas herramientas**: Docker, Pytest, HTTPX, jq, Typer, Rich
 
-### Biblioteca de Patrones (v8.0 - 42 patrones)
+### Biblioteca de Patrones (v8.1 - 33 patrones)
 
-**15 Packs organizados:**
+**Packs organizados:**
 
 | Pack | Patrones | Tema |
 |------|----------|------|
@@ -199,7 +210,7 @@ DirectOS/
 │   ├── vectors/            ← ChromaDB persistence
 │   └── logs/               ← Logs del sistema
 ├── versions/               ← Histórico de versiones
-├── PATRONES.md             ← 42 patrones documentados
+├── PATRONES.md             ← 33 patrones documentados
 ├── MEJORAS.md              ← Roadmap y mejoras futuras
 ├── start.sh                ← Script de arranque
 ├── .env.example            ← Variables de entorno
