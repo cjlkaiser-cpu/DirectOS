@@ -1,7 +1,7 @@
 ---
 id: directos
 name: DirectOS
-version: v2.0
+version: v8.0
 status: production
 stack:
   - fastapi
@@ -13,7 +13,7 @@ repo: ~/Desktop/DirectOS
 description: Sistema operativo personal de conocimiento. Dashboard interactivo para navegación de herramientas, patrones, flows y proyectos minerOS.
 ---
 
-# DirectOS v2.0
+# DirectOS v8.0
 
 Sistema operativo personal de conocimiento. Dashboard interactivo para navegar herramientas, patrones, flows y proyectos del ecosistema minerOS.
 

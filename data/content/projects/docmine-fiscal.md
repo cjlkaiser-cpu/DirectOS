@@ -1,47 +1,46 @@
 ---
 id: docmine-fiscal
 name: DocMine Fiscal
-version: v2.1
-status: prototype
+version: v1.0
+status: production
 stack:
-  - fastapi
-  - ollama
-  - chroma
   - python
   - ocr
-repo: https://github.com/yourusername/docmine-fiscal
-description: Sistema RAG local para consultar documentación fiscal y contratos. Embeddings con Sentence-BERT, LLM con Ollama (llama3).
+  - flask
+  - sqlite
+repo: ~/Desktop/docmine-fiscal
+description: Gestor de documentos fiscales. Procesa Modelo 130 con OCR + regex parser + Dashboard Flask. 93K€ procesados con 100% éxito.
 ---
 
-# DocMine Fiscal v2.1
+# DocMine Fiscal v1.0
 
-Sistema RAG 100% local para consultar documentación fiscal, contratos y manuales técnicos. Sin llamadas a APIs externas.
+Precursor de la metodología minerOS. Sistema de procesamiento automático de documentos fiscales (Modelo 130).
 
 ## Flujo de trabajo
 
-1. **Ingesta de documentos**
-   - Soporte: PDF, DOCX, TXT, MD
+1. **Ingesta de PDFs**
+   - Escaneado automático de carpeta
+   - Detección de tipo de documento
    - OCR para PDFs escaneados (Tesseract)
    - Extracción de texto con PyMuPDF
-   - Detección automática de idioma
 
-2. **Procesamiento RAG**
-   - Chunking semántico (respeta párrafos)
-   - Embeddings con Sentence-BERT (all-MiniLM-L6-v2)
-   - Indexado en ChromaDB persistente
-   - Metadata: archivo, página, fecha, tipo
+2. **Parsing con regex**
+   - Parser específico para formularios Modelo 130
+   - Extracción de datos: trimestre, año, bases, cuotas
+   - Validación de formato y cálculos
+   - Normalización de clientes
 
-3. **Motor de consultas**
-   - Multi-query RAG para mejor cobertura
-   - Reranking con cross-encoder
-   - Contexto ventana deslizante
-   - Ollama llama3 para respuestas
+3. **Almacenamiento**
+   - SQLite con esquema fiscal
+   - Histórico completo de declaraciones
+   - Indexado por cliente y periodo
+   - Queries SQL para análisis
 
-4. **Interfaz**
-   - Chat conversacional con historial
-   - Citas a documentos originales
-   - Exportación de respuestas a MD/PDF
-   - Modo "solo buscar" (sin LLM)
+4. **Dashboard Flask**
+   - Visualización de datos procesados
+   - Listado de clientes y totales
+   - Gráficos de evolución IRPF
+   - Exportación a CSV
 
 ## Comandos principales
 
@@ -51,21 +50,17 @@ python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
-# Instalar Ollama
-curl -fsSL https://ollama.com/install.sh | sh
-ollama pull llama3
+# Instalar Tesseract (OCR)
+brew install tesseract
 
-# Ingerir documentos
-python main.py ingest --input ~/Documents/Fiscal --recursive
+# Procesar documentos
+python main.py procesar --input ~/Documents/Fiscal/Modelo130/
 
-# Modo servidor
-python main.py serve --port 8000
+# Iniciar dashboard
+python main.py dashboard --port 5000
 
-# Consulta desde CLI
-python main.py query "¿Cuáles son los plazos de IVA trimestral?"
-
-# Dashboard web
-open http://localhost:8000
+# Ver estadísticas
+python main.py stats
 ```
 
 ## Arquitectura
@@ -73,136 +68,211 @@ open http://localhost:8000
 ```
 docmine-fiscal/
 ├── main.py                  # CLI entry point
-├── app.py                   # FastAPI server
 ├── modules/
-│   ├── ingestion.py         # Document loaders
-│   ├── chunking.py          # Semantic chunking
-│   ├── embeddings.py        # Sentence-BERT
-│   ├── vector_store.py      # ChromaDB wrapper
-│   ├── rag_engine.py        # Multi-query + rerank
-│   └── llm.py               # Ollama interface
+│   ├── scanner.py           # Escaner de PDFs
+│   ├── ocr.py               # Tesseract wrapper
+│   ├── parser_130.py        # Parser regex Modelo 130
+│   └── database.py          # SQLite manager
 ├── templates/
-│   ├── chat.html            # Chat interface
-│   └── documents.html       # Document manager
+│   ├── index.html           # Dashboard principal
+│   ├── cliente.html         # Vista por cliente
+│   └── stats.html           # Estadísticas
+├── static/
+│   └── style.css            # Estilos básicos
 └── data/
-    ├── chroma/              # Vector DB
-    └── uploads/             # Original docs
+    ├── fiscal.db            # Base de datos SQLite
+    └── processed/           # PDFs procesados
 ```
 
 ### Stack técnico
 
-- **LLM:** Ollama llama3 (8B params, local)
-- **Embeddings:** Sentence-BERT (all-MiniLM-L6-v2)
-- **Vector DB:** ChromaDB con persistencia
-- **OCR:** Tesseract para PDFs escaneados
-- **Backend:** FastAPI + Python 3.11
-- **Frontend:** HTML5 + HTMX + TailwindCSS
+- **Backend:** Python 3.11 + Flask
+- **OCR:** Tesseract (open source)
+- **Parsing:** Regex específico para Modelo 130
+- **Base de datos:** SQLite
+- **Frontend:** HTML + CSS + Jinja2 templates
 
 ## Aprendizajes clave
 
 ### Lo que funcionó bien
 
-1. **100% local = sin costos:** Procesar 500 docs sin pagar APIs
-2. **Chunking semántico:** Respeta párrafos, mejor que fixed-size
-3. **Multi-query RAG:** 5 queries diferentes mejoran recall
-4. **Reranking:** Cross-encoder reduce respuestas irrelevantes
+1. **OCR con Tesseract:** 100% de precisión en formularios escaneados
+2. **Parser regex:** Extracción confiable de campos numéricos
+3. **Normalización clientes:** Diferentes variantes → un solo ID
+4. **Validación automática:** Detecta errores de cálculo en formularios
+5. **Flask simple:** Dashboard funcional sin complejidad
 
 ### Problemas resueltos
 
-- **PDFs escaneados:** OCR con Tesseract + limpieza de ruido
-- **Documentos mixtos (ES/EN):** Detección de idioma por chunk
-- **Respuestas genéricas:** Añadir "SOLO responde basándote en el contexto"
-- **ChromaDB locks:** Usar PersistentClient con paths absolutos
+- **PDFs escaneados vs digitales:** Detección automática y OCR condicional
+- **Variantes de formato:** Parser robusto con múltiples patterns
+- **Nombres inconsistentes:** Normalización con similitud de strings
+- **Cálculos incorrectos:** Validación cruzada de cuotas
+- **Escalabilidad:** Procesamiento por lotes con checkpoints
 
-### Optimizaciones
+### Métricas reales
 
-- **Embeddings cacheados:** Evitar recomputar docs existentes
-- **Batch ingestion:** Procesar 100 docs en paralelo
-- **Query expansion:** Sinónimos automáticos para términos fiscales
-- **Filtrado por metadata:** Búsqueda solo en docs del año X
+**Procesamiento completo:**
+```
+Total documentos: 107 Modelo 130
+Éxito: 107 (100%)
+Errores: 0
+
+Total IRPF procesado: 93,029.46€
+Clientes únicos: 18
+Periodo: 2020-2024
+Trimestres: Q1-Q4 de cada año
+```
+
+**Performance:**
+- Tiempo por documento: ~2-3 segundos
+- OCR (si necesario): +5 segundos
+- Total 107 docs: ~8 minutos
 
 ### Siguientes pasos
 
-- [ ] Soporte para tablas en PDFs (Camelot)
-- [ ] Fine-tuning de embeddings con términos fiscales
-- [ ] Sistema de alertas (notificar cambios BOE)
-- [ ] Multi-tenant (un ChromaDB por cliente)
+- [ ] Soporte para más modelos fiscales (190, 303)
+- [ ] Exportación a Excel con macros
+- [ ] Alertas de plazos de presentación
+- [ ] Integración con AEAT API
 
 ## Métricas
 
-- **Documentos indexados:** 487 archivos
-- **Chunks totales:** 12,456 fragmentos
-- **Tamaño ChromaDB:** 340 MB
-- **Tiempo consulta:** ~3s (búsqueda + LLM)
-- **Precisión:** 82% (evaluación manual 50 queries)
-- **Líneas código:** 1,847 líneas Python
+- **Documentos procesados:** 107 (Modelo 130)
+- **Tasa éxito:** 100%
+- **Total IRPF:** 93,029.46€
+- **Clientes:** 18 únicos
+- **Periodo:** 2020-2024
+- **Líneas de código:** ~1,500 líneas Python
 
 ## Casos de uso reales
 
-### Consultor fiscal
+### Procesamiento automático
 ```bash
-# Buscar información sobre IVA
-python main.py query "¿Cuál es el tipo reducido de IVA en 2024?"
+$ python main.py procesar --input ~/Fiscal/2024/Q3/
 
-# Filtrar solo por documentos AEAT
-python main.py query "retenciones autónomos" --source AEAT
+Procesando Modelo 130...
+✓ Carlos_García_Q3_2024.pdf → 2,450.00€
+✓ Ana_López_Q3_2024.pdf → 1,890.50€
+✓ Juan_Martínez_Q3_2024.pdf → 3,120.75€
 
-# Exportar respuesta con citas
-python main.py query "calendario fiscal 2024" --export respuesta.md
+Total trimestre: 7,461.25€
+Guardado en fiscal.db
 ```
 
-### Abogado contratista
-```bash
-# Buscar cláusulas en contratos
-python main.py query "cláusula de confidencialidad" --doctype contrato
+### Dashboard Flask
+```
+IRPF por Cliente (2024):
 
-# Comparar versiones
-python main.py compare contrato_v1.pdf contrato_v2.pdf
+Carlos García:
+  Q1: 2,100.00€
+  Q2: 2,350.50€
+  Q3: 2,450.00€
+  Q4: 2,200.00€
+  ━━━━━━━━━━━━━━
+  Total: 9,100.50€
 
-# Extraer todas las fechas
-python main.py extract dates --input contratos/
+Ana López:
+  Q1-Q4: 7,560.00€
+
+Total general 2024: 24,890.75€
 ```
 
-## Configuración avanzada
+### Query SQL directa
+```sql
+-- Total por cliente
+SELECT cliente, SUM(cuota) as total
+FROM modelo_130
+WHERE year = 2024
+GROUP BY cliente
+ORDER BY total DESC;
 
-```yaml
-# config.yaml
-chunk_size: 500
-chunk_overlap: 50
-embedding_model: "all-MiniLM-L6-v2"
-llm_model: "llama3"
-llm_temperature: 0.1
-max_context_chunks: 5
-rerank_top_k: 3
+-- Evolución trimestral
+SELECT trimestre, SUM(cuota) as total
+FROM modelo_130
+WHERE cliente = 'Carlos García'
+GROUP BY trimestre;
 ```
 
-## Comparativa con alternativas
+## Parser Regex (Ejemplo)
 
-| Feature | DocMine Fiscal | ChatPDF | DocuChat |
-|---------|---------------|----------|----------|
-| Local | ✅ | ❌ | ❌ |
-| Gratis | ✅ | Límites | Límites |
-| OCR | ✅ | ✅ | ❌ |
-| Multi-query | ✅ | ❌ | ✅ |
-| Rerank | ✅ | ❌ | ❌ |
-| API | ✅ | ✅ | ❌ |
+```python
+import re
+
+# Pattern para extraer cuota IRPF
+PATTERN_CUOTA = r'Cuota\s+resultante.*?(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2}))'
+
+def extraer_cuota_130(texto):
+    """
+    Extrae la cuota de IRPF del Modelo 130
+    """
+    match = re.search(PATTERN_CUOTA, texto, re.DOTALL)
+    if match:
+        # Normalizar formato número
+        cuota_str = match.group(1).replace('.', '').replace(',', '.')
+        return float(cuota_str)
+    return None
+
+# Ejemplo
+texto_pdf = "...Cuota resultante: 2.450,50..."
+cuota = extraer_cuota_130(texto_pdf)  # 2450.50
+```
+
+## Esquema SQLite
+
+```sql
+CREATE TABLE modelo_130 (
+    id INTEGER PRIMARY KEY,
+    cliente TEXT NOT NULL,
+    trimestre INTEGER,
+    year INTEGER,
+    base_imponible REAL,
+    cuota REAL,
+    retenciones REAL,
+    resultado REAL,
+    fecha_proceso TIMESTAMP,
+    pdf_path TEXT,
+    UNIQUE(cliente, trimestre, year)
+);
+
+CREATE INDEX idx_cliente ON modelo_130(cliente);
+CREATE INDEX idx_periodo ON modelo_130(year, trimestre);
+```
 
 ## Deploy
 
 ```bash
-# Docker
-docker build -t docmine-fiscal .
-docker run -p 8000:8000 -v $(pwd)/data:/app/data docmine-fiscal
+# Producción local
+python main.py dashboard --port 5000 --host 0.0.0.0
 
-# Systemd
-sudo cp scripts/docmine.service /etc/systemd/system/
-sudo systemctl enable docmine
-sudo systemctl start docmine
+# Systemd service
+sudo cp docmine-fiscal.service /etc/systemd/system/
+sudo systemctl enable docmine-fiscal
+sudo systemctl start docmine-fiscal
 ```
+
+## Lecciones aprendidas
+
+**"Un sistema que funciona pero no aporta valor real no es un sistema completo."**
+
+**Versión inicial (indexar):**
+- "Encuentra el Modelo 130 de Carlos Q3"
+- → "Aquí está el PDF"
+- **Valor bajo:** Solo organiza
+
+**Versión mejorada (responder):**
+- "¿Cuánto IRPF pagó Carlos en 2024?"
+- → "9,100.50€ en 4 trimestres"
+- **Valor alto:** Genera insights
+
+**El pivote crítico:**
+> De buscar documentos → Responder preguntas
+
+Esto marcó el inicio de la metodología minerOS: **el valor está en los insights, no en la organización**.
 
 ## Enlaces útiles
 
-- [Ollama](https://ollama.com/)
-- [ChromaDB](https://www.trychroma.com/)
-- [Sentence Transformers](https://www.sbert.net/)
+- [Tesseract OCR](https://github.com/tesseract-ocr/tesseract)
+- [Flask Docs](https://flask.palletsprojects.com/)
 - [PyMuPDF](https://pymupdf.readthedocs.io/)
+- [AEAT - Modelo 130](https://www.agenciatributaria.es/AEAT.internet/Inicio/La_Agencia_Tributaria/Campanas/IVA/Modelo_130/Modelo_130.shtml)
