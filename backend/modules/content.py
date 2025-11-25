@@ -129,6 +129,28 @@ class ContentManager:
             self._cache['presets'] = self._load_category('presets')
         return self._cache['presets']
 
+    def get_projects(self, reload: bool = False) -> List[Dict]:
+        """Obtiene todos los proyectos documentados"""
+        if reload or 'projects' not in self._cache:
+            self._cache['projects'] = self._load_category('projects')
+        return self._cache['projects']
+
+    def get_project(self, project_id: str) -> Optional[Dict]:
+        """
+        Obtiene un proyecto específico por ID.
+
+        Args:
+            project_id: ID del proyecto (ej: "farmaia")
+
+        Returns:
+            Dict con el proyecto o None si no existe
+        """
+        projects = self.get_projects()
+        for project in projects:
+            if project.get('id') == project_id:
+                return project
+        return None
+
     def refresh_cache(self):
         """Limpia y recarga todo el cache"""
         logger.info("Refrescando cache de contenido")
@@ -137,6 +159,7 @@ class ContentManager:
         self.get_patterns(reload=True)
         self.get_flows(reload=True)
         self.get_presets(reload=True)
+        self.get_projects(reload=True)
 
     def get_stats(self) -> Dict:
         """Estadísticas del contenido"""
@@ -145,5 +168,6 @@ class ContentManager:
             "patterns": len(self.get_patterns()),
             "flows": len(self.get_flows()),
             "presets": len(self.get_presets()),
+            "projects": len(self.get_projects()),
             "base_dir": str(self.base_dir)
         }

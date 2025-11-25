@@ -170,6 +170,20 @@ async def get_presets():
     presets = content.get_presets()
     return {"presets": presets, "count": len(presets)}
 
+@app.get("/api/projects")
+async def get_projects():
+    """Obtener todos los proyectos documentados"""
+    projects = content.get_projects()
+    return {"projects": projects, "count": len(projects)}
+
+@app.get("/api/projects/{project_id}")
+async def get_project(project_id: str):
+    """Obtener un proyecto específico por ID"""
+    project = content.get_project(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail=f"Proyecto '{project_id}' no encontrado")
+    return project
+
 @app.post("/api/content/refresh")
 async def refresh_content():
     """Refrescar cache de contenido (recargar desde disco)"""
