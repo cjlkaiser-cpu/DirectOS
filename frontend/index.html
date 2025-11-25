@@ -91,6 +91,7 @@
             <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 pl-2 mt-6">Operaciones</p>
             <button onclick="switchView('monitor')" id="btn-monitor" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3"><i class="fa-solid fa-heart-pulse"></i> Monitor Sistema</button>
             <button onclick="switchView('grid')" id="btn-grid" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3"><i class="fa-solid fa-boxes-stacked"></i> Glosario</button>
+            <button onclick="switchView('projects')" id="btn-projects" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3"><i class="fa-solid fa-folder-open"></i> Proyectos</button>
         </nav>
     </aside>
 
@@ -687,6 +688,77 @@
                 <div id="no-results" class="hidden text-center py-12">
                     <i class="fa-solid fa-search text-4xl text-slate-700 mb-4"></i>
                     <p class="text-slate-500">No se encontraron herramientas con esos filtros</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA 5: PROYECTOS -->
+        <div id="view-projects" class="hidden flex-1 overflow-y-auto p-6 bg-slate-950 relative">
+            <div class="max-w-7xl mx-auto">
+                <!-- Header -->
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-bold text-white mb-2">Proyectos minerOS</h2>
+                    <p class="text-slate-400">Portfolio de proyectos reales con métricas y aprendizajes documentados</p>
+                </div>
+
+                <!-- Grid de Proyectos -->
+                <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <!-- Las tarjetas se generan dinámicamente -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Detalle de Proyecto -->
+        <div id="project-detail-modal" class="hidden absolute inset-0 bg-slate-950/90 z-50 flex items-center justify-center p-8 backdrop-blur-sm">
+            <div class="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-4xl shadow-2xl flex flex-col max-h-[90vh]">
+                <!-- Header -->
+                <div class="p-5 border-b border-slate-800 flex justify-between items-start">
+                    <div>
+                        <h3 id="project-modal-name" class="font-bold text-white text-2xl mb-2"></h3>
+                        <div class="flex items-center gap-2">
+                            <span id="project-modal-version" class="text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30"></span>
+                            <span id="project-modal-status" class="text-xs px-2 py-1 rounded"></span>
+                        </div>
+                    </div>
+                    <button onclick="closeModal('project-detail-modal')" class="text-slate-500 hover:text-white p-1">
+                        <i class="fa-solid fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Body -->
+                <div class="p-6 overflow-y-auto flex-1 space-y-5">
+                    <!-- Descripción -->
+                    <div>
+                        <p id="project-modal-desc" class="text-slate-300 leading-relaxed text-lg"></p>
+                    </div>
+
+                    <!-- Stack Técnico -->
+                    <div class="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
+                        <h4 class="text-xs font-bold text-purple-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-layer-group"></i> Stack Técnico
+                        </h4>
+                        <div id="project-modal-stack" class="flex flex-wrap gap-2"></div>
+                    </div>
+
+                    <!-- Repositorio -->
+                    <div class="bg-slate-950 border border-slate-800 rounded-lg p-4">
+                        <h4 class="text-xs font-bold text-green-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <i class="fa-brands fa-git-alt"></i> Repositorio
+                        </h4>
+                        <code id="project-modal-repo" class="text-sm text-slate-300 font-mono"></code>
+                    </div>
+
+                    <!-- Contenido Markdown -->
+                    <div class="bg-slate-950 border border-slate-800 rounded-lg p-4 max-h-96 overflow-y-auto">
+                        <pre id="project-modal-content" class="text-sm text-slate-300 whitespace-pre-wrap font-mono leading-relaxed"></pre>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="p-4 border-t border-slate-800 bg-slate-900 flex gap-3">
+                    <button onclick="copyProjectContent()" class="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-sm px-4 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 shadow-lg">
+                        <i class="fa-solid fa-copy"></i> Copiar Documentación
+                    </button>
                 </div>
             </div>
         </div>
@@ -2390,7 +2462,7 @@ if __name__ == "__main__":
         function copyArchitectPrompt() { navigator.clipboard.writeText(document.getElementById('architect-prompt-output').textContent); }
 
         function switchView(view) {
-            ['architect', 'generator', 'grid', 'flow', 'monitor'].forEach(v => {
+            ['architect', 'generator', 'grid', 'flow', 'monitor', 'projects'].forEach(v => {
                 document.getElementById(`view-${v}`).classList.add('hidden');
                 const b = document.getElementById(`btn-${v}`);
                 if(b) { b.classList.replace('bg-blue-600', 'text-slate-400'); b.classList.replace('text-white', 'hover:bg-slate-800'); b.classList.remove('shadow-lg'); }
@@ -2398,11 +2470,11 @@ if __name__ == "__main__":
             document.getElementById(`view-${view}`).classList.remove('hidden');
             const btn = document.getElementById(`btn-${view}`);
             if(btn) { btn.classList.replace('text-slate-400', 'bg-blue-600'); btn.classList.replace('hover:bg-slate-800', 'text-white'); btn.classList.add('shadow-lg'); }
-            
+
             const headerTools = document.getElementById('header-tools');
             if(view === 'architect') headerTools.classList.remove('hidden'); else headerTools.classList.add('hidden');
-            
-            document.getElementById('page-title').textContent = { 'architect': 'Pipeline Builder', 'generator': 'Generador', 'grid': 'Glosario', 'flow': 'Recetas', 'monitor': 'Monitor' }[view];
+
+            document.getElementById('page-title').textContent = { 'architect': 'Pipeline Builder', 'generator': 'Generador', 'grid': 'Glosario', 'flow': 'Recetas', 'monitor': 'Monitor', 'projects': 'Proyectos' }[view];
         }
 
         // Monitor & Generator
@@ -3091,11 +3163,132 @@ if __name__ == "__main__":
         setInterval(checkHealth, 30000); // cada 30s
 
         // ============================================
+        // PROYECTOS - FUNCIONES
+        // ============================================
+        let projectsData = [];
+        let currentProject = null;
+
+        async function loadProjectsFromAPI() {
+            try {
+                const response = await fetch('/api/projects');
+                const data = await response.json();
+                if (data.projects && Array.isArray(data.projects)) {
+                    projectsData = data.projects;
+                    return true;
+                }
+            } catch (error) {
+                console.error('Error loading projects:', error);
+            }
+            return false;
+        }
+
+        function renderProjectsGrid() {
+            const grid = document.getElementById('projects-grid');
+            grid.innerHTML = '';
+
+            if (!projectsData.length) {
+                grid.innerHTML = '<div class="col-span-full text-center text-slate-500 py-12"><i class="fa-solid fa-folder-open text-4xl mb-4 block"></i><p>No hay proyectos disponibles</p></div>';
+                return;
+            }
+
+            projectsData.forEach(project => {
+                const statusColors = {
+                    'production': 'bg-green-500/20 text-green-400 border-green-500/30',
+                    'active': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+                    'archived': 'bg-slate-500/20 text-slate-400 border-slate-500/30',
+                    'learning': 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                };
+
+                const statusClass = statusColors[project.status] || statusColors['active'];
+
+                const card = document.createElement('div');
+                card.className = 'bg-slate-900 border border-slate-800 rounded-xl overflow-hidden hover:border-slate-600 transition-all duration-300 cursor-pointer group hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1';
+                card.onclick = () => openProjectModal(project.id);
+
+                card.innerHTML = `
+                    <div class="p-5">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <h3 class="text-lg font-bold text-white mb-1 group-hover:text-blue-400 transition">${project.name}</h3>
+                                <span class="text-xs px-2 py-0.5 rounded ${statusClass} border">${project.status}</span>
+                            </div>
+                            <span class="text-xs text-slate-500 font-mono">${project.version || 'v1.0'}</span>
+                        </div>
+                        <p class="text-sm text-slate-400 mb-4 line-clamp-2">${project.description || 'Sin descripción'}</p>
+                        <div class="flex flex-wrap gap-1.5">
+                            ${(project.stack || []).slice(0, 4).map(tech => `
+                                <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded border border-slate-700">${tech}</span>
+                            `).join('')}
+                            ${(project.stack || []).length > 4 ? `<span class="text-[10px] text-slate-500 px-1">+${project.stack.length - 4}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="border-t border-slate-800 p-3 bg-slate-950/50">
+                        <button onclick="event.stopPropagation(); openProjectModal('${project.id}')" class="w-full bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white text-xs py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 border border-slate-700 hover:border-blue-500">
+                            <i class="fa-solid fa-book-open"></i> Ver Documentación
+                        </button>
+                    </div>
+                `;
+
+                grid.appendChild(card);
+            });
+        }
+
+        function openProjectModal(projectId) {
+            const project = projectsData.find(p => p.id === projectId);
+            if (!project) return;
+
+            currentProject = project;
+
+            const statusColors = {
+                'production': 'bg-green-500/20 text-green-400 border-green-500/30',
+                'active': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+                'archived': 'bg-slate-500/20 text-slate-400 border-slate-500/30',
+                'learning': 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+            };
+
+            document.getElementById('project-modal-name').textContent = project.name;
+            document.getElementById('project-modal-version').textContent = project.version || 'v1.0';
+            document.getElementById('project-modal-status').textContent = project.status;
+            document.getElementById('project-modal-status').className = `text-xs px-2 py-1 rounded ${statusColors[project.status] || statusColors['active']} border`;
+            document.getElementById('project-modal-desc').textContent = project.description || 'Sin descripción';
+            document.getElementById('project-modal-repo').textContent = project.repo || 'N/A';
+
+            // Stack técnico
+            const stackContainer = document.getElementById('project-modal-stack');
+            stackContainer.innerHTML = (project.stack || []).map(tech => `
+                <span class="inline-flex items-center gap-1.5 bg-slate-800 border border-slate-700 px-2 py-1 rounded text-xs text-slate-300">
+                    <i class="fa-solid fa-cube text-purple-400"></i> ${tech}
+                </span>
+            `).join('');
+
+            // Contenido markdown
+            document.getElementById('project-modal-content').textContent = project.content || 'Sin contenido disponible';
+
+            document.getElementById('project-detail-modal').classList.remove('hidden');
+        }
+
+        function copyProjectContent() {
+            if (!currentProject) return;
+
+            const text = `# ${currentProject.name} ${currentProject.version}\n\n${currentProject.description}\n\n## Stack\n${(currentProject.stack || []).join(', ')}\n\n${currentProject.content || ''}`;
+
+            navigator.clipboard.writeText(text).then(() => {
+                addLog("SUCCESS", `Documentación de "${currentProject.name}" copiada al portapapeles`);
+            });
+        }
+
+        async function initProjects() {
+            await loadProjectsFromAPI();
+            renderProjectsGrid();
+        }
+
+        // ============================================
         // INICIALIZACIÓN
         // ============================================
         initPresets();
         initPatternsAccordion();
         initFlowsGallery();
+        initProjects();
         switchView('architect');
         renderCanvas();
     </script>
