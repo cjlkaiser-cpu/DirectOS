@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🛠️ DirectOS v7.0</title>
+    <title>🛠️ DirectOS v9.0 - Agent Mode</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -68,9 +68,39 @@
         .flow-card {
             transition: all 0.3s ease;
         }
+
+        /* Toast notifications */
+        .toast-container {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .toast {
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .toast-success { background: #166534; color: #bbf7d0; border: 1px solid #22c55e; }
+        .toast-error { background: #991b1b; color: #fecaca; border: 1px solid #ef4444; }
+        .toast-info { background: #1e40af; color: #bfdbfe; border: 1px solid #3b82f6; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-200 h-screen flex overflow-hidden selection:bg-blue-500 selection:text-white">
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
 
     <!-- SIDEBAR -->
     <aside class="w-64 bg-slate-900 border-r border-slate-800 flex-shrink-0 flex flex-col transition-all duration-300">
@@ -79,7 +109,7 @@
                 <i class="fa-solid fa-layer-group text-blue-500"></i>
                 Director<span class="text-slate-500">OS</span>
             </h1>
-            <p class="text-xs text-slate-500 mt-1">v8.0 - Pipeline Builder</p>
+            <p class="text-xs text-slate-500 mt-1">v9.0 - Agent Mode</p>
         </div>
         
         <nav class="flex-1 overflow-y-auto p-4 space-y-2">
@@ -89,6 +119,7 @@
             <button onclick="switchView('generator')" id="btn-generator" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3"><i class="fa-solid fa-wand-magic-sparkles"></i> Generador Prompts</button>
             
             <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 pl-2 mt-6">Operaciones</p>
+            <button onclick="switchView('agent')" id="btn-agent" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3"><i class="fa-solid fa-robot"></i> Agent Mode <span id="agent-status-dot" class="w-2 h-2 rounded-full bg-slate-600"></span></button>
             <button onclick="switchView('monitor')" id="btn-monitor" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3"><i class="fa-solid fa-heart-pulse"></i> Monitor Sistema</button>
             <button onclick="switchView('grid')" id="btn-grid" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3"><i class="fa-solid fa-boxes-stacked"></i> Glosario</button>
             <button onclick="switchView('projects')" id="btn-projects" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3"><i class="fa-solid fa-folder-open"></i> Proyectos</button>
@@ -104,12 +135,16 @@
                 <h2 id="page-title" class="text-lg font-semibold text-white">Arquitecto Pro</h2>
                 <!-- Dynamic Header Content -->
                 <div id="header-tools" class="hidden flex gap-2">
+                    <button onclick="importFromCodeModal()" class="bg-blue-600 hover:bg-blue-500 text-xs px-3 py-1.5 rounded border border-blue-500 transition flex items-center gap-2" title="Importar desde código"><i class="fa-solid fa-file-import"></i> Importar</button>
                     <button onclick="saveArchitecture()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded border border-slate-700 transition flex items-center gap-2" title="Guardar"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
                     <button onclick="loadArchitectureModal()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded border border-slate-700 transition flex items-center gap-2" title="Cargar"><i class="fa-solid fa-folder-open"></i> Cargar</button>
                     <button onclick="exportDiagram()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded border border-slate-700 transition flex items-center gap-2" title="Exportar"><i class="fa-solid fa-camera"></i> PNG</button>
                 </div>
             </div>
             <div class="flex gap-3 items-center">
+                <span id="sync-status" class="text-xs font-medium px-2 py-1 rounded bg-slate-700 text-slate-400 border border-slate-600">
+                    <i class="fa-solid fa-circle-notch fa-spin mr-1"></i> Checking...
+                </span>
                 <span class="text-xs font-mono text-slate-500 bg-slate-900 px-2 py-1 rounded border border-slate-800" id="clock">00:00</span>
             </div>
         </header>
@@ -221,6 +256,32 @@
             <div class="bg-slate-900 border border-slate-700 rounded-xl w-96 shadow-2xl">
                 <div class="p-4 border-b border-slate-800 flex justify-between items-center"><h3 class="font-bold text-white">Cargar Arquitectura</h3><button onclick="closeModal('load-modal')" class="text-slate-500 hover:text-white"><i class="fa-solid fa-times"></i></button></div>
                 <div id="load-list" class="p-2 max-h-64 overflow-y-auto space-y-1"></div>
+            </div>
+        </div>
+
+        <!-- Modal Importar desde Código -->
+        <div id="import-modal" class="hidden absolute inset-0 bg-slate-950/90 z-50 flex items-center justify-center p-8 backdrop-blur-sm">
+            <div class="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-xl shadow-2xl">
+                <div class="p-4 border-b border-slate-800 flex justify-between items-center">
+                    <h3 class="font-bold text-white"><i class="fa-solid fa-file-import mr-2 text-blue-400"></i>Importar desde Código</h3>
+                    <button onclick="closeModal('import-modal')" class="text-slate-500 hover:text-white"><i class="fa-solid fa-times"></i></button>
+                </div>
+                <div class="p-4">
+                    <p class="text-sm text-slate-400 mb-3">Pega código Python y detectaré automáticamente las herramientas usadas.</p>
+                    <textarea id="import-code" rows="12" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-sm font-mono text-slate-300 focus:border-blue-500 focus:outline-none" placeholder="# Pega tu código Python aquí...
+from fastapi import FastAPI
+from anthropic import Anthropic
+import sqlite3
+..."></textarea>
+                    <div id="import-preview" class="hidden mt-3 p-3 bg-slate-800 rounded-lg">
+                        <p class="text-xs text-slate-400 mb-2">Herramientas detectadas:</p>
+                        <div id="import-detected" class="flex flex-wrap gap-2"></div>
+                    </div>
+                </div>
+                <div class="p-4 border-t border-slate-800 flex justify-between">
+                    <button onclick="analyzeImports()" class="bg-slate-700 hover:bg-slate-600 text-sm px-4 py-2 rounded transition"><i class="fa-solid fa-search mr-2"></i>Analizar</button>
+                    <button onclick="applyImportedArchitecture()" class="bg-blue-600 hover:bg-blue-500 text-sm px-4 py-2 rounded transition"><i class="fa-solid fa-check mr-2"></i>Aplicar al Canvas</button>
+                </div>
             </div>
         </div>
 
@@ -699,11 +760,222 @@
                 <div class="text-center mb-8">
                     <h2 class="text-2xl font-bold text-white mb-2">Proyectos minerOS</h2>
                     <p class="text-slate-400">Portfolio de proyectos reales con métricas y aprendizajes documentados</p>
+                    <button onclick="createLocalProject()" class="mt-4 bg-blue-600 hover:bg-blue-500 text-white font-medium py-2 px-4 rounded-lg transition flex items-center gap-2 mx-auto">
+                        <i class="fa-solid fa-plus"></i> Nuevo Proyecto
+                    </button>
                 </div>
 
                 <!-- Grid de Proyectos -->
                 <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                     <!-- Las tarjetas se generan dinámicamente -->
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA 6: AGENT MODE -->
+        <div id="view-agent" class="hidden flex-1 overflow-y-auto p-6 bg-slate-950 relative">
+            <div class="max-w-6xl mx-auto">
+                <!-- Header -->
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+                            <i class="fa-solid fa-robot text-purple-400"></i> Agent Mode
+                            <span id="agent-version-badge" class="text-xs px-2 py-1 rounded bg-purple-500/20 text-purple-400 border border-purple-500/30">v9.0</span>
+                        </h2>
+                        <p class="text-slate-400 text-sm mt-1">Automatiza pipelines con watches, schedules y notificaciones</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="startAllAgents()" class="bg-green-600 hover:bg-green-500 text-white text-sm px-4 py-2 rounded-lg transition flex items-center gap-2">
+                            <i class="fa-solid fa-play"></i> Iniciar Todo
+                        </button>
+                        <button onclick="stopAllAgents()" class="bg-red-600/20 hover:bg-red-600/40 text-red-400 text-sm px-4 py-2 rounded-lg transition flex items-center gap-2 border border-red-500/30">
+                            <i class="fa-solid fa-stop"></i> Detener
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Status Cards -->
+                <div class="grid grid-cols-4 gap-4 mb-6">
+                    <!-- Executor -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-slate-400 text-sm">Executor</span>
+                            <i class="fa-solid fa-play-circle text-blue-400"></i>
+                        </div>
+                        <p id="agent-executor-runs" class="text-2xl font-bold text-white">0</p>
+                        <p class="text-xs text-slate-500">ejecuciones activas</p>
+                    </div>
+                    <!-- Watchdog -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-slate-400 text-sm">Watchdog</span>
+                            <span id="agent-watchdog-status" class="w-2 h-2 rounded-full bg-slate-600"></span>
+                        </div>
+                        <p id="agent-watchdog-count" class="text-2xl font-bold text-white">0</p>
+                        <p class="text-xs text-slate-500">watches activos</p>
+                    </div>
+                    <!-- Scheduler -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-slate-400 text-sm">Scheduler</span>
+                            <span id="agent-scheduler-status" class="w-2 h-2 rounded-full bg-slate-600"></span>
+                        </div>
+                        <p id="agent-scheduler-count" class="text-2xl font-bold text-white">0</p>
+                        <p class="text-xs text-slate-500">tareas programadas</p>
+                    </div>
+                    <!-- Notifications -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-slate-400 text-sm">Notificaciones</span>
+                            <i class="fa-solid fa-bell text-yellow-400"></i>
+                        </div>
+                        <p id="agent-notif-count" class="text-2xl font-bold text-white">0</p>
+                        <p class="text-xs text-slate-500">sin leer</p>
+                    </div>
+                </div>
+
+                <!-- Main Content Grid -->
+                <div class="grid grid-cols-2 gap-6">
+                    <!-- Watches Section -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                        <div class="p-4 border-b border-slate-800 flex justify-between items-center">
+                            <h3 class="font-semibold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-eye text-cyan-400"></i> Watches
+                            </h3>
+                            <button onclick="showCreateWatchModal()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded transition">
+                                <i class="fa-solid fa-plus mr-1"></i> Nuevo
+                            </button>
+                        </div>
+                        <div id="agent-watches-list" class="p-4 space-y-2 max-h-64 overflow-y-auto">
+                            <p class="text-slate-500 text-sm text-center py-4">No hay watches configurados</p>
+                        </div>
+                    </div>
+
+                    <!-- Schedules Section -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                        <div class="p-4 border-b border-slate-800 flex justify-between items-center">
+                            <h3 class="font-semibold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-clock text-orange-400"></i> Tareas Programadas
+                            </h3>
+                            <button onclick="showCreateScheduleModal()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded transition">
+                                <i class="fa-solid fa-plus mr-1"></i> Nueva
+                            </button>
+                        </div>
+                        <div id="agent-schedules-list" class="p-4 space-y-2 max-h-64 overflow-y-auto">
+                            <p class="text-slate-500 text-sm text-center py-4">No hay tareas programadas</p>
+                        </div>
+                    </div>
+
+                    <!-- Recent Runs -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                        <div class="p-4 border-b border-slate-800 flex justify-between items-center">
+                            <h3 class="font-semibold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-history text-green-400"></i> Ejecuciones Recientes
+                            </h3>
+                            <button onclick="refreshAgentRuns()" class="text-xs text-slate-400 hover:text-white transition">
+                                <i class="fa-solid fa-refresh"></i>
+                            </button>
+                        </div>
+                        <div id="agent-runs-list" class="p-4 space-y-2 max-h-64 overflow-y-auto">
+                            <p class="text-slate-500 text-sm text-center py-4">No hay ejecuciones recientes</p>
+                        </div>
+                    </div>
+
+                    <!-- Notifications -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                        <div class="p-4 border-b border-slate-800 flex justify-between items-center">
+                            <h3 class="font-semibold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-bell text-yellow-400"></i> Notificaciones
+                            </h3>
+                            <button onclick="markAllNotificationsRead()" class="text-xs text-slate-400 hover:text-white transition">
+                                Marcar leídas
+                            </button>
+                        </div>
+                        <div id="agent-notifications-list" class="p-4 space-y-2 max-h-64 overflow-y-auto">
+                            <p class="text-slate-500 text-sm text-center py-4">No hay notificaciones</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="mt-6 bg-slate-900 border border-slate-800 rounded-xl p-4">
+                    <h3 class="font-semibold text-white mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-bolt text-yellow-400"></i> Acciones Rápidas
+                    </h3>
+                    <div class="flex gap-3 flex-wrap">
+                        <button onclick="executeCurrentPipeline()" class="bg-blue-600 hover:bg-blue-500 text-white text-sm px-4 py-2 rounded-lg transition flex items-center gap-2">
+                            <i class="fa-solid fa-rocket"></i> Ejecutar Pipeline Actual
+                        </button>
+                        <button onclick="testNotification()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm px-4 py-2 rounded-lg transition flex items-center gap-2">
+                            <i class="fa-solid fa-bell"></i> Test Notificación
+                        </button>
+                        <button onclick="toggleWatchdogService()" id="btn-toggle-watchdog" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm px-4 py-2 rounded-lg transition flex items-center gap-2">
+                            <i class="fa-solid fa-eye"></i> <span>Iniciar Watchdog</span>
+                        </button>
+                        <button onclick="toggleSchedulerService()" id="btn-toggle-scheduler" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm px-4 py-2 rounded-lg transition flex items-center gap-2">
+                            <i class="fa-solid fa-clock"></i> <span>Iniciar Scheduler</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Crear Watch -->
+        <div id="create-watch-modal" class="hidden absolute inset-0 bg-slate-950/90 z-50 flex items-center justify-center p-8 backdrop-blur-sm">
+            <div class="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-md shadow-2xl">
+                <div class="p-4 border-b border-slate-800 flex justify-between items-center">
+                    <h3 class="font-bold text-white"><i class="fa-solid fa-eye mr-2 text-cyan-400"></i>Nuevo Watch</h3>
+                    <button onclick="closeModal('create-watch-modal')" class="text-slate-500 hover:text-white"><i class="fa-solid fa-times"></i></button>
+                </div>
+                <div class="p-4 space-y-4">
+                    <div>
+                        <label class="text-sm text-slate-400 block mb-1">Nombre</label>
+                        <input id="watch-name" type="text" placeholder="PDFs en Descargas" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-cyan-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="text-sm text-slate-400 block mb-1">Directorio</label>
+                        <input id="watch-directory" type="text" placeholder="~/Downloads" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-cyan-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="text-sm text-slate-400 block mb-1">Patrones (separados por coma)</label>
+                        <input id="watch-patterns" type="text" placeholder="*.pdf, *.jpg" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-cyan-500 focus:outline-none">
+                    </div>
+                </div>
+                <div class="p-4 border-t border-slate-800 flex justify-end gap-2">
+                    <button onclick="closeModal('create-watch-modal')" class="bg-slate-800 hover:bg-slate-700 text-sm px-4 py-2 rounded transition">Cancelar</button>
+                    <button onclick="createWatch()" class="bg-cyan-600 hover:bg-cyan-500 text-sm px-4 py-2 rounded transition">Crear Watch</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Crear Schedule -->
+        <div id="create-schedule-modal" class="hidden absolute inset-0 bg-slate-950/90 z-50 flex items-center justify-center p-8 backdrop-blur-sm">
+            <div class="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-md shadow-2xl">
+                <div class="p-4 border-b border-slate-800 flex justify-between items-center">
+                    <h3 class="font-bold text-white"><i class="fa-solid fa-clock mr-2 text-orange-400"></i>Nueva Tarea Programada</h3>
+                    <button onclick="closeModal('create-schedule-modal')" class="text-slate-500 hover:text-white"><i class="fa-solid fa-times"></i></button>
+                </div>
+                <div class="p-4 space-y-4">
+                    <div>
+                        <label class="text-sm text-slate-400 block mb-1">Nombre</label>
+                        <input id="schedule-name" type="text" placeholder="Backup diario" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-orange-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="text-sm text-slate-400 block mb-1">Tipo</label>
+                        <select id="schedule-type" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-orange-500 focus:outline-none">
+                            <option value="cron">Cron (horario específico)</option>
+                            <option value="interval">Intervalo (cada X tiempo)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-sm text-slate-400 block mb-1">Horario</label>
+                        <input id="schedule-schedule" type="text" placeholder="0 9 * * * (9am diario) o 15m (cada 15 min)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-orange-500 focus:outline-none">
+                        <p class="text-xs text-slate-500 mt-1">Cron: min hora día mes dow | Intervalo: 15m, 1h, 1d</p>
+                    </div>
+                </div>
+                <div class="p-4 border-t border-slate-800 flex justify-end gap-2">
+                    <button onclick="closeModal('create-schedule-modal')" class="bg-slate-800 hover:bg-slate-700 text-sm px-4 py-2 rounded transition">Cancelar</button>
+                    <button onclick="createSchedule()" class="bg-orange-600 hover:bg-orange-500 text-sm px-4 py-2 rounded transition">Crear Tarea</button>
                 </div>
             </div>
         </div>
@@ -765,6 +1037,389 @@
     </main>
 
     <script>
+        // ============================================
+        // 0. OFFLINE-FIRST MODULES
+        // ============================================
+
+        const API_URL = '';  // Mismo origen
+
+        // TOAST NOTIFICATIONS
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle' };
+            toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info}"></i> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // OFFLINE STORE - Maneja localStorage con timestamps
+        const OfflineStore = {
+            KEYS: {
+                tools: 'directos_tools',
+                toolStates: 'directos_tool_states',
+                projects: 'directos_projects',
+                architectures: 'directos_architectures',
+                queue: 'directos_sync_queue',
+                lastSync: 'directos_last_sync'
+            },
+
+            get(key) {
+                try {
+                    return JSON.parse(localStorage.getItem(this.KEYS[key]) || '{}');
+                } catch {
+                    return {};
+                }
+            },
+
+            getArray(key) {
+                try {
+                    return JSON.parse(localStorage.getItem(this.KEYS[key]) || '[]');
+                } catch {
+                    return [];
+                }
+            },
+
+            set(key, data) {
+                localStorage.setItem(this.KEYS[key], JSON.stringify(data));
+            },
+
+            // Guardar entidad con timestamp
+            save(entity, id, data) {
+                const store = this.get(entity);
+                store[id] = { ...data, id, updatedAt: Date.now(), synced: false };
+                this.set(entity, store);
+                SyncQueue.add(entity, 'update', id, data);
+                SyncManager.updateUI();
+                return store[id];
+            },
+
+            // Crear nueva entidad
+            create(entity, data) {
+                const store = this.get(entity);
+                const id = 'local_' + Date.now().toString(36);
+                store[id] = { ...data, id, createdAt: Date.now(), updatedAt: Date.now(), synced: false };
+                this.set(entity, store);
+                SyncQueue.add(entity, 'create', id, store[id]);
+                SyncManager.updateUI();
+                return store[id];
+            },
+
+            // Eliminar entidad
+            remove(entity, id) {
+                const store = this.get(entity);
+                if (store[id]) {
+                    const deleted = store[id];
+                    delete store[id];
+                    this.set(entity, store);
+                    SyncQueue.add(entity, 'delete', id, deleted);
+                    SyncManager.updateUI();
+                    return deleted;
+                }
+                return null;
+            },
+
+            // Marcar como sincronizado
+            markSynced(entity, id, serverId = null) {
+                const store = this.get(entity);
+                if (store[id]) {
+                    store[id].synced = true;
+                    store[id].syncedAt = Date.now();
+                    if (serverId && serverId !== id) {
+                        // Reemplazar ID local con ID del servidor
+                        store[serverId] = { ...store[id], id: serverId };
+                        delete store[id];
+                    }
+                    this.set(entity, store);
+                }
+            },
+
+            // Obtener todos como array
+            getAll(entity) {
+                const store = this.get(entity);
+                return Object.values(store);
+            }
+        };
+
+        // SYNC QUEUE - Cola de operaciones pendientes
+        const SyncQueue = {
+            add(entity, action, id, data) {
+                const queue = OfflineStore.getArray('queue');
+                // Evitar duplicados: si ya hay una operación pendiente para este id, actualizarla
+                const existingIdx = queue.findIndex(q => q.entity === entity && q.id === id);
+                const item = {
+                    entity,
+                    action,  // 'create' | 'update' | 'delete'
+                    id,
+                    data,
+                    timestamp: Date.now(),
+                    retries: 0
+                };
+                if (existingIdx >= 0) {
+                    // Si era create y ahora es delete, eliminar de la cola
+                    if (queue[existingIdx].action === 'create' && action === 'delete') {
+                        queue.splice(existingIdx, 1);
+                    } else {
+                        queue[existingIdx] = item;
+                    }
+                } else {
+                    queue.push(item);
+                }
+                OfflineStore.set('queue', queue);
+                SyncManager.attemptSync();
+            },
+
+            getAll() {
+                return OfflineStore.getArray('queue');
+            },
+
+            clear() {
+                OfflineStore.set('queue', []);
+            },
+
+            removeFirst() {
+                const queue = this.getAll();
+                queue.shift();
+                OfflineStore.set('queue', queue);
+            },
+
+            size() {
+                return this.getAll().length;
+            }
+        };
+
+        // SYNC MANAGER - Orquesta la sincronización
+        const SyncManager = {
+            isOnline: navigator.onLine,
+            isServerReachable: false,
+            checkInterval: null,
+            isSyncing: false,
+
+            init() {
+                // Listeners de conectividad
+                window.addEventListener('online', () => this.checkConnection());
+                window.addEventListener('offline', () => this.setOffline());
+
+                // Check inicial
+                this.checkConnection();
+
+                // Ping cada 30s
+                this.checkInterval = setInterval(() => this.checkConnection(), 30000);
+
+                console.log('[SyncManager] Initialized');
+            },
+
+            async checkConnection() {
+                this.isOnline = navigator.onLine;
+                if (!this.isOnline) {
+                    this.setOffline();
+                    return;
+                }
+
+                try {
+                    const res = await fetch(`${API_URL}/api/health`, {
+                        method: 'GET',
+                        cache: 'no-cache'
+                    });
+                    this.isServerReachable = res.ok;
+                    this.updateUI();
+
+                    if (this.isServerReachable) {
+                        this.attemptSync();
+                    }
+                } catch {
+                    this.isServerReachable = false;
+                    this.updateUI();
+                }
+            },
+
+            setOffline() {
+                this.isOnline = false;
+                this.isServerReachable = false;
+                this.updateUI();
+            },
+
+            async attemptSync() {
+                if (!this.isServerReachable || this.isSyncing) return;
+
+                const queue = SyncQueue.getAll();
+                if (queue.length === 0) {
+                    // Solo pull si no hay nada pendiente
+                    await this.pullFromServer();
+                    return;
+                }
+
+                this.isSyncing = true;
+                this.updateUI('syncing');
+
+                for (let i = 0; i < queue.length; i++) {
+                    const item = queue[0]; // Siempre el primero (FIFO)
+                    try {
+                        const serverId = await this.pushToServer(item);
+                        OfflineStore.markSynced(item.entity, item.id, serverId);
+                        SyncQueue.removeFirst();
+                        console.log(`[Sync] ✓ ${item.action} ${item.entity}/${item.id}`);
+                    } catch (e) {
+                        console.error(`[Sync] ✗ ${item.action} ${item.entity}/${item.id}:`, e);
+                        // Incrementar retries en la cola
+                        const q = SyncQueue.getAll();
+                        if (q[0]) {
+                            q[0].retries++;
+                            if (q[0].retries > 3) {
+                                console.error('[Sync] Max retries reached, skipping');
+                                SyncQueue.removeFirst();
+                            } else {
+                                OfflineStore.set('queue', q);
+                            }
+                        }
+                        break; // Parar en el primer error
+                    }
+                }
+
+                // Pull datos frescos después de push
+                await this.pullFromServer();
+
+                this.isSyncing = false;
+                this.updateUI();
+            },
+
+            async pushToServer(item) {
+                let endpoint, method, body;
+
+                switch (item.entity) {
+                    case 'toolStates':
+                        endpoint = `${API_URL}/api/tools/${item.id}/status`;
+                        method = 'PUT';
+                        body = { status: item.data.status || item.data };
+                        break;
+                    case 'projects':
+                        if (item.action === 'create') {
+                            endpoint = `${API_URL}/api/projects`;
+                            method = 'POST';
+                        } else if (item.action === 'delete') {
+                            endpoint = `${API_URL}/api/projects/${item.id}`;
+                            method = 'DELETE';
+                        } else {
+                            endpoint = `${API_URL}/api/projects/${item.id}`;
+                            method = 'PUT';
+                        }
+                        body = item.data;
+                        break;
+                    case 'architectures':
+                        if (item.action === 'create') {
+                            endpoint = `${API_URL}/api/architectures`;
+                            method = 'POST';
+                        } else if (item.action === 'delete') {
+                            endpoint = `${API_URL}/api/architectures/${item.id}`;
+                            method = 'DELETE';
+                        } else {
+                            endpoint = `${API_URL}/api/architectures/${item.id}`;
+                            method = 'PUT';
+                        }
+                        body = item.data;
+                        break;
+                    default:
+                        throw new Error(`Unknown entity: ${item.entity}`);
+                }
+
+                const options = {
+                    method,
+                    headers: { 'Content-Type': 'application/json' }
+                };
+                if (method !== 'DELETE' && body) {
+                    options.body = JSON.stringify(body);
+                }
+
+                const res = await fetch(endpoint, options);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                const data = await res.json();
+                return data.id || item.id; // Devolver ID del servidor si existe
+            },
+
+            async pullFromServer() {
+                const lastSync = localStorage.getItem(OfflineStore.KEYS.lastSync) || 0;
+
+                try {
+                    // Pull tool states
+                    const statesRes = await fetch(`${API_URL}/api/tools/states`);
+                    if (statesRes.ok) {
+                        const { states } = await statesRes.json();
+                        this.mergeToolStates(states);
+                    }
+
+                    // Pull architectures
+                    const archRes = await fetch(`${API_URL}/api/architectures`);
+                    if (archRes.ok) {
+                        const { architectures } = await archRes.json();
+                        this.mergeData('architectures', architectures);
+                    }
+
+                    // Pull projects sync
+                    const projRes = await fetch(`${API_URL}/api/projects/sync`);
+                    if (projRes.ok) {
+                        const { projects } = await projRes.json();
+                        this.mergeData('projects', projects);
+                    }
+
+                    localStorage.setItem(OfflineStore.KEYS.lastSync, Date.now());
+                    console.log('[Sync] Pull complete');
+                } catch (e) {
+                    console.warn('[Sync] Pull failed:', e);
+                }
+            },
+
+            mergeToolStates(serverStates) {
+                const local = OfflineStore.get('toolStates');
+
+                Object.entries(serverStates).forEach(([id, serverItem]) => {
+                    const localItem = local[id];
+                    // Si no existe local o está sincronizado, aceptar server
+                    if (!localItem || localItem.synced !== false) {
+                        local[id] = { ...serverItem, synced: true };
+                    }
+                });
+
+                OfflineStore.set('toolStates', local);
+            },
+
+            mergeData(entity, serverData) {
+                const local = OfflineStore.get(entity);
+
+                serverData.forEach(item => {
+                    const localItem = local[item.id];
+                    // Si no existe local o está sincronizado, aceptar server
+                    if (!localItem || localItem.synced !== false) {
+                        local[item.id] = { ...item, synced: true, syncedAt: Date.now() };
+                    }
+                });
+
+                OfflineStore.set(entity, local);
+            },
+
+            updateUI(status) {
+                const badge = document.getElementById('sync-status');
+                if (!badge) return;
+
+                const pending = SyncQueue.size();
+
+                if (status === 'syncing') {
+                    badge.innerHTML = '<i class="fa-solid fa-sync fa-spin mr-1"></i> Syncing...';
+                    badge.className = 'text-xs font-medium px-2 py-1 rounded bg-yellow-500/20 text-yellow-400 border border-yellow-500/30';
+                } else if (!this.isOnline || !this.isServerReachable) {
+                    badge.innerHTML = `<i class="fa-solid fa-cloud-slash mr-1"></i> Offline${pending > 0 ? ` (${pending})` : ''}`;
+                    badge.className = 'text-xs font-medium px-2 py-1 rounded bg-slate-700 text-slate-400 border border-slate-600';
+                } else if (pending > 0) {
+                    badge.innerHTML = `<i class="fa-solid fa-clock mr-1"></i> ${pending} pending`;
+                    badge.className = 'text-xs font-medium px-2 py-1 rounded bg-yellow-500/20 text-yellow-400 border border-yellow-500/30';
+                } else {
+                    badge.innerHTML = '<i class="fa-solid fa-check mr-1"></i> Synced';
+                    badge.className = 'text-xs font-medium px-2 py-1 rounded bg-green-500/20 text-green-400 border border-green-500/30';
+                }
+            }
+        };
+
         // ============================================
         // 1. DATA TOOLS & DETAILS (TAGS CON ICONOS AÑADIDOS)
         // ============================================
@@ -1847,7 +2502,7 @@ Incluye docker-compose para orquestar.`
         });
 
         // ============================================
-        // PIPELINE BUILDER - SISTEMA DE NODOS v8.0
+        // PIPELINE BUILDER - SISTEMA DE NODOS v9.0
         // ============================================
         const nodesContainer = document.getElementById('nodes-container');
         const connectionsSvg = document.getElementById('connections-svg');
@@ -1885,6 +2540,132 @@ Incluye docker-compose para orquestar.`
                 renderCanvas();
                 addLog("INFO", "Canvas limpiado");
             }
+        }
+
+        // ============================================
+        // ARQUITECTURAS - SAVE/LOAD (Offline-First)
+        // ============================================
+
+        function saveArchitecture() {
+            if (canvasNodes.length === 0) {
+                showToast('Añade herramientas al canvas primero', 'error');
+                return;
+            }
+
+            const name = prompt('Nombre de la arquitectura:', `Arquitectura ${new Date().toLocaleDateString()}`);
+            if (!name) return;
+
+            const description = prompt('Descripción (opcional):', '');
+
+            const archData = {
+                name,
+                description: description || '',
+                nodes: canvasNodes.map(n => ({ id: n.id, name: n.name, cat: n.cat })),
+                stack: canvasNodes.map(n => n.name).join(' → ')
+            };
+
+            const saved = OfflineStore.create('architectures', archData);
+            showToast(`Arquitectura "${name}" guardada (${canvasNodes.length} nodos)`, 'success');
+            addLog("SUCCESS", `Arquitectura "${name}" guardada (${canvasNodes.length} nodos)`);
+
+            // Refrescar selector de presets
+            initPresets();
+
+            // Mostrar estado de sync
+            if (!SyncManager.isServerReachable) {
+                showToast("Se sincronizará cuando haya conexión", 'info');
+            }
+        }
+
+        function loadArchitectureModal() {
+            const architectures = OfflineStore.getAll('architectures');
+            const loadList = document.getElementById('load-list');
+
+            if (architectures.length === 0) {
+                showToast('No hay arquitecturas guardadas', 'info');
+                return;
+            }
+
+            // Renderizar lista en el modal
+            loadList.innerHTML = architectures.map(arch => `
+                <div class="flex items-center justify-between p-3 bg-slate-800 hover:bg-slate-700 rounded-lg cursor-pointer group" onclick="loadArchitectureById('${arch.id}')">
+                    <div class="flex-1">
+                        <p class="font-medium text-white">${arch.name}</p>
+                        <p class="text-xs text-slate-400">${arch.nodes?.length || 0} nodos ${arch.synced === false ? '• <span class="text-yellow-400">pendiente sync</span>' : ''}</p>
+                    </div>
+                    <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">
+                        <button onclick="event.stopPropagation(); deleteArchitecture('${arch.id}', '${arch.name}')" class="text-red-400 hover:text-red-300 p-1" title="Eliminar">
+                            <i class="fa-solid fa-trash text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            // Mostrar modal
+            document.getElementById('load-modal').classList.remove('hidden');
+        }
+
+        function loadArchitectureById(archId) {
+            const arch = OfflineStore.getAll('architectures').find(a => a.id === archId);
+            if (!arch) return;
+
+            canvasNodes = [];
+
+            // Reconstruir nodos desde IDs guardados
+            (arch.nodes || []).forEach(savedNode => {
+                const tool = getTools().find(t => t.id === savedNode.id);
+                if (tool) {
+                    canvasNodes.push({...tool});
+                }
+            });
+
+            renderCanvas();
+            validateFlowRealtime();
+            closeModal('load-modal');
+            showToast(`Arquitectura "${arch.name}" cargada`, 'success');
+            addLog("SUCCESS", `Arquitectura "${arch.name}" cargada`);
+        }
+
+        function deleteArchitecture(archId, archName) {
+            if (confirm(`¿Eliminar "${archName}"?`)) {
+                OfflineStore.remove('architectures', archId);
+                showToast(`Arquitectura "${archName}" eliminada`, 'info');
+                addLog("INFO", `Arquitectura "${archName}" eliminada`);
+                loadArchitectureModal(); // Refrescar lista
+                initPresets(); // Refrescar selector
+            }
+        }
+
+        function exportDiagram() {
+            if (canvasNodes.length === 0) {
+                showToast('Añade herramientas al canvas primero', 'error');
+                return;
+            }
+
+            const canvas = document.getElementById('pipeline-canvas');
+            if (!canvas) return;
+
+            // Mostrar feedback
+            addLog("INFO", "Generando imagen PNG...");
+
+            html2canvas(canvas, {
+                backgroundColor: '#0f172a',
+                scale: 2,
+                logging: false,
+                useCORS: true
+            }).then(canvasImg => {
+                // Crear link de descarga
+                const link = document.createElement('a');
+                const timestamp = new Date().toISOString().slice(0, 10);
+                link.download = `directos-pipeline-${timestamp}.png`;
+                link.href = canvasImg.toDataURL('image/png');
+                link.click();
+
+                addLog("SUCCESS", `Pipeline exportado como PNG`);
+            }).catch(err => {
+                console.error('Error exportando:', err);
+                addLog("ERROR", "Error al exportar PNG");
+            });
         }
 
         function renderCanvas() {
@@ -2209,7 +2990,7 @@ EOF
 cat > README.md << 'EOF'
 # ${name}
 
-Pipeline generado con DirectOS v8.0
+Pipeline generado con DirectOS v9.0
 
 ## Stack
 ${canvasNodes.map(n => `- **${n.name}**: ${n.tag}`).join('\n')}
@@ -2248,38 +3029,140 @@ EOF
         }
 
         // --- PRESETS ---
-        function initPresets() {
+        async function initPresets() {
             const selector = document.getElementById('preset-selector');
+
+            // Limpiar selector (excepto la primera opción vacía)
+            while (selector.options.length > 1) {
+                selector.remove(1);
+            }
+            // Remover optgroups existentes
+            selector.querySelectorAll('optgroup').forEach(g => g.remove());
+
+            // Grupo: Patrones (hardcoded)
+            const patternsGroup = document.createElement('optgroup');
+            patternsGroup.label = '📐 Patrones';
             presets.forEach(p => {
                 const opt = document.createElement('option');
-                opt.value = p.id;
+                opt.value = `preset:${p.id}`;
                 opt.textContent = p.name;
-                selector.appendChild(opt);
+                patternsGroup.appendChild(opt);
             });
+            selector.appendChild(patternsGroup);
+
+            // Grupo: Proyectos (desde API)
+            try {
+                const res = await fetch('/api/projects');
+                const data = await res.json();
+                if (data.projects && data.projects.length > 0) {
+                    const projectsGroup = document.createElement('optgroup');
+                    projectsGroup.label = '📁 Proyectos';
+                    data.projects.forEach(p => {
+                        if (p.stack && p.stack.length > 0) {
+                            const opt = document.createElement('option');
+                            opt.value = `project:${p.id}`;
+                            opt.textContent = `${p.name} (${p.stack.length} tools)`;
+                            projectsGroup.appendChild(opt);
+                        }
+                    });
+                    if (projectsGroup.children.length > 0) {
+                        selector.appendChild(projectsGroup);
+                    }
+                }
+            } catch (e) {
+                console.warn('No se pudieron cargar proyectos para selector');
+            }
+
+            // Grupo: Arquitecturas guardadas (offline)
+            const savedArchs = OfflineStore.getAll('architectures');
+            if (savedArchs.length > 0) {
+                const archGroup = document.createElement('optgroup');
+                archGroup.label = '💾 Guardadas';
+                savedArchs.forEach(a => {
+                    const opt = document.createElement('option');
+                    opt.value = `arch:${a.id}`;
+                    opt.textContent = `${a.name} (${a.nodes?.length || 0} nodos)`;
+                    archGroup.appendChild(opt);
+                });
+                selector.appendChild(archGroup);
+            }
         }
 
-        function loadPreset(presetId) {
-            if (!presetId) {
+        function loadPreset(value) {
+            if (!value) {
                 document.getElementById('preset-info').classList.add('hidden');
                 return;
             }
 
-            const preset = presets.find(p => p.id === presetId);
-            if (!preset) return;
+            const [type, id] = value.split(':');
 
-            // Mostrar info del preset
-            document.getElementById('preset-info').classList.remove('hidden');
-            document.getElementById('preset-desc').textContent = preset.desc;
-            document.getElementById('preset-flow').textContent = preset.flow;
-            document.getElementById('preset-usecase').textContent = `Casos: ${preset.useCase}`;
+            if (type === 'preset') {
+                // Cargar preset predefinido
+                const preset = presets.find(p => p.id === id);
+                if (!preset) return;
 
-            // Limpiar canvas y cargar herramientas del preset
-            canvasNodes = [];
-            preset.tools.forEach(toolId => {
-                const tool = getTools().find(t => t.id === toolId);
-                if (tool) canvasNodes.push(tool);
-            });
-            renderCanvas();
+                document.getElementById('preset-info').classList.remove('hidden');
+                document.getElementById('preset-desc').textContent = preset.desc;
+                document.getElementById('preset-flow').textContent = preset.flow;
+                document.getElementById('preset-usecase').textContent = `Casos: ${preset.useCase}`;
+
+                canvasNodes = [];
+                preset.tools.forEach(toolId => {
+                    const tool = getTools().find(t => t.id === toolId);
+                    if (tool) canvasNodes.push(tool);
+                });
+                renderCanvas();
+
+            } else if (type === 'project') {
+                // Cargar stack de proyecto
+                loadProjectToCanvas(id);
+
+            } else if (type === 'arch') {
+                // Cargar arquitectura guardada
+                const arch = OfflineStore.getAll('architectures').find(a => a.id === id);
+                if (!arch) return;
+
+                document.getElementById('preset-info').classList.remove('hidden');
+                document.getElementById('preset-desc').textContent = arch.description || 'Arquitectura guardada';
+                document.getElementById('preset-flow').textContent = arch.stack || '';
+                document.getElementById('preset-usecase').textContent = '';
+
+                canvasNodes = [];
+                (arch.nodes || []).forEach(n => {
+                    const tool = getTools().find(t => t.id === n.id);
+                    if (tool) canvasNodes.push({...tool});
+                });
+                renderCanvas();
+                addLog("SUCCESS", `Arquitectura "${arch.name}" cargada`);
+            }
+        }
+
+        async function loadProjectToCanvas(projectId) {
+            try {
+                const res = await fetch(`/api/projects/${projectId}`);
+                const project = await res.json();
+
+                if (project && project.stack) {
+                    document.getElementById('preset-info').classList.remove('hidden');
+                    document.getElementById('preset-desc').textContent = project.description || project.name;
+                    document.getElementById('preset-flow').textContent = project.stack.join(' → ');
+                    document.getElementById('preset-usecase').textContent = `v${project.version || '1.0'} - ${project.status || 'active'}`;
+
+                    canvasNodes = [];
+                    // Mapear nombres de stack a IDs de tools
+                    project.stack.forEach(techName => {
+                        const tool = getTools().find(t =>
+                            t.name.toLowerCase() === techName.toLowerCase() ||
+                            t.id.toLowerCase() === techName.toLowerCase()
+                        );
+                        if (tool) canvasNodes.push({...tool});
+                    });
+                    renderCanvas();
+                    addLog("SUCCESS", `Proyecto "${project.name}" cargado (${canvasNodes.length} tools)`);
+                }
+            } catch (e) {
+                console.error('Error loading project:', e);
+            }
         }
 
         // --- CORE UI ---
@@ -2291,7 +3174,7 @@ EOF
             const stack = [...new Set(canvasNodes.map(n => n.name))].join(", ");
 
             let imports = `"""
-Pipeline generado con DirectOS v8.0
+Pipeline generado con DirectOS v9.0
 Stack: ${stack}
 """
 import os
@@ -2422,7 +3305,7 @@ async def health_check():
 
 @app.get("/")
 async def root():
-    return {"message": "Pipeline API - DirectOS v8.0"}
+    return {"message": "Pipeline API - DirectOS v9.0"}
 
 `;
                 if (ids.includes('chroma')) {
@@ -2462,7 +3345,7 @@ if __name__ == "__main__":
         function copyArchitectPrompt() { navigator.clipboard.writeText(document.getElementById('architect-prompt-output').textContent); }
 
         function switchView(view) {
-            ['architect', 'generator', 'grid', 'flow', 'monitor', 'projects'].forEach(v => {
+            ['architect', 'generator', 'grid', 'flow', 'monitor', 'projects', 'agent'].forEach(v => {
                 document.getElementById(`view-${v}`).classList.add('hidden');
                 const b = document.getElementById(`btn-${v}`);
                 if(b) { b.classList.replace('bg-blue-600', 'text-slate-400'); b.classList.replace('text-white', 'hover:bg-slate-800'); b.classList.remove('shadow-lg'); }
@@ -2474,42 +3357,74 @@ if __name__ == "__main__":
             const headerTools = document.getElementById('header-tools');
             if(view === 'architect') headerTools.classList.remove('hidden'); else headerTools.classList.add('hidden');
 
-            document.getElementById('page-title').textContent = { 'architect': 'Pipeline Builder', 'generator': 'Generador', 'grid': 'Glosario', 'flow': 'Recetas', 'monitor': 'Monitor', 'projects': 'Proyectos' }[view];
+            document.getElementById('page-title').textContent = { 'architect': 'Pipeline Builder', 'generator': 'Generador', 'grid': 'Glosario', 'flow': 'Recetas', 'monitor': 'Monitor', 'projects': 'Proyectos', 'agent': 'Agent Mode' }[view];
+
+            // Refresh Agent Mode data when switching to it
+            if(view === 'agent') refreshAgentStatus();
         }
 
         // Monitor & Generator
         let isOnline = false; const term = document.getElementById('terminal-window');
         function addLog(t,m){const time=new Date().toLocaleTimeString('es-ES',{hour12:false});let c="text-slate-300";if(t==="SUCCESS")c="text-green-400";if(t==="ERROR")c="text-red-400";term.innerHTML+=`<div class="terminal-line"><span class="text-slate-600">[${time}]</span> <span class="${c} font-bold w-16 inline-block">${t}</span> ${m}</div>`;term.scrollTop=term.scrollHeight;}
-        setTimeout(()=>{addLog("INFO","Conectado a DirectOS v8.0 - Pipeline Builder")},1000);
+        setTimeout(()=>{addLog("INFO","Conectado a DirectOS v9.0 - Agent Mode")},1000);
         
         // ============================================
         // GLOSARIO - FILTROS, BÚSQUEDA Y PERSISTENCIA
         // ============================================
 
-        // Cargar estados desde localStorage
+        // Cargar estados desde localStorage (compatible con OfflineStore)
         function loadToolStates() {
+            const allTools = getTools();
+            // Primero intentar cargar del nuevo formato (OfflineStore)
+            const offlineStates = OfflineStore.get('toolStates');
+            if (Object.keys(offlineStates).length > 0) {
+                allTools.forEach(t => {
+                    if (offlineStates[t.id]) {
+                        t.status = offlineStates[t.id].status || offlineStates[t.id];
+                    }
+                });
+                return;
+            }
+            // Fallback: formato antiguo
             const saved = localStorage.getItem('directos_tool_states');
             if (saved) {
                 const states = JSON.parse(saved);
-                tools.forEach(t => {
+                allTools.forEach(t => {
                     if (states[t.id]) t.status = states[t.id];
+                });
+                // Migrar al nuevo formato
+                Object.entries(states).forEach(([id, status]) => {
+                    OfflineStore.save('toolStates', id, { status, synced: true });
                 });
             }
         }
 
-        // Guardar estados en localStorage
+        // Guardar estados en localStorage (usa OfflineStore + sync)
         function saveToolStates() {
             const states = {};
-            tools.forEach(t => states[t.id] = t.status);
+            const allTools = getTools();
+            allTools.forEach(t => {
+                states[t.id] = t.status;
+                // Guardar en OfflineStore con sync
+                OfflineStore.save('toolStates', t.id, { status: t.status });
+            });
+            // Mantener compatibilidad con formato antiguo
             localStorage.setItem('directos_tool_states', JSON.stringify(states));
         }
 
-        // Cambiar estado de herramienta
+        // Cambiar estado de herramienta (con sync offline-first)
         function changeToolStatus(toolId, newStatus) {
-            const tool = getTools().find(t => t.id === toolId);
+            const allTools = getTools();
+            const tool = allTools.find(t => t.id === toolId);
             if (tool) {
                 tool.status = newStatus;
-                saveToolStates();
+                // Guardar solo este tool en OfflineStore (más eficiente)
+                OfflineStore.save('toolStates', toolId, { status: newStatus });
+                // Mantener compatibilidad
+                const states = {};
+                allTools.forEach(t => states[t.id] = t.status);
+                localStorage.setItem('directos_tool_states', JSON.stringify(states));
+
                 renderToolsGrid();
                 updateProgress();
                 // Actualizar modal si está abierto
@@ -3042,7 +3957,7 @@ if __name__ == "__main__":
         // ============================================
         // 6. BACKEND API CONNECTION
         // ============================================
-        const API_URL = 'http://localhost:8000';
+        // API_URL ya definido arriba en módulos offline-first
 
         // Health Check
         async function checkHealth() {
@@ -3163,23 +4078,78 @@ if __name__ == "__main__":
         setInterval(checkHealth, 30000); // cada 30s
 
         // ============================================
-        // PROYECTOS - FUNCIONES
+        // PROYECTOS - FUNCIONES (Offline-First)
         // ============================================
         let projectsData = [];
         let currentProject = null;
 
         async function loadProjectsFromAPI() {
+            // 1. Cargar proyectos locales (OfflineStore) primero
+            const localProjects = OfflineStore.getAll('projects');
+
+            // 2. Intentar cargar del servidor
             try {
                 const response = await fetch('/api/projects');
                 const data = await response.json();
                 if (data.projects && Array.isArray(data.projects)) {
-                    projectsData = data.projects;
+                    // Combinar: server projects + local projects (sin duplicados)
+                    const serverProjects = data.projects;
+                    const localIds = new Set(localProjects.map(p => p.id));
+                    const serverIds = new Set(serverProjects.map(p => p.id));
+
+                    // Proyectos del servidor que no están en local
+                    projectsData = serverProjects.filter(p => !localIds.has(p.id));
+                    // Añadir proyectos locales (tienen prioridad si hay ediciones pendientes)
+                    projectsData = [...projectsData, ...localProjects];
+
                     return true;
                 }
             } catch (error) {
                 console.error('Error loading projects:', error);
             }
-            return false;
+
+            // Fallback: solo proyectos locales
+            projectsData = localProjects;
+            return localProjects.length > 0;
+        }
+
+        // Crear proyecto local (offline-first)
+        function createLocalProject() {
+            const name = prompt('Nombre del proyecto:');
+            if (!name) return;
+
+            const description = prompt('Descripción:', '');
+            const stackStr = prompt('Stack (separado por comas):', 'FastAPI, Python');
+            const stack = stackStr ? stackStr.split(',').map(s => s.trim()) : [];
+
+            const projectData = {
+                name,
+                description: description || '',
+                status: 'active',
+                stack,
+                version: 'v1.0',
+                repo: ''
+            };
+
+            const saved = OfflineStore.create('projects', projectData);
+            addLog("SUCCESS", `Proyecto "${name}" creado`);
+
+            // Recargar grid
+            loadProjectsFromAPI().then(() => renderProjectsGrid());
+        }
+
+        // Eliminar proyecto local
+        function deleteLocalProject(projectId) {
+            const project = projectsData.find(p => p.id === projectId);
+            if (!project) return;
+
+            if (!confirm(`¿Eliminar proyecto "${project.name}"?`)) return;
+
+            OfflineStore.remove('projects', projectId);
+            addLog("INFO", `Proyecto "${project.name}" eliminado`);
+
+            document.getElementById('project-detail-modal').classList.add('hidden');
+            loadProjectsFromAPI().then(() => renderProjectsGrid());
         }
 
         function renderProjectsGrid() {
@@ -3200,6 +4170,10 @@ if __name__ == "__main__":
                 };
 
                 const statusClass = statusColors[project.status] || statusColors['active'];
+                const isLocal = project.id?.startsWith('local_') || project.synced === false;
+                const syncIndicator = isLocal ?
+                    `<span class="text-[10px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400 border border-yellow-500/30" title="Pendiente de sync"><i class="fa-solid fa-clock"></i></span>` :
+                    '';
 
                 const card = document.createElement('div');
                 card.className = 'bg-slate-900 border border-slate-800 rounded-xl overflow-hidden hover:border-slate-600 transition-all duration-300 cursor-pointer group hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1';
@@ -3210,9 +4184,15 @@ if __name__ == "__main__":
                         <div class="flex items-start justify-between mb-3">
                             <div>
                                 <h3 class="text-lg font-bold text-white mb-1 group-hover:text-blue-400 transition">${project.name}</h3>
-                                <span class="text-xs px-2 py-0.5 rounded ${statusClass} border">${project.status}</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs px-2 py-0.5 rounded ${statusClass} border">${project.status}</span>
+                                    ${syncIndicator}
+                                </div>
                             </div>
-                            <span class="text-xs text-slate-500 font-mono">${project.version || 'v1.0'}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-slate-500 font-mono">${project.version || 'v1.0'}</span>
+                                ${isLocal ? `<button onclick="event.stopPropagation(); deleteLocalProject('${project.id}')" class="text-slate-500 hover:text-red-400 transition" title="Eliminar"><i class="fa-solid fa-trash text-xs"></i></button>` : ''}
+                            </div>
                         </div>
                         <p class="text-sm text-slate-400 mb-4 line-clamp-2">${project.description || 'Sin descripción'}</p>
                         <div class="flex flex-wrap gap-1.5">
@@ -3283,8 +4263,576 @@ if __name__ == "__main__":
         }
 
         // ============================================
+        // IMPORTAR DESDE CÓDIGO
+        // ============================================
+
+        // Mapeo de imports Python a tool IDs
+        const IMPORT_TO_TOOL = {
+            // Backend
+            'fastapi': 'fastapi',
+            'uvicorn': 'uvicorn',
+            'flask': 'flask',
+            'pydantic': 'pydantic',
+            'httpx': 'httpx',
+
+            // AI/ML
+            'anthropic': 'claude',
+            'openai': 'clip',
+            'ollama': 'ollama',
+            'sentence_transformers': 'sbert',
+            'transformers': 'huggingface',
+            'huggingface_hub': 'huggingface',
+            'whisper': 'whisper',
+            'faster_whisper': 'whisper',
+
+            // Data/Storage
+            'sqlite3': 'sqlite',
+            'chromadb': 'chroma',
+
+            // Scraping/Web
+            'bs4': 'bs4',
+            'BeautifulSoup': 'bs4',
+            'beautifulsoup4': 'bs4',
+
+            // Media/Files
+            'cv2': 'opencv',
+            'opencv': 'opencv',
+            'ffmpeg': 'ffmpeg',
+            'pymupdf': 'pymupdf',
+            'fitz': 'pymupdf',
+            'pypdf': 'pypdf',
+            'PyPDF2': 'pypdf',
+            'pytesseract': 'ocr',
+
+            // CLI/Utils
+            'loguru': 'loguru',
+            'rich': 'rich',
+            'typer': 'typer',
+            'watchdog': 'watchdog',
+            'pytest': 'pytest',
+            'frontmatter': 'markdown',
+
+            // GUI
+            'tkinter': 'tkinter',
+
+            // DevOps
+            'docker': 'docker',
+            'git': 'git',
+
+            // Frontend (para código mixto)
+            'htmx': 'htmx'
+        };
+
+        let detectedTools = [];
+
+        function importFromCodeModal() {
+            document.getElementById('import-modal').classList.remove('hidden');
+            document.getElementById('import-code').value = '';
+            document.getElementById('import-preview').classList.add('hidden');
+            document.getElementById('import-preview').innerHTML = '';
+            detectedTools = [];
+        }
+
+        function analyzeImports() {
+            const code = document.getElementById('import-code').value;
+            if (!code.trim()) {
+                showToast('Pega código Python primero', 'error');
+                return;
+            }
+
+            // Regex para detectar imports
+            const importRegex = /^(?:from\s+(\w+)|import\s+(\w+))/gm;
+            const detected = new Set();
+            let match;
+
+            while ((match = importRegex.exec(code)) !== null) {
+                const moduleName = match[1] || match[2];
+                if (moduleName) {
+                    detected.add(moduleName.toLowerCase());
+                }
+            }
+
+            // Mapear a herramientas
+            detectedTools = [];
+            const previewContainer = document.getElementById('import-preview');
+
+            detected.forEach(moduleName => {
+                // Buscar en mapeo (case insensitive)
+                const toolId = Object.entries(IMPORT_TO_TOOL).find(([key, _]) =>
+                    key.toLowerCase() === moduleName
+                )?.[1];
+
+                if (toolId && !detectedTools.includes(toolId)) {
+                    detectedTools.push(toolId);
+                }
+            });
+
+            // Mostrar preview
+            previewContainer.classList.remove('hidden');
+
+            if (detectedTools.length === 0) {
+                previewContainer.innerHTML = `
+                    <div class="text-center py-2">
+                        <i class="fa-solid fa-circle-info text-xl text-slate-600 mb-2"></i>
+                        <p class="text-slate-500 text-sm">No se detectaron herramientas conocidas</p>
+                        <p class="text-xs text-slate-600 mt-1">Imports encontrados: ${[...detected].join(', ') || 'ninguno'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Mostrar preview de herramientas detectadas
+            previewContainer.innerHTML = `
+                <p class="text-sm text-green-400 font-medium mb-2"><i class="fa-solid fa-check-circle mr-2"></i>${detectedTools.length} herramientas detectadas:</p>
+                <div class="flex flex-wrap gap-2">
+                    ${detectedTools.map(id => `
+                        <span class="bg-slate-700 text-slate-300 px-2 py-1 rounded-full text-xs flex items-center gap-1">
+                            <i class="fa-solid fa-cube text-blue-400"></i>
+                            ${id}
+                        </span>
+                    `).join('')}
+                </div>
+            `;
+
+            showToast(`${detectedTools.length} herramientas detectadas`, 'success');
+        }
+
+        async function applyImportedArchitecture() {
+            if (detectedTools.length === 0) {
+                showToast('Primero analiza el código', 'error');
+                return;
+            }
+
+            // Cargar herramientas desde API
+            try {
+                const response = await fetch('/api/tools');
+                if (!response.ok) throw new Error('No se pudieron cargar las herramientas');
+
+                const apiTools = await response.json();
+                let added = 0;
+
+                detectedTools.forEach(toolId => {
+                    const tool = apiTools.find(t => t.id === toolId);
+                    if (tool) {
+                        // Verificar que no esté ya en el canvas
+                        if (!canvasNodes.find(n => n.id === toolId)) {
+                            canvasNodes.push({
+                                id: tool.id,
+                                name: tool.name,
+                                cat: (tool.category || 'Other').toLowerCase(),
+                                icon: tool.icon || 'fa-cube',
+                                tag: tool.tag || tool.category
+                            });
+                            added++;
+                        }
+                    }
+                });
+
+                renderCanvas();
+                closeModal('import-modal');
+
+                if (added > 0) {
+                    showToast(`${added} herramientas añadidas al canvas`, 'success');
+                    addLog("SUCCESS", `Importadas ${added} herramientas desde código`);
+                } else {
+                    showToast('Las herramientas ya estaban en el canvas', 'info');
+                }
+
+            } catch (error) {
+                console.error('Error aplicando arquitectura:', error);
+                showToast('Error cargando herramientas', 'error');
+            }
+        }
+
+        // ============================================
+        // AGENT MODE v9.0
+        // ============================================
+        let agentState = {
+            watchdogRunning: false,
+            schedulerRunning: false,
+            watches: [],
+            schedules: [],
+            runs: [],
+            notifications: []
+        };
+
+        async function refreshAgentStatus() {
+            try {
+                const res = await fetch('/api/agent/status');
+                const data = await res.json();
+
+                // Update status cards
+                document.getElementById('agent-executor-runs').textContent = data.executor?.active_runs || 0;
+                document.getElementById('agent-watchdog-count').textContent = data.watchdog?.watches_count || 0;
+                document.getElementById('agent-scheduler-count').textContent = data.scheduler?.tasks_count || 0;
+                document.getElementById('agent-notif-count').textContent = data.notifier?.unread_count || 0;
+
+                // Update status indicators
+                agentState.watchdogRunning = data.watchdog?.running || false;
+                agentState.schedulerRunning = data.scheduler?.running || false;
+
+                const watchdogStatus = document.getElementById('agent-watchdog-status');
+                const schedulerStatus = document.getElementById('agent-scheduler-status');
+                const statusDot = document.getElementById('agent-status-dot');
+
+                watchdogStatus.className = 'w-2 h-2 rounded-full ' + (agentState.watchdogRunning ? 'bg-green-400' : 'bg-slate-600');
+                schedulerStatus.className = 'w-2 h-2 rounded-full ' + (agentState.schedulerRunning ? 'bg-green-400' : 'bg-slate-600');
+                statusDot.className = 'w-2 h-2 rounded-full ' + ((agentState.watchdogRunning || agentState.schedulerRunning) ? 'bg-green-400' : 'bg-slate-600');
+
+                // Update toggle buttons
+                updateToggleButtons();
+
+                // Refresh lists
+                await Promise.all([refreshAgentWatches(), refreshAgentSchedules(), refreshAgentRuns(), refreshAgentNotifications()]);
+            } catch(e) {
+                console.error('Error refreshing agent status:', e);
+            }
+        }
+
+        function updateToggleButtons() {
+            const btnWatchdog = document.getElementById('btn-toggle-watchdog');
+            const btnScheduler = document.getElementById('btn-toggle-scheduler');
+
+            if(btnWatchdog) {
+                const isRunning = agentState.watchdogRunning;
+                btnWatchdog.innerHTML = `<i class="fa-solid fa-eye"></i> <span>${isRunning ? 'Detener Watchdog' : 'Iniciar Watchdog'}</span>`;
+                btnWatchdog.className = isRunning
+                    ? 'bg-cyan-600 hover:bg-cyan-500 text-white text-sm px-4 py-2 rounded-lg transition flex items-center gap-2'
+                    : 'bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm px-4 py-2 rounded-lg transition flex items-center gap-2';
+            }
+            if(btnScheduler) {
+                const isRunning = agentState.schedulerRunning;
+                btnScheduler.innerHTML = `<i class="fa-solid fa-clock"></i> <span>${isRunning ? 'Detener Scheduler' : 'Iniciar Scheduler'}</span>`;
+                btnScheduler.className = isRunning
+                    ? 'bg-orange-600 hover:bg-orange-500 text-white text-sm px-4 py-2 rounded-lg transition flex items-center gap-2'
+                    : 'bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm px-4 py-2 rounded-lg transition flex items-center gap-2';
+            }
+        }
+
+        async function refreshAgentWatches() {
+            try {
+                const res = await fetch('/api/agent/watches');
+                const data = await res.json();
+                const watches = data.watches || [];
+                agentState.watches = watches;
+
+                const container = document.getElementById('agent-watches-list');
+                if(!watches || watches.length === 0) {
+                    container.innerHTML = '<p class="text-slate-500 text-sm text-center py-4">No hay watches configurados</p>';
+                    return;
+                }
+
+                container.innerHTML = watches.map(w => `
+                    <div class="bg-slate-950 border border-slate-800 rounded-lg p-3 flex justify-between items-center">
+                        <div>
+                            <p class="text-white font-medium text-sm">${w.name}</p>
+                            <p class="text-slate-500 text-xs">${w.directory} → ${w.patterns?.join(', ') || '*'}</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full ${w.active ? 'bg-green-400' : 'bg-slate-600'}"></span>
+                            <button onclick="deleteWatch('${w.id}')" class="text-red-400 hover:text-red-300 text-xs"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch(e) {
+                console.error('Error loading watches:', e);
+            }
+        }
+
+        async function refreshAgentSchedules() {
+            try {
+                const res = await fetch('/api/agent/schedules');
+                const data = await res.json();
+                const schedules = data.tasks || [];
+                agentState.schedules = schedules;
+
+                const container = document.getElementById('agent-schedules-list');
+                if(!schedules || schedules.length === 0) {
+                    container.innerHTML = '<p class="text-slate-500 text-sm text-center py-4">No hay tareas programadas</p>';
+                    return;
+                }
+
+                container.innerHTML = schedules.map(s => `
+                    <div class="bg-slate-950 border border-slate-800 rounded-lg p-3 flex justify-between items-center">
+                        <div>
+                            <p class="text-white font-medium text-sm">${s.name}</p>
+                            <p class="text-slate-500 text-xs">${s.schedule_type}: ${s.schedule}</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full ${s.enabled ? 'bg-green-400' : 'bg-slate-600'}"></span>
+                            <button onclick="deleteSchedule('${s.id}')" class="text-red-400 hover:text-red-300 text-xs"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch(e) {
+                console.error('Error loading schedules:', e);
+            }
+        }
+
+        async function refreshAgentRuns() {
+            try {
+                const res = await fetch('/api/agent/runs?limit=10');
+                const data = await res.json();
+                const runs = data.runs || [];
+                agentState.runs = runs;
+
+                const container = document.getElementById('agent-runs-list');
+                if(!runs || runs.length === 0) {
+                    container.innerHTML = '<p class="text-slate-500 text-sm text-center py-4">No hay ejecuciones recientes</p>';
+                    return;
+                }
+
+                container.innerHTML = runs.map(r => {
+                    const statusColor = r.status === 'success' ? 'text-green-400' : r.status === 'error' ? 'text-red-400' : 'text-yellow-400';
+                    const statusIcon = r.status === 'success' ? 'fa-check-circle' : r.status === 'error' ? 'fa-times-circle' : 'fa-spinner fa-spin';
+                    const time = new Date(r.started_at * 1000).toLocaleTimeString('es-ES', {hour12: false});
+                    return `
+                        <div class="bg-slate-950 border border-slate-800 rounded-lg p-3 flex justify-between items-center">
+                            <div>
+                                <p class="text-white font-medium text-sm">${r.pipeline_name || 'Pipeline'}</p>
+                                <p class="text-slate-500 text-xs">${time} • ${r.duration ? r.duration.toFixed(1) + 's' : 'En progreso...'}</p>
+                            </div>
+                            <i class="fa-solid ${statusIcon} ${statusColor}"></i>
+                        </div>
+                    `;
+                }).join('');
+            } catch(e) {
+                console.error('Error loading runs:', e);
+            }
+        }
+
+        async function refreshAgentNotifications() {
+            try {
+                const res = await fetch('/api/agent/notifications?limit=10');
+                const data = await res.json();
+                const notifs = data.notifications || [];
+                agentState.notifications = notifs;
+
+                const container = document.getElementById('agent-notifications-list');
+                if(!notifs || notifs.length === 0) {
+                    container.innerHTML = '<p class="text-slate-500 text-sm text-center py-4">No hay notificaciones</p>';
+                    return;
+                }
+
+                container.innerHTML = notifs.map(n => {
+                    const typeColor = {success: 'text-green-400', error: 'text-red-400', warning: 'text-yellow-400', info: 'text-blue-400'}[n.type] || 'text-slate-400';
+                    const time = new Date(n.timestamp * 1000).toLocaleTimeString('es-ES', {hour12: false});
+                    return `
+                        <div class="bg-slate-950 border border-slate-800 rounded-lg p-3 ${n.read ? 'opacity-60' : ''}">
+                            <div class="flex justify-between items-start">
+                                <p class="${typeColor} font-medium text-sm">${n.title}</p>
+                                <span class="text-slate-600 text-xs">${time}</span>
+                            </div>
+                            <p class="text-slate-400 text-xs mt-1">${n.message}</p>
+                        </div>
+                    `;
+                }).join('');
+            } catch(e) {
+                console.error('Error loading notifications:', e);
+            }
+        }
+
+        async function startAllAgents() {
+            try {
+                const res = await fetch('/api/agent/start-all', {method: 'POST'});
+                const data = await res.json();
+                showToast('Agent Mode iniciado', 'success');
+                await refreshAgentStatus();
+            } catch(e) {
+                showToast('Error iniciando Agent Mode', 'error');
+            }
+        }
+
+        async function stopAllAgents() {
+            try {
+                const res = await fetch('/api/agent/stop-all', {method: 'POST'});
+                showToast('Agent Mode detenido', 'info');
+                await refreshAgentStatus();
+            } catch(e) {
+                showToast('Error deteniendo Agent Mode', 'error');
+            }
+        }
+
+        async function toggleWatchdogService() {
+            try {
+                const endpoint = agentState.watchdogRunning ? '/api/agent/watchdog/stop' : '/api/agent/watchdog/start';
+                await fetch(endpoint, {method: 'POST'});
+                showToast(agentState.watchdogRunning ? 'Watchdog detenido' : 'Watchdog iniciado', 'info');
+                await refreshAgentStatus();
+            } catch(e) {
+                showToast('Error con Watchdog', 'error');
+            }
+        }
+
+        async function toggleSchedulerService() {
+            try {
+                const endpoint = agentState.schedulerRunning ? '/api/agent/scheduler/stop' : '/api/agent/scheduler/start';
+                await fetch(endpoint, {method: 'POST'});
+                showToast(agentState.schedulerRunning ? 'Scheduler detenido' : 'Scheduler iniciado', 'info');
+                await refreshAgentStatus();
+            } catch(e) {
+                showToast('Error con Scheduler', 'error');
+            }
+        }
+
+        function showCreateWatchModal() {
+            document.getElementById('watch-name').value = '';
+            document.getElementById('watch-directory').value = '~/Downloads';
+            document.getElementById('watch-patterns').value = '*.pdf';
+            document.getElementById('create-watch-modal').classList.remove('hidden');
+        }
+
+        async function createWatch() {
+            const name = document.getElementById('watch-name').value;
+            const directory = document.getElementById('watch-directory').value;
+            const patterns = document.getElementById('watch-patterns').value.split(',').map(p => p.trim()).filter(p => p);
+
+            if(!name || !directory) {
+                showToast('Nombre y directorio requeridos', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/agent/watches', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({name, directory, patterns})
+                });
+                if(res.ok) {
+                    showToast('Watch creado', 'success');
+                    closeModal('create-watch-modal');
+                    await refreshAgentWatches();
+                    await refreshAgentStatus();
+                } else {
+                    const err = await res.json();
+                    showToast(err.detail || 'Error creando watch', 'error');
+                }
+            } catch(e) {
+                showToast('Error creando watch', 'error');
+            }
+        }
+
+        async function deleteWatch(watchId) {
+            if(!confirm('¿Eliminar este watch?')) return;
+            try {
+                await fetch(`/api/agent/watches/${watchId}`, {method: 'DELETE'});
+                showToast('Watch eliminado', 'info');
+                await refreshAgentWatches();
+                await refreshAgentStatus();
+            } catch(e) {
+                showToast('Error eliminando watch', 'error');
+            }
+        }
+
+        function showCreateScheduleModal() {
+            document.getElementById('schedule-name').value = '';
+            document.getElementById('schedule-type').value = 'cron';
+            document.getElementById('schedule-schedule').value = '0 9 * * *';
+            document.getElementById('create-schedule-modal').classList.remove('hidden');
+        }
+
+        async function createSchedule() {
+            const name = document.getElementById('schedule-name').value;
+            const schedule_type = document.getElementById('schedule-type').value;
+            const schedule = document.getElementById('schedule-schedule').value;
+
+            if(!name || !schedule) {
+                showToast('Nombre y horario requeridos', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/agent/schedules', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({name, schedule_type, schedule})
+                });
+                if(res.ok) {
+                    showToast('Tarea programada creada', 'success');
+                    closeModal('create-schedule-modal');
+                    await refreshAgentSchedules();
+                    await refreshAgentStatus();
+                } else {
+                    const err = await res.json();
+                    showToast(err.detail || 'Error creando tarea', 'error');
+                }
+            } catch(e) {
+                showToast('Error creando tarea', 'error');
+            }
+        }
+
+        async function deleteSchedule(scheduleId) {
+            if(!confirm('¿Eliminar esta tarea programada?')) return;
+            try {
+                await fetch(`/api/agent/schedules/${scheduleId}`, {method: 'DELETE'});
+                showToast('Tarea eliminada', 'info');
+                await refreshAgentSchedules();
+                await refreshAgentStatus();
+            } catch(e) {
+                showToast('Error eliminando tarea', 'error');
+            }
+        }
+
+        async function testNotification() {
+            try {
+                await fetch('/api/agent/notifications/test', {method: 'POST'});
+                showToast('Notificación enviada', 'info');
+                setTimeout(() => refreshAgentNotifications(), 500);
+            } catch(e) {
+                showToast('Error enviando notificación', 'error');
+            }
+        }
+
+        async function markAllNotificationsRead() {
+            try {
+                await fetch('/api/agent/notifications/read-all', {method: 'POST'});
+                await refreshAgentNotifications();
+                await refreshAgentStatus();
+            } catch(e) {
+                console.error('Error marking notifications read:', e);
+            }
+        }
+
+        async function executeCurrentPipeline() {
+            // Get current pipeline from canvas
+            if(!canvasNodes || canvasNodes.length === 0) {
+                showToast('No hay pipeline en el canvas', 'error');
+                return;
+            }
+
+            const pipelineDef = {
+                name: 'Pipeline desde Canvas',
+                nodes: canvasNodes.map(n => ({
+                    id: n.id,
+                    tool: n.id,  // El nodo ES el tool
+                    name: n.name,
+                    config: {}
+                })),
+                connections: (typeof connections !== 'undefined' ? connections : []).map(c => ({
+                    from: c.from,
+                    to: c.to
+                }))
+            };
+
+            try {
+                const res = await fetch('/api/agent/execute', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(pipelineDef)
+                });
+                const data = await res.json();
+                showToast(`Pipeline iniciado (${data.run_id})`, 'success');
+                switchView('agent');
+                setTimeout(() => refreshAgentRuns(), 1000);
+            } catch(e) {
+                showToast('Error ejecutando pipeline', 'error');
+            }
+        }
+
+        // ============================================
         // INICIALIZACIÓN
         // ============================================
+        SyncManager.init();  // Offline-first sync
         initPresets();
         initPatternsAccordion();
         initFlowsGallery();

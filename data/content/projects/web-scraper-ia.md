@@ -8,7 +8,7 @@ stack:
   - claude
   - pydantic
   - httpx
-  - beautifulsoup
+  - bs4
   - sqlite
   - rich
   - loguru

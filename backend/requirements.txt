@@ -1,4 +1,4 @@
-# DirectOS Backend v6.0
+# DirectOS Backend v9.0
 # =====================
 
 # API Server
@@ -11,6 +11,10 @@ chromadb>=0.4.18
 
 # Scout (Claude API)
 anthropic==0.7.8
+
+# Agent Mode v9.0
+watchdog>=3.0.0       # File system monitoring
+apscheduler>=3.10.0   # Task scheduling
 
 # Utilities
 python-dotenv==1.0.0

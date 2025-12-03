@@ -4,12 +4,9 @@ name: minerOS Dashboard Mobile
 version: v1.0
 status: production
 stack:
-  - html5
-  - css3
+  - html
+  - css
   - javascript
-  - localstorage
-  - pwa
-  - service-worker
 repo: https://github.com/cjlkaiser-cpu/dashboard-mobile-mineros
 description: Dashboard PWA móvil para consulta rápida de proyectos y capturas de ideas. Mobile-first, offline-capable, un solo archivo HTML.
 ---

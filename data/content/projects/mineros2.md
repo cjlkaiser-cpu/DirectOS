@@ -5,7 +5,7 @@ version: v0.1.0
 status: prototype
 stack:
   - fastapi
-  - chromadb
+  - chroma
   - python
   - pydantic
   - loguru
@@ -290,7 +290,7 @@ app = FastAPI(lifespan=lifespan)
 
 **db.py:**
 ```python
-import chromadb
+import chroma
 
 class ChromaManager:
     def __init__(self):
@@ -298,7 +298,7 @@ class ChromaManager:
         self.collection = None
 
     def connect(self):
-        self.client = chromadb.PersistentClient(
+        self.client = chroma.PersistentClient(
             path=settings.CHROMA_PERSIST_DIR
         )
         self.collection = self.client.get_or_create_collection(

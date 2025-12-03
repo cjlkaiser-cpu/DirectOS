@@ -8,7 +8,7 @@ stack:
   - flask
   - sqlite
   - spacy
-  - beautifulsoup
+  - bs4
   - pdfminer
   - python-docx
   - loguru
