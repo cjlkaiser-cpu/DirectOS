@@ -319,6 +319,151 @@ async def content_stats():
     return content.get_stats()
 
 # =============================================================================
+# ENDPOINTS - SLASH COMMANDS (Claude Code)
+# =============================================================================
+
+COMMANDS_DIR = Path.home() / ".claude" / "commands"
+
+class CommandCreate(BaseModel):
+    """Crear/actualizar un slash command"""
+    name: str
+    description: str
+    allowed_tools: List[str] = []
+    argument_hint: str = ""
+    content: str  # Markdown completo del comando
+
+class CommandResponse(BaseModel):
+    """Respuesta de un comando"""
+    name: str
+    description: str
+    allowed_tools: List[str]
+    argument_hint: str
+    content: str
+    path: str
+
+@app.get("/api/commands")
+async def list_commands():
+    """
+    Listar todos los slash commands de ~/.claude/commands/
+    """
+    if not COMMANDS_DIR.exists():
+        return {"commands": [], "count": 0, "path": str(COMMANDS_DIR)}
+
+    commands = []
+    for file in COMMANDS_DIR.glob("*.md"):
+        try:
+            content = file.read_text()
+            # Parsear frontmatter básico
+            meta = {"name": file.stem, "description": "", "allowed_tools": [], "argument_hint": ""}
+
+            if content.startswith("---"):
+                parts = content.split("---", 2)
+                if len(parts) >= 3:
+                    frontmatter = parts[1].strip()
+                    for line in frontmatter.split("\n"):
+                        if ":" in line:
+                            key, value = line.split(":", 1)
+                            key = key.strip().replace("-", "_")
+                            value = value.strip()
+                            if key == "description":
+                                meta["description"] = value
+                            elif key == "allowed_tools":
+                                meta["allowed_tools"] = [t.strip() for t in value.split(",")]
+                            elif key == "argument_hint":
+                                meta["argument_hint"] = value
+
+            commands.append({
+                "name": file.stem,
+                "description": meta["description"],
+                "allowed_tools": meta["allowed_tools"],
+                "argument_hint": meta["argument_hint"],
+                "path": str(file)
+            })
+        except Exception as e:
+            logger.error(f"Error parsing command {file}: {e}")
+
+    return {"commands": commands, "count": len(commands), "path": str(COMMANDS_DIR)}
+
+@app.get("/api/commands/{name}")
+async def get_command(name: str):
+    """
+    Obtener un slash command específico
+    """
+    file_path = COMMANDS_DIR / f"{name}.md"
+
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail=f"Comando '{name}' no encontrado")
+
+    content = file_path.read_text()
+
+    # Parsear frontmatter
+    meta = {"description": "", "allowed_tools": [], "argument_hint": ""}
+
+    if content.startswith("---"):
+        parts = content.split("---", 2)
+        if len(parts) >= 3:
+            frontmatter = parts[1].strip()
+            for line in frontmatter.split("\n"):
+                if ":" in line:
+                    key, value = line.split(":", 1)
+                    key = key.strip().replace("-", "_")
+                    value = value.strip()
+                    if key == "description":
+                        meta["description"] = value
+                    elif key == "allowed_tools":
+                        meta["allowed_tools"] = [t.strip() for t in value.split(",")]
+                    elif key == "argument_hint":
+                        meta["argument_hint"] = value
+
+    return {
+        "name": name,
+        "description": meta["description"],
+        "allowed_tools": meta["allowed_tools"],
+        "argument_hint": meta["argument_hint"],
+        "content": content,
+        "path": str(file_path)
+    }
+
+@app.post("/api/commands")
+async def save_command(command: CommandCreate):
+    """
+    Guardar un slash command en ~/.claude/commands/
+
+    Crea o sobrescribe el archivo {name}.md
+    """
+    # Asegurar que existe el directorio
+    COMMANDS_DIR.mkdir(parents=True, exist_ok=True)
+
+    file_path = COMMANDS_DIR / f"{command.name}.md"
+
+    # Guardar contenido
+    file_path.write_text(command.content)
+
+    logger.info(f"Command saved: {command.name} → {file_path}")
+
+    return {
+        "name": command.name,
+        "path": str(file_path),
+        "status": "saved",
+        "message": f"Comando /{command.name} guardado correctamente"
+    }
+
+@app.delete("/api/commands/{name}")
+async def delete_command(name: str):
+    """
+    Eliminar un slash command
+    """
+    file_path = COMMANDS_DIR / f"{name}.md"
+
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail=f"Comando '{name}' no encontrado")
+
+    file_path.unlink()
+    logger.info(f"Command deleted: {name}")
+
+    return {"deleted": name, "message": f"Comando /{name} eliminado"}
+
+# =============================================================================
 # HELPERS - PERSISTENCIA JSON (para offline-first)
 # =============================================================================
 

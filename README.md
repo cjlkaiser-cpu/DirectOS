@@ -1,12 +1,45 @@
-# DirectOS v8.1 - Portfolio & Projects
+# DirectOS v9.0 - Agent Mode
 
-> Centro de operaciones para diseñar arquitecturas, aprender herramientas y dominar tu stack
+> Centro de operaciones para diseñar arquitecturas, crear prompts agénticos y dominar tu stack
 
 ## Qué es
 
-DirectOS es tu **cockpit de desarrollo** para el ecosistema minerOS. Diseña pipelines visualmente, aprende nuevas herramientas con contexto, genera código automáticamente, y documenta tus proyectos.
+DirectOS es tu **cockpit de desarrollo** para el ecosistema minerOS. Diseña pipelines visualmente, crea prompts agénticos estructurados, aprende nuevas herramientas con contexto, y documenta tus proyectos.
 
-## Novedades v8.1
+## Novedades v9.0
+
+### Prompt Builder Pro
+| Feature | Descripción |
+|---------|-------------|
+| **Constructor Visual** | Crea prompts agénticos con el patrón de 6 secciones |
+| **8 Plantillas** | code-review, doc, test, security, refactor, vault, scan-projects, update-context |
+| **Drag & Drop** | Reordena pasos del workflow arrastrando |
+| **Instalar Directo** | Guarda en `~/.claude/commands/` con un click |
+| **Editar Existentes** | Carga comandos instalados y edítalos visualmente |
+| **Validación en Tiempo Real** | Checklist de calidad para prompts |
+
+### Agent Mode Backend
+| Feature | Descripción |
+|---------|-------------|
+| **Pipeline Executor** | Ejecuta pipelines diseñados como código real |
+| **Watchdog Service** | Detecta archivos nuevos y procesa automáticamente |
+| **Scheduler** | Programa tareas con cron o intervalos |
+| **Notificaciones** | Alertas macOS nativas cuando terminan procesos |
+| **API Commands** | CRUD completo para slash commands |
+
+### Prompt Builder Pro - El Patrón de 6 Secciones
+
+```
+┌─────────────────────────────────────────┐
+│ 1. METADATA     → description, tools    │
+│ 2. VARIABLES    → dinámicas/estáticas   │
+│ 3. WORKFLOW     → pasos secuenciales    │  ★ S-TIER
+│ 4. INSTRUCTIONS → cómo ejecutar         │
+│ 5. REPORT       → formato de salida     │
+└─────────────────────────────────────────┘
+```
+
+### Novedades v8.1
 
 | Feature | Descripción |
 |---------|-------------|

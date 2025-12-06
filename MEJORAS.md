@@ -1,140 +1,71 @@
-# DirectOS - Plan de Mejoras
+# DirectOS - Roadmap
 
-> Roadmap de evolución para las próximas versiones
+> Mejoras pendientes y próximas versiones
 
-## Estado actual: v9.0 - Agent Mode
+## Estado actual: v9.0
 
-### Lo que tenemos
-- [x] Pipeline Builder con canvas visual y conexiones SVG
-- [x] 6 Presets de arquitectura
-- [x] **34 Patrones de prompts** organizados en packs
-- [x] **38 Herramientas** con fichas técnicas
-- [x] **13 Proyectos** documentados con stacks
-- [x] Estado de maestría (used/learning/new)
-- [x] Knowledge Base (RAG) con embeddings
-- [x] Scout (análisis de errores con Claude)
-- [x] Monitor de sistema
-- [x] **App Store de Flujos** (12 recetas)
-- [x] **Sistema de toasts** para feedback visual
-- [x] **Exportar a PNG** con html2canvas
-- [x] **Guardar/Cargar arquitecturas** con modal visual
-- [x] **Sync con minerOS Mobile**: Endpoints para push/pull de ideas
-- [x] **Importar desde código**: Detectar imports y generar arquitectura
-
-### Agent Mode v9.0 (NUEVO)
-- [x] **Pipeline Executor**: Ejecutar pipelines diseñados como código real
-- [x] **Watchdog Service**: Detectar archivos nuevos y procesarlos automáticamente
-- [x] **Scheduler**: Programar tareas con cron expressions o intervalos
-- [x] **Notificaciones macOS**: Alertas desktop cuando terminan procesos
-- [x] **API REST completa**: 25+ endpoints para Agent Mode
+Ver [CHANGELOG.md](./CHANGELOG.md) para el historial completo de cambios.
 
 ---
 
-## v8.2 - Quick Wins (UX)
+## v9.1 - Agent Mode UI (Próxima)
 
-**Prioridad: Alta | Esfuerzo: Bajo**
+**Prioridad: Alta | Esfuerzo: Medio**
 
-### Mejoras de UX
-- [ ] **Filtros en Glosario**: Por estado (Dominada/Learning/New) y categoría
-- [ ] **Búsqueda en Glosario**: Input de búsqueda para encontrar herramientas
-- [ ] **Búsqueda en Patrones**: Encontrar patrón por palabra clave
-- [x] **Contador de progreso**: Círculo SVG animado en Glosario
-- [ ] **Dark/Light mode toggle**: Para preferencias de usuario
+### Panel de Control Agent Mode
+- [ ] **Vista Agent Mode** en sidebar
+- [ ] **Iniciar/parar servicios** desde frontend
+- [ ] **Configurador de watches**: UI para crear watchers de archivos
+- [ ] **Programador visual**: Crear schedules sin escribir cron
+- [ ] **Monitor de ejecuciones**: Ver pipelines en progreso
 
-### Mejoras de datos
-- [x] **Cambiar estado desde modal**: Botones en modal de herramienta
-- [x] **Persistir estado en localStorage**: OfflineStore + sync
-- [x] **Más herramientas**: Docker, pytest, httpx, jq, flask, huggingface, tkinter, pymupdf, rich, uvicorn...
-
----
-
+### Mejoras Prompt Builder
+- [ ] **Autocompletado de tools**: Sugerencias al escribir allowed-tools
+- [ ] **Snippets de report**: Plantillas de formato de salida
+- [ ] **Historial de comandos**: Ver cambios anteriores
 
 ---
 
-## v8.0 - Pipeline Builder ✅ COMPLETADO
+## v10.0 - Multi-proyecto
 
 **Prioridad: Media | Esfuerzo: Alto**
 
-### Arquitecto Pro++
-- [x] **Conexiones visuales**: Líneas SVG bezier entre nodos
-- [x] **Validación en tiempo real**: Panel de validación con checks/warnings/errors
-- [x] **Generación de código**: Botón "Generar Código" → Python completo
-- [x] **Importar arquitectura desde código**: Detectar imports y generar diagrama ✅
+### Workspaces
+- [ ] Gestionar varios proyectos minerOS
+- [ ] Dashboard global con estado de todos los proyectos
+- [ ] Métricas: archivos procesados, errores, etc.
 
-### Templates de proyecto
-- [x] **"Crear proyecto desde preset"**: Modal con estructura de carpetas
-- [x] **Git init automático**: Opción en modal de scaffold
-- ~~**Integración con cookiecutter**~~: Descartada - no aporta valor suficiente
+### Integración Claude Code
+- [ ] **MCP Server**: DirectOS como servidor MCP
+- [ ] **CLI**: `directos search "RAG"` desde terminal
 
 ---
 
-## v9.0 - Agent Mode ✅ COMPLETADO
-
-**Backend implementado - UI pendiente**
-
-### DirectOS como Agente
-- [x] **Ejecutar pipelines**: Motor de ejecución con soporte async
-- [x] **Watchdog integrado**: Detectar archivos nuevos (*.pdf, *.mp3, etc.)
-- [x] **Scheduling**: Cron expressions y intervalos ("cada 15m", "9am diario")
-- [x] **Notificaciones**: Alertas macOS nativas con sonido
-
-### Endpoints API Agent Mode
-```
-POST /api/agent/execute         - Ejecutar pipeline
-GET  /api/agent/runs            - Listar ejecuciones
-POST /api/agent/watches         - Crear watch de archivos
-POST /api/agent/schedules       - Programar tarea
-POST /api/agent/start-all       - Iniciar servicios
-GET  /api/agent/status          - Estado general
-```
-
----
-
-## v10.0 - Multi-proyecto (Próxima)
-
-### Multi-proyecto
-- [ ] **Workspaces**: Gestionar varios proyectos minerOS
-- [ ] **Dashboard global**: Ver estado de todos los proyectos
-- [ ] **Métricas**: Cuántos archivos procesados, errores, etc.
-
-### Agent Mode UI
-- [ ] **Panel de control**: Iniciar/parar servicios desde frontend
-- [ ] **Configurador de watches**: UI para crear watchers
-- [ ] **Programador visual**: Crear schedules sin escribir cron
-
----
-
-## Ideas en el Backlog
+## Backlog
 
 ### UX/UI
 - [ ] Modo compacto para sidebar
 - [ ] Atajos de teclado (Cmd+K para buscar)
 - [ ] Tour guiado para nuevos usuarios
-- [ ] Exportar configuración completa
-
-### Integraciones
-- [ ] **MCP Server**: DirectOS como servidor MCP para Claude Code
-- [ ] **CLI**: `directos search "RAG"` desde terminal
-- [ ] **API pública**: Otros proyectos consultan DirectOS
+- [ ] Dark/Light mode toggle
 
 ### Contenido
-- [x] Más patrones de prompts (objetivo: 30) → **34 patrones**
-- [x] Más herramientas (objetivo: 40) → **38 herramientas**
 - [ ] Tutoriales interactivos por herramienta
 - [ ] Links a documentación oficial
+- [ ] Más patrones (objetivo: 50)
 
 ---
 
 ## Cómo priorizar
 
 ```
-                IMPACTO
-            Alto    Bajo
-         ┌───────┬───────┐
-    Bajo │ v7.1  │ Backlog│  ESFUERZO
-         ├───────┼───────┤
-    Alto │ v8-9  │  Skip  │
-         └───────┴───────┘
+            IMPACTO
+        Alto    Bajo
+     ┌───────┬───────┐
+Bajo │ HACER │Backlog│  ESFUERZO
+     ├───────┼───────┤
+Alto │ v9-10 │ Skip  │
+     └───────┴───────┘
 ```
 
 **Criterios**:
@@ -144,10 +75,4 @@ GET  /api/agent/status          - Estado general
 
 ---
 
-## Contribuciones
-
-Ideas, bugs o mejoras → Abrir issue o PR en el repo.
-
----
-
-*Última actualización: 3 Dic 2025*
+*Última actualización: 6 Dic 2025*

@@ -6,6 +6,43 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 ---
 
+## [9.0.0] - 2025-12-06
+
+### Added - Prompt Builder Pro
+- **Constructor visual de prompts agénticos** con patrón de 6 secciones:
+  - Metadata (description, allowed-tools, argument-hint)
+  - Variables (dinámicas y estáticas)
+  - Workflow (S-TIER - pasos secuenciales)
+  - Instructions (reglas y guías)
+  - Report (formato de salida)
+- **8 plantillas precargadas**: code-review, doc, test, security, refactor, vault, scan-projects, update-context
+- **Validación en tiempo real** con checklist de calidad
+- **Drag & drop** para reordenar pasos del workflow
+- **Instalar directo** a `~/.claude/commands/` desde el UI
+- **Cargar/editar comandos existentes** con parsing de markdown
+- **Parser de secciones** para importar comandos y editarlos
+- **Biblioteca de prompts agénticos** en `data/content/patterns/agentic-prompts-library.md`
+
+### Added - API Commands
+- `GET /api/commands` - Listar slash commands de ~/.claude/commands/
+- `GET /api/commands/{name}` - Obtener comando específico
+- `POST /api/commands` - Guardar/actualizar comando
+- `DELETE /api/commands/{name}` - Eliminar comando
+
+### Added - Agent Mode Backend
+- **Pipeline Executor**: Ejecutar pipelines diseñados como código real
+- **Watchdog Service**: Detectar archivos nuevos y procesarlos automáticamente
+- **Scheduler Service**: Programar tareas con cron expressions o intervalos
+- **Notifier Service**: Notificaciones macOS nativas
+- **25+ endpoints REST** para Agent Mode completo
+
+### Changed
+- 8 slash commands refactorizados con patrón de 6 secciones
+- README actualizado con Agent Mode y Prompt Builder
+- Total plantillas: 5 → 8
+
+---
+
 ## [8.1.0] - 2025-11-25
 
 ### Added - Portfolio de Proyectos

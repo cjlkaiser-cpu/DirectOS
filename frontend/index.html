@@ -69,6 +69,28 @@
             transition: all 0.3s ease;
         }
 
+        /* Drag & Drop Workflow */
+        .pb-workflow-step {
+            transition: all 0.2s ease;
+            border-radius: 0.375rem;
+            padding: 0.25rem;
+        }
+        .pb-workflow-step:hover {
+            background: rgba(30, 41, 59, 0.5);
+        }
+        .pb-workflow-step.dragging {
+            opacity: 0.4;
+        }
+        .pb-workflow-step.drag-over {
+            border-top: 2px solid #22c55e;
+        }
+        .drag-handle {
+            cursor: grab;
+        }
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+
         /* Toast notifications */
         .toast-container {
             position: fixed;
@@ -116,7 +138,8 @@
             <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 pl-2">Diseño</p>
             <button onclick="switchView('architect')" id="btn-architect" class="w-full text-left px-3 py-2.5 rounded-lg text-sm transition font-medium flex items-center gap-3 bg-blue-600 text-white shadow-lg shadow-blue-900/20"><i class="fa-solid fa-diagram-project"></i> Pipeline Builder</button>
             <button onclick="switchView('flow')" id="btn-flow" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3"><i class="fa-solid fa-store"></i> Recetas</button>
-            <button onclick="switchView('generator')" id="btn-generator" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3"><i class="fa-solid fa-wand-magic-sparkles"></i> Generador Prompts</button>
+            <button onclick="switchView('generator')" id="btn-generator" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3"><i class="fa-solid fa-wand-magic-sparkles"></i> Patrones</button>
+            <button onclick="switchView('prompt-builder')" id="btn-prompt-builder" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3"><i class="fa-solid fa-hammer"></i> Prompt Builder <span class="text-[9px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded">PRO</span></button>
             
             <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 pl-2 mt-6">Operaciones</p>
             <button onclick="switchView('agent')" id="btn-agent" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3"><i class="fa-solid fa-robot"></i> Agent Mode <span id="agent-status-dot" class="w-2 h-2 rounded-full bg-slate-600"></span></button>
@@ -640,6 +663,239 @@ import sqlite3
                     <div class="bg-slate-800 border border-slate-700 rounded-xl p-1 flex-1 flex flex-col relative group">
                         <div class="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition"><button onclick="copyToClipboard()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-md shadow-lg font-medium transition">Copiar</button></div>
                         <div class="bg-slate-950 rounded-lg p-4 flex-1 overflow-y-auto text-xs font-mono text-slate-300 whitespace-pre-wrap" id="prompt-output"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA: PROMPT BUILDER PRO -->
+        <div id="view-prompt-builder" class="hidden flex-1 overflow-y-auto p-6">
+            <div class="max-w-6xl mx-auto">
+                <!-- Header -->
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-hammer text-green-400"></i>
+                            Prompt Builder Pro
+                        </h2>
+                        <p class="text-sm text-slate-400 mt-1">Crea prompts agénticos con estructura de 6 secciones</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <select id="pb-template" onchange="loadPromptTemplate(this.value)" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300">
+                            <option value="">-- Cargar plantilla --</option>
+                            <option value="code-review">📋 Code Review</option>
+                            <option value="doc">📝 Documentation</option>
+                            <option value="test">🧪 Test Runner</option>
+                            <option value="security">🛡️ Security Audit</option>
+                            <option value="refactor">🔧 Refactor</option>
+                            <option value="vault">📦 Vault</option>
+                            <option value="scan-projects">🔍 Scan Projects</option>
+                            <option value="update-context">📝 Update Context</option>
+                            <option value="blank">📄 En blanco</option>
+                        </select>
+                        <button onclick="clearPromptBuilder()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg text-sm transition border border-slate-700" title="Limpiar formulario">
+                            <i class="fa-solid fa-eraser"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Columna izquierda: Formulario -->
+                    <div class="space-y-4">
+                        <!-- 1. METADATA -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-bold">1</span>
+                                <h3 class="font-bold text-white text-sm">Metadata</h3>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="text-xs text-slate-500 mb-1 block">Nombre del comando</label>
+                                        <input type="text" id="pb-name" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-slate-300" placeholder="ej: code-review">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-slate-500 mb-1 block">Argument hint</label>
+                                        <input type="text" id="pb-arg-hint" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-slate-300" placeholder="ej: [archivo o directorio]">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-slate-500 mb-1 block">Description (qué hace + cuándo usarlo)</label>
+                                    <input type="text" id="pb-description" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-slate-300" placeholder="ej: Code review de calidad y seguridad. Usa después de escribir código.">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-slate-500 mb-1 block">Allowed tools</label>
+                                    <div class="flex flex-wrap gap-2 mt-1">
+                                        <label class="flex items-center gap-1 text-xs text-slate-400 bg-slate-950 px-2 py-1 rounded border border-slate-700 cursor-pointer hover:border-blue-500 transition">
+                                            <input type="checkbox" class="pb-tool" value="Read" checked> Read
+                                        </label>
+                                        <label class="flex items-center gap-1 text-xs text-slate-400 bg-slate-950 px-2 py-1 rounded border border-slate-700 cursor-pointer hover:border-blue-500 transition">
+                                            <input type="checkbox" class="pb-tool" value="Write"> Write
+                                        </label>
+                                        <label class="flex items-center gap-1 text-xs text-slate-400 bg-slate-950 px-2 py-1 rounded border border-slate-700 cursor-pointer hover:border-blue-500 transition">
+                                            <input type="checkbox" class="pb-tool" value="Edit"> Edit
+                                        </label>
+                                        <label class="flex items-center gap-1 text-xs text-slate-400 bg-slate-950 px-2 py-1 rounded border border-slate-700 cursor-pointer hover:border-blue-500 transition">
+                                            <input type="checkbox" class="pb-tool" value="Glob" checked> Glob
+                                        </label>
+                                        <label class="flex items-center gap-1 text-xs text-slate-400 bg-slate-950 px-2 py-1 rounded border border-slate-700 cursor-pointer hover:border-blue-500 transition">
+                                            <input type="checkbox" class="pb-tool" value="Grep" checked> Grep
+                                        </label>
+                                        <label class="flex items-center gap-1 text-xs text-slate-400 bg-slate-950 px-2 py-1 rounded border border-slate-700 cursor-pointer hover:border-blue-500 transition">
+                                            <input type="checkbox" class="pb-tool" value="Bash"> Bash
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. VARIABLES -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded-full bg-purple-600 text-white text-xs flex items-center justify-center font-bold">2</span>
+                                    <h3 class="font-bold text-white text-sm">Variables</h3>
+                                </div>
+                                <button onclick="addVariable()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded border border-slate-700 transition">+ Añadir</button>
+                            </div>
+                            <div id="pb-variables" class="space-y-2">
+                                <div class="grid grid-cols-12 gap-2 items-center pb-variable-row">
+                                    <input type="text" class="col-span-3 bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-slate-300 font-mono" value="$ARGUMENTS" readonly>
+                                    <select class="col-span-3 bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-slate-300">
+                                        <option value="dinámico" selected>dinámico</option>
+                                        <option value="estático">estático</option>
+                                    </select>
+                                    <input type="text" class="col-span-5 bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-slate-300" placeholder="Descripción..." value="Target del comando">
+                                    <button class="col-span-1 text-slate-500 hover:text-red-400 transition opacity-50 cursor-not-allowed" disabled><i class="fa-solid fa-times"></i></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. WORKFLOW -->
+                        <div class="bg-slate-900 border border-green-800/50 rounded-xl p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded-full bg-green-600 text-white text-xs flex items-center justify-center font-bold">3</span>
+                                    <h3 class="font-bold text-white text-sm">Workflow</h3>
+                                    <span class="text-[9px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded font-bold">S-TIER</span>
+                                </div>
+                                <button onclick="addWorkflowStep()" class="text-xs bg-green-800 hover:bg-green-700 text-green-200 px-2 py-1 rounded border border-green-700 transition">+ Paso</button>
+                            </div>
+                            <div id="pb-workflow" class="space-y-2">
+                                <!-- Se llena dinámicamente con addWorkflowStepRow -->
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-2 italic">Define QUÉ hace el agente, paso a paso secuencial</p>
+                        </div>
+
+                        <!-- 4. INSTRUCTIONS -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded-full bg-cyan-600 text-white text-xs flex items-center justify-center font-bold">4</span>
+                                    <h3 class="font-bold text-white text-sm">Instructions</h3>
+                                </div>
+                                <button onclick="addInstruction()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded border border-slate-700 transition">+ Instrucción</button>
+                            </div>
+                            <div id="pb-instructions" class="space-y-2">
+                                <div class="flex items-center gap-2 pb-instruction-row">
+                                    <span class="text-cyan-400">•</span>
+                                    <input type="text" class="flex-1 bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-slate-300" placeholder="Regla o guía..." value="Máximo 10 issues por archivo">
+                                    <button onclick="removeInstruction(this)" class="text-slate-500 hover:text-red-400 transition text-xs"><i class="fa-solid fa-times"></i></button>
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-2 italic">Define CÓMO ejecutar el workflow (reglas, límites, edge cases)</p>
+                        </div>
+
+                        <!-- 5. REPORT -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="w-6 h-6 rounded-full bg-pink-600 text-white text-xs flex items-center justify-center font-bold">5</span>
+                                <h3 class="font-bold text-white text-sm">Report (formato de salida)</h3>
+                            </div>
+                            <textarea id="pb-report" rows="6" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-300 font-mono" placeholder="```
+📋 REPORTE: {target}
+═══════════════════
+
+📍 ubicación
+🏷️ [ETIQUETA] Categoría
+...
+
+📊 RESUMEN
+```"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Columna derecha: Preview y Validación -->
+                    <div class="space-y-4">
+                        <!-- Validación -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fa-solid fa-check-circle text-slate-400"></i>
+                                <h3 class="font-bold text-white text-sm">Validación</h3>
+                            </div>
+                            <div id="pb-validation" class="space-y-1.5 text-xs">
+                                <div class="flex items-center gap-2 text-slate-500"><i class="fa-solid fa-circle w-3"></i> Metadata completo</div>
+                                <div class="flex items-center gap-2 text-slate-500"><i class="fa-solid fa-circle w-3"></i> Variables definidas</div>
+                                <div class="flex items-center gap-2 text-slate-500"><i class="fa-solid fa-circle w-3"></i> Workflow tiene 4+ pasos</div>
+                                <div class="flex items-center gap-2 text-slate-500"><i class="fa-solid fa-circle w-3"></i> Instructions definidas</div>
+                                <div class="flex items-center gap-2 text-slate-500"><i class="fa-solid fa-circle w-3"></i> Report definido</div>
+                            </div>
+                        </div>
+
+                        <!-- Comandos Instalados -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-terminal text-blue-400"></i>
+                                    <h3 class="font-bold text-white text-sm">Instalados</h3>
+                                </div>
+                                <button onclick="loadInstalledCommands()" class="text-slate-500 hover:text-blue-400 text-xs" title="Refrescar">
+                                    <i class="fa-solid fa-refresh"></i>
+                                </button>
+                            </div>
+                            <div id="installed-commands-list" class="space-y-2 max-h-40 overflow-y-auto">
+                                <p class="text-slate-500 text-xs">Cargando...</p>
+                            </div>
+                        </div>
+
+                        <!-- Preview -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col" style="height: calc(100vh - 380px);">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-eye text-blue-400"></i>
+                                    <h3 class="font-bold text-white text-sm">Preview</h3>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick="generatePromptPreview()" class="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded border border-blue-500 transition">
+                                        <i class="fa-solid fa-refresh mr-1"></i> Generar
+                                    </button>
+                                    <button onclick="copyPromptBuilder()" class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1.5 rounded border border-slate-600 transition">
+                                        <i class="fa-solid fa-copy mr-1"></i> Copiar
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="flex-1 bg-slate-950 rounded-lg p-3 overflow-y-auto">
+                                <pre id="pb-preview" class="text-xs text-slate-300 font-mono whitespace-pre-wrap leading-relaxed"></pre>
+                            </div>
+                        </div>
+
+                        <!-- Guardar -->
+                        <div class="bg-gradient-to-r from-green-900/30 to-emerald-900/30 border border-green-800/50 rounded-xl p-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="font-bold text-green-400 text-sm">Guardar comando</h3>
+                                    <p class="text-[10px] text-slate-400 mt-0.5">Instala directo o descarga .md</p>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick="installPromptCommand()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2" title="Instalar directo en ~/.claude/commands/">
+                                        <i class="fa-solid fa-bolt"></i> Instalar
+                                    </button>
+                                    <button onclick="exportPromptCommand()" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2" title="Descargar archivo .md">
+                                        <i class="fa-solid fa-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -3345,7 +3601,7 @@ if __name__ == "__main__":
         function copyArchitectPrompt() { navigator.clipboard.writeText(document.getElementById('architect-prompt-output').textContent); }
 
         function switchView(view) {
-            ['architect', 'generator', 'grid', 'flow', 'monitor', 'projects', 'agent'].forEach(v => {
+            ['architect', 'generator', 'grid', 'flow', 'monitor', 'projects', 'agent', 'prompt-builder'].forEach(v => {
                 document.getElementById(`view-${v}`).classList.add('hidden');
                 const b = document.getElementById(`btn-${v}`);
                 if(b) { b.classList.replace('bg-blue-600', 'text-slate-400'); b.classList.replace('text-white', 'hover:bg-slate-800'); b.classList.remove('shadow-lg'); }
@@ -3357,11 +3613,837 @@ if __name__ == "__main__":
             const headerTools = document.getElementById('header-tools');
             if(view === 'architect') headerTools.classList.remove('hidden'); else headerTools.classList.add('hidden');
 
-            document.getElementById('page-title').textContent = { 'architect': 'Pipeline Builder', 'generator': 'Generador', 'grid': 'Glosario', 'flow': 'Recetas', 'monitor': 'Monitor', 'projects': 'Proyectos', 'agent': 'Agent Mode' }[view];
+            document.getElementById('page-title').textContent = { 'architect': 'Pipeline Builder', 'generator': 'Patrones', 'grid': 'Glosario', 'flow': 'Recetas', 'monitor': 'Monitor', 'projects': 'Proyectos', 'agent': 'Agent Mode', 'prompt-builder': 'Prompt Builder Pro' }[view];
 
             // Refresh Agent Mode data when switching to it
             if(view === 'agent') refreshAgentStatus();
         }
+
+        // ============================================
+        // PROMPT BUILDER PRO
+        // ============================================
+
+        const promptTemplates = {
+            'code-review': {
+                name: 'code-review',
+                description: 'Code review de calidad, seguridad y mantenibilidad. Usa después de escribir código o antes de commit/PR.',
+                argHint: '[archivo o directorio]',
+                tools: ['Read', 'Grep', 'Glob'],
+                variables: [
+                    { name: '$ARGUMENTS', type: 'dinámico', desc: 'Target a revisar' },
+                    { name: 'TARGET', type: 'estático', desc: 'Si vacío → git diff' },
+                    { name: 'MAX_ISSUES', type: 'estático', desc: '10 por archivo' }
+                ],
+                workflow: ['Determinar scope', 'Leer código', 'Analizar por categoría', 'Clasificar hallazgos', 'Generar reporte'],
+                instructions: ['Máximo 10 issues por archivo', 'Siempre incluir línea exacta', 'Sugerencia concreta de fix'],
+                report: `📋 CODE REVIEW: {target}
+════════════════════════
+
+📍 archivo:línea
+🏷️ [SEVERIDAD] Categoría
+❌ Problema
+✅ Sugerencia
+
+────────────────────────
+📊 RESUMEN
+────────────────────────
+Archivos: X | Hallazgos: Y
+
+🎯 Top 3 prioridades:
+1. ...`
+            },
+            'doc': {
+                name: 'doc',
+                description: 'Genera documentación técnica desde código. Usa cuando necesites README, docs de API, o documentar archivos.',
+                argHint: '[archivo, directorio o "readme"]',
+                tools: ['Read', 'Write', 'Glob', 'Grep'],
+                variables: [
+                    { name: '$ARGUMENTS', type: 'dinámico', desc: 'Target: archivo, directorio, o "readme"' },
+                    { name: 'MODE', type: 'estático', desc: 'readme | file | directory' }
+                ],
+                workflow: ['Detectar modo según $ARGUMENTS', 'Recopilar contexto', 'Analizar patrones', 'Generar documentación', 'Presentar resultado'],
+                instructions: ['NO inventar funcionalidad', 'Ejemplos reales del proyecto', 'Mantener estilo existente'],
+                report: `# {Proyecto}
+
+## Descripción
+{1-2 líneas}
+
+## Instalación
+{Pasos detectados}
+
+## Uso
+{Ejemplo funcional}`
+            },
+            'test': {
+                name: 'test',
+                description: 'Ejecuta tests, analiza fallos y sugiere correcciones.',
+                argHint: '[archivo, patrón o vacío]',
+                tools: ['Read', 'Bash', 'Grep', 'Glob'],
+                variables: [
+                    { name: '$ARGUMENTS', type: 'dinámico', desc: 'Archivo/patrón específico' },
+                    { name: 'FRAMEWORK', type: 'estático', desc: 'Detectado: jest, pytest, go test' }
+                ],
+                workflow: ['Detectar framework', 'Ejecutar tests', 'Analizar fallos', 'Sugerir corrección', 'Reportar cobertura'],
+                instructions: ['Ejecutar con verbose (-v)', 'Para cada fallo: leer test + código', 'Comparar expected vs actual'],
+                report: `✅ TODOS PASAN | ❌ X FALLOS
+
+Para fallos:
+- Test: nombre
+- Causa probable
+- Sugerencia de fix
+
+⚠️ Código sin tests detectado`
+            },
+            'security': {
+                name: 'security',
+                description: 'Auditoría de seguridad OWASP Top 10 + secrets.',
+                argHint: '[directorio o vacío para todo]',
+                tools: ['Read', 'Grep', 'Glob'],
+                variables: [
+                    { name: '$ARGUMENTS', type: 'dinámico', desc: 'Scope del escaneo' },
+                    { name: 'SEVERITY', type: 'estático', desc: '🔴 CRÍTICO → 🔵 BAJO' }
+                ],
+                workflow: ['Escanear secrets', 'Buscar SQL injection', 'Detectar XSS', 'Validar inputs', 'Auditar dependencias', 'Generar reporte'],
+                instructions: ['Ignorar: .env.example, *.test.*', 'Incluir referencia OWASP', 'Priorizar por explotabilidad'],
+                report: `🛡️ AUDITORÍA DE SEGURIDAD
+═════════════════════════
+
+🔴 [CRÍTICO] Tipo - ubicación
+❌ Código vulnerable
+✅ Código seguro
+🔗 Referencia OWASP
+
+📊 RESUMEN por severidad`
+            },
+            'refactor': {
+                name: 'refactor',
+                description: 'Analiza código y sugiere refactorizaciones. Usa cuando el código funciona pero quieres mejorarlo.',
+                argHint: '[archivo o directorio]',
+                tools: ['Read', 'Grep', 'Glob'],
+                variables: [
+                    { name: '$ARGUMENTS', type: 'dinámico', desc: 'Target a analizar' },
+                    { name: 'PRIORITY', type: 'estático', desc: 'impacto × (1/esfuerzo)' }
+                ],
+                workflow: ['Leer código target', 'Detectar code smells', 'Identificar dead code', 'Evaluar naming', 'Priorizar sugerencias', 'Generar reporte'],
+                instructions: ['NO romper funcionalidad', 'Código ANTES y DESPUÉS', 'Explicar POR QUÉ es mejor'],
+                report: `🔧 REFACTORING ANALYSIS
+═════════════════════════
+
+💡 QUICK WINS (alto impacto, fácil)
+📍 ubicación
+ANTES: ...
+DESPUÉS: ...
+💡 Beneficio: ...
+
+📋 REFACTORS MAYORES
+📊 Deuda técnica: BAJA|MEDIA|ALTA`
+            },
+            'vault': {
+                name: 'vault',
+                description: 'Actualiza el Vault personal con aprendizajes de la sesión (knowledge-base, dashboard, tools, projects, patterns)',
+                argHint: '',
+                tools: ['Read', 'Write', 'Edit', 'Bash'],
+                variables: [
+                    { name: 'VAULT_PATH', type: 'estático', desc: '~/learning-journey/' },
+                    { name: 'DIRECTOS_PATH', type: 'estático', desc: '~/Desktop/DirectOS/data/content/' },
+                    { name: 'KB_FILE', type: 'estático', desc: '{VAULT_PATH}knowledge-base.md' }
+                ],
+                workflow: ['Preguntar al usuario qué trabajó', 'Leer estado actual del Vault', 'Decidir qué actualizar', 'Aplicar cambios en archivos', 'Sincronizar dashboard.html', 'Refrescar cache y confirmar'],
+                instructions: ['KISS: Solo cambios necesarios', 'Incremental: Pequeñas actualizaciones', 'DRY: No duplicar datos', 'Git-friendly: Cambios fáciles de revisar'],
+                report: `📦 VAULT ACTUALIZADO
+════════════════════
+
+✅ knowledge-base.md actualizado
+✅ dashboard.html sincronizado
+✅ tools/python.md → level: expert
+🆕 projects/nuevo.md creado
+
+────────────────────
+📊 RESUMEN
+────────────────────
+Archivos modificados: X
+Archivos creados: Y
+
+¿Crear commit? [S/n]`
+            },
+            'scan-projects': {
+                name: 'scan-projects',
+                description: 'Escanea el Desktop buscando proyectos no documentados en el Vault',
+                argHint: '',
+                tools: ['Read', 'Bash', 'Glob', 'Grep'],
+                variables: [
+                    { name: 'SCAN_PATH', type: 'estático', desc: '~/Desktop/' },
+                    { name: 'VAULT_FILE', type: 'estático', desc: '~/learning-journey/knowledge-base.md' },
+                    { name: 'IGNORE', type: 'estático', desc: 'venv, node_modules, .git, __pycache__' }
+                ],
+                workflow: ['Leer Vault actual', 'Escanear Desktop buscando indicadores', 'Detectar stack por archivo', 'Comparar documentados vs encontrados', 'Generar reporte con hallazgos'],
+                instructions: ['Ignorar: venv, node_modules, .git, backups', 'Solo carpetas primer nivel Desktop', 'No entrar en subdirectorios profundos'],
+                report: `📊 ESCANEO COMPLETO
+═══════════════════
+
+✅ DOCUMENTADOS (X):
+- Proyecto1
+- Proyecto2
+
+🆕 SIN DOCUMENTAR (Y):
+| Proyecto | Stack | Última mod |
+|----------|-------|------------|
+| nombre   | Python| 2 dic 2025 |
+
+→ Usar /vault para añadir`
+            },
+            'update-context': {
+                name: 'update-context',
+                description: 'Actualiza CLAUDE.md del proyecto actual con cambios recientes',
+                argHint: '',
+                tools: ['Read', 'Write', 'Edit', 'Bash'],
+                variables: [
+                    { name: 'PROJECT_ROOT', type: 'estático', desc: 'Directorio actual' },
+                    { name: 'CLAUDE_FILE', type: 'estático', desc: '{PROJECT_ROOT}/CLAUDE.md' },
+                    { name: 'LOOKBACK', type: 'estático', desc: 'Últimos 5 commits' }
+                ],
+                workflow: ['Analizar cambios recientes (git log, diff)', 'Leer CLAUDE.md actual', 'Identificar actualizaciones necesarias', 'Preguntar al usuario', 'Generar diff de cambios', 'Confirmar y guardar'],
+                instructions: ['NO borrar información útil', 'Mantener formato existente', 'Fechas: DD mmm YYYY', 'Si no hay cambios → decirlo'],
+                report: `📝 ACTUALIZACIÓN DE CLAUDE.md
+═════════════════════════════
+
+📊 Cambios detectados:
+- X commits desde última actualización
+- Y archivos modificados
+
+📋 Actualizaciones propuestas:
++ Sección nueva...
+~ Sección modificada...
+
+¿Guardar cambios? [S/n]`
+            },
+            'blank': {
+                name: '',
+                description: '',
+                argHint: '',
+                tools: ['Read', 'Glob', 'Grep'],
+                variables: [{ name: '$ARGUMENTS', type: 'dinámico', desc: 'Target del comando' }],
+                workflow: [''],
+                instructions: [''],
+                report: ''
+            }
+        };
+
+        function loadPromptTemplate(templateId) {
+            if (!templateId) return;
+            const t = promptTemplates[templateId];
+            if (!t) return;
+
+            document.getElementById('pb-name').value = t.name;
+            document.getElementById('pb-description').value = t.description;
+            document.getElementById('pb-arg-hint').value = t.argHint;
+
+            // Tools
+            document.querySelectorAll('.pb-tool').forEach(cb => {
+                cb.checked = t.tools.includes(cb.value);
+            });
+
+            // Variables
+            const varsContainer = document.getElementById('pb-variables');
+            varsContainer.innerHTML = '';
+            t.variables.forEach((v, i) => {
+                addVariableRow(v.name, v.type, v.desc, i === 0);
+            });
+
+            // Workflow
+            const wfContainer = document.getElementById('pb-workflow');
+            wfContainer.innerHTML = '';
+            t.workflow.forEach((step, i) => {
+                addWorkflowStepRow(step, i + 1);
+            });
+
+            // Instructions
+            const insContainer = document.getElementById('pb-instructions');
+            insContainer.innerHTML = '';
+            t.instructions.forEach(ins => {
+                addInstructionRow(ins);
+            });
+
+            // Report
+            document.getElementById('pb-report').value = t.report;
+
+            generatePromptPreview();
+            validatePromptBuilder();
+        }
+
+        function addVariableRow(name = '', type = 'estático', desc = '', isReadonly = false) {
+            const container = document.getElementById('pb-variables');
+            const row = document.createElement('div');
+            row.className = 'grid grid-cols-12 gap-2 items-center pb-variable-row';
+            row.innerHTML = `
+                <input type="text" class="col-span-3 bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-slate-300 font-mono" value="${name}" ${isReadonly ? 'readonly' : ''} placeholder="VARIABLE">
+                <select class="col-span-3 bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-slate-300">
+                    <option value="dinámico" ${type === 'dinámico' ? 'selected' : ''}>dinámico</option>
+                    <option value="estático" ${type === 'estático' ? 'selected' : ''}>estático</option>
+                </select>
+                <input type="text" class="col-span-5 bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-slate-300" placeholder="Descripción..." value="${desc}">
+                <button onclick="this.closest('.pb-variable-row').remove(); validatePromptBuilder();" class="col-span-1 text-slate-500 hover:text-red-400 transition ${isReadonly ? 'opacity-50 cursor-not-allowed' : ''}" ${isReadonly ? 'disabled' : ''}><i class="fa-solid fa-times"></i></button>
+            `;
+            container.appendChild(row);
+        }
+
+        function addVariable() {
+            addVariableRow();
+            validatePromptBuilder();
+        }
+
+        function addWorkflowStepRow(value = '', num = null) {
+            const container = document.getElementById('pb-workflow');
+            const stepNum = num || container.querySelectorAll('.pb-workflow-step').length + 1;
+            const row = document.createElement('div');
+            row.className = 'flex items-center gap-2 pb-workflow-step';
+            row.draggable = true;
+            row.innerHTML = `
+                <span class="drag-handle text-slate-600 hover:text-slate-400 cursor-grab active:cursor-grabbing mr-1" title="Arrastrar para reordenar"><i class="fa-solid fa-grip-vertical"></i></span>
+                <span class="step-number text-xs text-slate-500 font-mono w-4">${stepNum}.</span>
+                <input type="text" class="flex-1 bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-slate-300 focus:border-green-500 focus:outline-none transition" placeholder="Verbo + descripción del paso..." value="${value}">
+                <button onclick="removeStep(this)" class="text-slate-500 hover:text-red-400 transition text-xs"><i class="fa-solid fa-times"></i></button>
+            `;
+
+            // Drag & Drop events
+            row.addEventListener('dragstart', handleDragStart);
+            row.addEventListener('dragend', handleDragEnd);
+            row.addEventListener('dragover', handleDragOver);
+            row.addEventListener('drop', handleDrop);
+            row.addEventListener('dragenter', handleDragEnter);
+            row.addEventListener('dragleave', handleDragLeave);
+
+            container.appendChild(row);
+        }
+
+        // Drag & Drop para Workflow
+        let draggedStep = null;
+
+        function handleDragStart(e) {
+            draggedStep = this;
+            this.style.opacity = '0.4';
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            this.style.opacity = '1';
+            document.querySelectorAll('.pb-workflow-step').forEach(step => {
+                step.classList.remove('border-t-2', 'border-green-500');
+            });
+            renumberSteps();
+            generatePromptPreview();
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function handleDragEnter(e) {
+            this.classList.add('border-t-2', 'border-green-500');
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('border-t-2', 'border-green-500');
+        }
+
+        function handleDrop(e) {
+            e.stopPropagation();
+            if (draggedStep !== this) {
+                const container = document.getElementById('pb-workflow');
+                const allSteps = Array.from(container.querySelectorAll('.pb-workflow-step'));
+                const draggedIdx = allSteps.indexOf(draggedStep);
+                const targetIdx = allSteps.indexOf(this);
+
+                if (draggedIdx < targetIdx) {
+                    this.parentNode.insertBefore(draggedStep, this.nextSibling);
+                } else {
+                    this.parentNode.insertBefore(draggedStep, this);
+                }
+            }
+            this.classList.remove('border-t-2', 'border-green-500');
+            return false;
+        }
+
+        function addWorkflowStep() {
+            addWorkflowStepRow();
+            renumberSteps();
+            validatePromptBuilder();
+        }
+
+        function removeStep(btn) {
+            btn.closest('.pb-workflow-step').remove();
+            renumberSteps();
+            validatePromptBuilder();
+        }
+
+        function moveStepUp(btn) {
+            const row = btn.closest('.pb-workflow-step');
+            const prev = row.previousElementSibling;
+            if (prev) row.parentNode.insertBefore(row, prev);
+            renumberSteps();
+        }
+
+        function moveStepDown(btn) {
+            const row = btn.closest('.pb-workflow-step');
+            const next = row.nextElementSibling;
+            if (next) row.parentNode.insertBefore(next, row);
+            renumberSteps();
+        }
+
+        function renumberSteps() {
+            document.querySelectorAll('.pb-workflow-step').forEach((step, i) => {
+                const numSpan = step.querySelector('.step-number');
+                if (numSpan) numSpan.textContent = `${i + 1}.`;
+            });
+        }
+
+        function addInstructionRow(value = '') {
+            const container = document.getElementById('pb-instructions');
+            const row = document.createElement('div');
+            row.className = 'flex items-center gap-2 pb-instruction-row';
+            row.innerHTML = `
+                <span class="text-cyan-400">•</span>
+                <input type="text" class="flex-1 bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-slate-300" placeholder="Regla o guía..." value="${value}">
+                <button onclick="removeInstruction(this)" class="text-slate-500 hover:text-red-400 transition text-xs"><i class="fa-solid fa-times"></i></button>
+            `;
+            container.appendChild(row);
+        }
+
+        function addInstruction() {
+            addInstructionRow();
+            validatePromptBuilder();
+        }
+
+        function removeInstruction(btn) {
+            btn.closest('.pb-instruction-row').remove();
+            validatePromptBuilder();
+        }
+
+        function validatePromptBuilder() {
+            const checks = [
+                {
+                    test: () => document.getElementById('pb-name').value && document.getElementById('pb-description').value,
+                    label: 'Metadata completo'
+                },
+                {
+                    test: () => document.querySelectorAll('.pb-variable-row').length >= 1,
+                    label: 'Variables definidas'
+                },
+                {
+                    test: () => {
+                        const steps = document.querySelectorAll('.pb-workflow-step input');
+                        return steps.length >= 4 && Array.from(steps).every(s => s.value.trim());
+                    },
+                    label: 'Workflow tiene 4+ pasos'
+                },
+                {
+                    test: () => {
+                        const ins = document.querySelectorAll('.pb-instruction-row input');
+                        return ins.length >= 1 && Array.from(ins).some(i => i.value.trim());
+                    },
+                    label: 'Instructions definidas'
+                },
+                {
+                    test: () => document.getElementById('pb-report').value.trim().length > 10,
+                    label: 'Report definido'
+                }
+            ];
+
+            const container = document.getElementById('pb-validation');
+            container.innerHTML = checks.map(c => {
+                const passed = c.test();
+                const icon = passed ? 'fa-check-circle text-green-400' : 'fa-circle text-slate-500';
+                const textColor = passed ? 'text-green-400' : 'text-slate-500';
+                return `<div class="flex items-center gap-2 ${textColor}"><i class="fa-solid ${icon} w-3"></i> ${c.label}</div>`;
+            }).join('');
+        }
+
+        function generatePromptPreview() {
+            const name = document.getElementById('pb-name').value || 'mi-comando';
+            const desc = document.getElementById('pb-description').value || 'Descripción del comando';
+            const argHint = document.getElementById('pb-arg-hint').value;
+            const tools = Array.from(document.querySelectorAll('.pb-tool:checked')).map(cb => cb.value).join(', ');
+
+            const variables = Array.from(document.querySelectorAll('.pb-variable-row')).map(row => {
+                const inputs = row.querySelectorAll('input');
+                const select = row.querySelector('select');
+                return { name: inputs[0].value, type: select.value, desc: inputs[1].value };
+            }).filter(v => v.name);
+
+            const workflow = Array.from(document.querySelectorAll('.pb-workflow-step input'))
+                .map(i => i.value).filter(v => v.trim());
+
+            const instructions = Array.from(document.querySelectorAll('.pb-instruction-row input'))
+                .map(i => i.value).filter(v => v.trim());
+
+            const report = document.getElementById('pb-report').value;
+
+            let md = `---
+description: ${desc}
+allowed-tools: ${tools}${argHint ? `\nargument-hint: ${argHint}` : ''}
+---
+
+# ${name.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+
+## Variables
+
+| Variable | Tipo | Descripción |
+|----------|------|-------------|
+${variables.map(v => `| \`${v.name}\` | ${v.type} | ${v.desc} |`).join('\n')}
+
+## Workflow
+
+${workflow.map((step, i) => `${i + 1}. **${step}**`).join('\n')}
+
+## Instructions
+
+${instructions.map(ins => `- ${ins}`).join('\n')}
+
+## Report
+
+\`\`\`
+${report}
+\`\`\``;
+
+            document.getElementById('pb-preview').textContent = md;
+            validatePromptBuilder();
+        }
+
+        function copyPromptBuilder() {
+            const content = document.getElementById('pb-preview').textContent;
+            navigator.clipboard.writeText(content);
+            showToast('Prompt copiado al portapapeles', 'success');
+        }
+
+        function exportPromptCommand() {
+            const name = document.getElementById('pb-name').value || 'mi-comando';
+            const content = document.getElementById('pb-preview').textContent;
+
+            if (!content) {
+                showToast('Primero genera el preview', 'error');
+                return;
+            }
+
+            // Crear blob y descargar
+            const blob = new Blob([content], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${name}.md`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            showToast(`${name}.md descargado. Mueve a ~/.claude/commands/`, 'success');
+        }
+
+        async function installPromptCommand() {
+            const name = document.getElementById('pb-name').value;
+            const content = document.getElementById('pb-preview').textContent;
+            const description = document.getElementById('pb-description').value;
+            const argHint = document.getElementById('pb-arg-hint').value;
+
+            if (!name) {
+                showToast('El nombre del comando es requerido', 'error');
+                return;
+            }
+
+            if (!content) {
+                showToast('Primero genera el preview', 'error');
+                return;
+            }
+
+            // Obtener tools seleccionados
+            const tools = [];
+            document.querySelectorAll('.pb-tool:checked').forEach(cb => tools.push(cb.value));
+
+            try {
+                const response = await fetch('/api/commands', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: name,
+                        description: description,
+                        allowed_tools: tools,
+                        argument_hint: argHint,
+                        content: content
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const result = await response.json();
+                showToast(`/${name} instalado correctamente`, 'success');
+
+                // Refrescar lista de comandos instalados
+                loadInstalledCommands();
+
+            } catch (error) {
+                console.error('Error installing command:', error);
+                showToast(`Error: ${error.message}. ¿Backend activo?`, 'error');
+            }
+        }
+
+        async function loadInstalledCommands() {
+            try {
+                const response = await fetch('/api/commands');
+                if (!response.ok) return;
+
+                const data = await response.json();
+                const container = document.getElementById('installed-commands-list');
+                if (!container) return;
+
+                if (data.commands.length === 0) {
+                    container.innerHTML = '<p class="text-slate-500 text-xs">No hay comandos instalados</p>';
+                    return;
+                }
+
+                container.innerHTML = data.commands.map(cmd => `
+                    <div class="flex items-center justify-between bg-slate-900 rounded-lg p-2 border border-slate-700">
+                        <div class="flex-1 min-w-0">
+                            <span class="text-blue-400 font-mono text-xs">/${cmd.name}</span>
+                            <p class="text-[10px] text-slate-500 truncate">${cmd.description || 'Sin descripción'}</p>
+                        </div>
+                        <div class="flex gap-1 ml-2">
+                            <button onclick="loadCommandToEditor('${cmd.name}')" class="text-slate-400 hover:text-blue-400 p-1" title="Editar">
+                                <i class="fa-solid fa-pen-to-square text-xs"></i>
+                            </button>
+                            <button onclick="deleteInstalledCommand('${cmd.name}')" class="text-slate-400 hover:text-red-400 p-1" title="Eliminar">
+                                <i class="fa-solid fa-trash text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error loading commands:', error);
+            }
+        }
+
+        async function loadCommandToEditor(name) {
+            try {
+                const response = await fetch(`/api/commands/${name}`);
+                if (!response.ok) throw new Error('Comando no encontrado');
+
+                const cmd = await response.json();
+                const content = cmd.content;
+
+                // Parsear el contenido markdown
+                document.getElementById('pb-name').value = cmd.name;
+                document.getElementById('pb-description').value = cmd.description;
+                document.getElementById('pb-arg-hint').value = cmd.argument_hint;
+
+                // Cargar tools
+                document.querySelectorAll('.pb-tool').forEach(cb => {
+                    cb.checked = cmd.allowed_tools.includes(cb.value);
+                });
+
+                // Parsear secciones del markdown
+                const sections = parseMarkdownSections(content);
+
+                // Variables
+                const varsContainer = document.getElementById('pb-variables');
+                varsContainer.innerHTML = '';
+                if (sections.variables && sections.variables.length > 0) {
+                    sections.variables.forEach((v, i) => {
+                        addVariableRow(v.name, v.type, v.desc, i === 0 && v.name.includes('$'));
+                    });
+                } else {
+                    addVariableRow('$ARGUMENTS', 'dinámico', 'Input del usuario', true);
+                }
+
+                // Workflow
+                const wfContainer = document.getElementById('pb-workflow');
+                wfContainer.innerHTML = '';
+                if (sections.workflow && sections.workflow.length > 0) {
+                    sections.workflow.forEach((step, i) => {
+                        addWorkflowStepRow(step, i + 1);
+                    });
+                } else {
+                    addWorkflowStepRow('Determinar scope');
+                }
+
+                // Instructions
+                const insContainer = document.getElementById('pb-instructions');
+                insContainer.innerHTML = '';
+                if (sections.instructions && sections.instructions.length > 0) {
+                    sections.instructions.forEach(ins => {
+                        addInstructionRow(ins);
+                    });
+                } else {
+                    addInstructionRow('');
+                }
+
+                // Report
+                document.getElementById('pb-report').value = sections.report || '';
+
+                // Poner contenido en preview
+                document.getElementById('pb-preview').textContent = content;
+
+                showToast(`/${name} cargado para editar`, 'info');
+                validatePromptBuilder();
+
+            } catch (error) {
+                console.error('Error loading command:', error);
+                showToast(`Error cargando /${name}`, 'error');
+            }
+        }
+
+        function parseMarkdownSections(content) {
+            const result = { variables: [], workflow: [], instructions: [], report: '' };
+
+            // Extraer Variables (tabla markdown)
+            const varsMatch = content.match(/## Variables[\s\S]*?\|[\s\S]*?(?=\n## |\n---|\n```|$)/);
+            if (varsMatch) {
+                const tableLines = varsMatch[0].split('\n').filter(l => l.startsWith('|') && !l.includes('---'));
+                tableLines.slice(1).forEach(line => { // Skip header
+                    const cells = line.split('|').map(c => c.trim()).filter(c => c);
+                    if (cells.length >= 3) {
+                        result.variables.push({
+                            name: cells[0].replace(/`/g, ''),
+                            type: cells[1],
+                            desc: cells[2]
+                        });
+                    }
+                });
+            }
+
+            // Extraer Workflow (lista numerada)
+            const workflowMatch = content.match(/## Workflow[\s\S]*?(?=\n## |\n---|\n```|$)/);
+            if (workflowMatch) {
+                const lines = workflowMatch[0].split('\n');
+                lines.forEach(line => {
+                    const stepMatch = line.match(/^\d+\.\s+\*\*([^*]+)\*\*/);
+                    if (stepMatch) {
+                        result.workflow.push(stepMatch[1].trim());
+                    } else {
+                        const simpleMatch = line.match(/^\d+\.\s+(.+)/);
+                        if (simpleMatch && !simpleMatch[1].includes('|')) {
+                            result.workflow.push(simpleMatch[1].replace(/\*\*/g, '').trim());
+                        }
+                    }
+                });
+            }
+
+            // Extraer Instructions (lista con -)
+            const instructionsMatch = content.match(/## Instructions[\s\S]*?(?=\n## |\n---|\n```|$)/);
+            if (instructionsMatch) {
+                const lines = instructionsMatch[0].split('\n');
+                lines.forEach(line => {
+                    const insMatch = line.match(/^-\s+(.+)/);
+                    if (insMatch) {
+                        result.instructions.push(insMatch[1].replace(/\*\*/g, '').trim());
+                    }
+                });
+            }
+
+            // Extraer Report (bloque de código)
+            const reportMatch = content.match(/## Report[\s\S]*?```([\s\S]*?)```/);
+            if (reportMatch) {
+                result.report = reportMatch[1].trim();
+            }
+
+            return result;
+        }
+
+        async function deleteInstalledCommand(name) {
+            if (!confirm(`¿Eliminar el comando /${name}?`)) return;
+
+            try {
+                const response = await fetch(`/api/commands/${name}`, { method: 'DELETE' });
+                if (!response.ok) throw new Error('Error eliminando');
+
+                showToast(`/${name} eliminado`, 'success');
+                loadInstalledCommands();
+
+            } catch (error) {
+                showToast(`Error eliminando /${name}`, 'error');
+            }
+        }
+
+        // Cargar comandos al iniciar si estamos en Prompt Builder
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(loadInstalledCommands, 1000);
+            // Inicializar workflow con un paso por defecto si está vacío
+            initializePromptBuilder();
+        });
+
+        function initializePromptBuilder() {
+            const wfContainer = document.getElementById('pb-workflow');
+            if (wfContainer && wfContainer.children.length === 0) {
+                addWorkflowStepRow('Determinar scope');
+            }
+        }
+
+        function clearPromptBuilder() {
+            // Limpiar metadata
+            document.getElementById('pb-name').value = '';
+            document.getElementById('pb-description').value = '';
+            document.getElementById('pb-arg-hint').value = '';
+
+            // Desmarcar tools
+            document.querySelectorAll('.pb-tool').forEach(cb => cb.checked = false);
+            // Marcar los básicos
+            ['Read', 'Glob', 'Grep'].forEach(t => {
+                const cb = document.querySelector(`.pb-tool[value="${t}"]`);
+                if (cb) cb.checked = true;
+            });
+
+            // Limpiar variables
+            const varsContainer = document.getElementById('pb-variables');
+            varsContainer.innerHTML = '';
+            addVariableRow('$ARGUMENTS', 'dinámico', 'Input del usuario', true);
+
+            // Limpiar workflow
+            const wfContainer = document.getElementById('pb-workflow');
+            wfContainer.innerHTML = '';
+            addWorkflowStepRow('');
+
+            // Limpiar instructions
+            const insContainer = document.getElementById('pb-instructions');
+            insContainer.innerHTML = '';
+            addInstructionRow('');
+
+            // Limpiar report
+            document.getElementById('pb-report').value = '';
+
+            // Limpiar preview
+            document.getElementById('pb-preview').textContent = '';
+
+            // Reset selector
+            document.getElementById('pb-template').value = '';
+
+            validatePromptBuilder();
+            showToast('Formulario limpiado', 'info');
+        }
+
+        // Lista de herramientas comunes para autocompletado
+        const commonTools = [
+            { name: 'Read', desc: 'Leer archivos' },
+            { name: 'Write', desc: 'Escribir archivos' },
+            { name: 'Edit', desc: 'Editar archivos' },
+            { name: 'Glob', desc: 'Buscar por patrón' },
+            { name: 'Grep', desc: 'Buscar contenido' },
+            { name: 'Bash', desc: 'Ejecutar comandos' },
+            { name: 'Bash(npm:*)', desc: 'Comandos npm' },
+            { name: 'Bash(pytest:*)', desc: 'Comandos pytest' },
+            { name: 'Bash(git:*)', desc: 'Comandos git' },
+            { name: 'Bash(python:*)', desc: 'Ejecutar Python' },
+            { name: 'Bash(curl:*)', desc: 'Comandos curl' },
+            { name: 'Bash(ls:*)', desc: 'Listar archivos' },
+            { name: 'WebFetch', desc: 'Obtener URLs' },
+            { name: 'WebSearch', desc: 'Buscar en web' },
+            { name: 'Task', desc: 'Lanzar subagentes' }
+        ];
+
+        // Verbos comunes para workflow
+        const workflowVerbs = [
+            'Detectar', 'Leer', 'Analizar', 'Validar', 'Buscar', 'Comparar',
+            'Generar', 'Ejecutar', 'Reportar', 'Clasificar', 'Identificar',
+            'Preguntar', 'Confirmar', 'Guardar', 'Refrescar', 'Parsear'
+        ];
 
         // Monitor & Generator
         let isOnline = false; const term = document.getElementById('terminal-window');
