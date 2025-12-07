@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutorial DirectOS v10.5</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        * { font-family: 'Inter', sans-serif; }
+        code, pre { font-family: 'JetBrains Mono', monospace; }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .step-card {
+            transition: all 0.3s ease;
+            opacity: 0.6;
+            transform: scale(0.98);
+        }
+
+        .step-card.active {
+            opacity: 1;
+            transform: scale(1);
+            border-color: #3b82f6;
+        }
+
+        .step-card.completed {
+            opacity: 0.8;
+            border-color: #22c55e;
+        }
+
+        .step-card.completed .step-number {
+            background: #22c55e;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #3b82f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .node-demo {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border: 2px solid #475569;
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .node-demo:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .node-demo.trigger { border-left: 4px solid #22c55e; }
+        .node-demo.process { border-left: 4px solid #3b82f6; }
+        .node-demo.ai { border-left: 4px solid #f59e0b; }
+        .node-demo.output { border-left: 4px solid #f97316; }
+        .node-demo.flow { border-left: 4px solid #a855f7; }
+
+        .connection-line {
+            stroke: #3b82f6;
+            stroke-width: 3;
+            fill: none;
+            stroke-dasharray: 10;
+            animation: dash 1s linear infinite;
+        }
+
+        @keyframes dash {
+            to { stroke-dashoffset: -20; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .pulse { animation: pulse 2s ease-in-out infinite; }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide-in { animation: slideIn 0.5s ease-out forwards; }
+
+        .progress-bar {
+            height: 4px;
+            background: #334155;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            transition: width 0.5s ease;
+        }
+
+        .interactive-canvas {
+            background:
+                linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+            border: 2px dashed #334155;
+            border-radius: 12px;
+            min-height: 200px;
+            position: relative;
+        }
+
+        .code-block {
+            background: #0f172a;
+            border-radius: 8px;
+            padding: 16px;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .code-block::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 12px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ef4444;
+            box-shadow: 20px 0 0 #f59e0b, 40px 0 0 #22c55e;
+        }
+
+        .code-block pre {
+            margin-top: 20px;
+        }
+
+        .tooltip {
+            position: relative;
+        }
+
+        .tooltip:hover::after {
+            content: attr(data-tip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 100;
+        }
+
+        .nav-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #475569;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-dot.active {
+            background: #3b82f6;
+            transform: scale(1.3);
+        }
+
+        .nav-dot.completed {
+            background: #22c55e;
+        }
+
+        .feature-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            background: rgba(30, 41, 59, 0.8);
+            transform: translateY(-4px);
+        }
+    </style>
+</head>
+<body class="text-white">
+    <!-- Header -->
+    <header class="glass fixed top-0 left-0 right-0 z-50 px-6 py-4">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                    <i class="fa-solid fa-cube text-white"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg">DirectOS</h1>
+                    <span class="text-xs text-gray-400">Tutorial Interactivo v10.5</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-sm text-gray-400">
+                    Paso <span id="current-step">1</span> de <span id="total-steps">10</span>
+                </div>
+                <div class="progress-bar w-32">
+                    <div class="progress-fill" id="progress-bar" style="width: 10%"></div>
+                </div>
+                <a href="index.html" class="text-blue-400 hover:text-blue-300 text-sm">
+                    <i class="fa-solid fa-arrow-left mr-1"></i> Volver a DirectOS
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Dots -->
+    <nav class="fixed right-6 top-1/2 transform -translate-y-1/2 z-40 flex flex-col gap-3" id="nav-dots">
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-24 pb-16">
+        <!-- Step 0: Welcome -->
+        <section class="step min-h-screen flex items-center justify-center px-6" data-step="0">
+            <div class="max-w-4xl mx-auto text-center slide-in">
+                <div class="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-8">
+                    <i class="fa-solid fa-cube text-4xl"></i>
+                </div>
+                <h1 class="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                    Bienvenido a DirectOS
+                </h1>
+                <p class="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+                    Tu cockpit de desarrollo con IA integrada. Diseña pipelines visuales,
+                    ejecuta Claude con tu suscripción, y automatiza tu workflow.
+                </p>
+                <div class="flex justify-center gap-4 mb-12">
+                    <div class="feature-card text-center px-6 py-4">
+                        <i class="fa-solid fa-diagram-project text-3xl text-blue-400 mb-2"></i>
+                        <div class="font-semibold">Pipeline Builder</div>
+                        <div class="text-sm text-gray-400">Visual & Drag-Drop</div>
+                    </div>
+                    <div class="feature-card text-center px-6 py-4">
+                        <i class="fa-solid fa-brain text-3xl text-amber-400 mb-2"></i>
+                        <div class="font-semibold">Claude CLI</div>
+                        <div class="text-sm text-gray-400">Sin coste API</div>
+                    </div>
+                    <div class="feature-card text-center px-6 py-4">
+                        <i class="fa-solid fa-bolt text-3xl text-green-400 mb-2"></i>
+                        <div class="font-semibold">35+ Nodos</div>
+                        <div class="text-sm text-gray-400">Listos para usar</div>
+                    </div>
+                    <div class="feature-card text-center px-6 py-4">
+                        <i class="fa-solid fa-hand text-3xl text-cyan-400 mb-2"></i>
+                        <div class="font-semibold">HITL</div>
+                        <div class="text-sm text-gray-400">Human-in-the-Loop</div>
+                    </div>
+                </div>
+                <button onclick="nextStep()" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 px-8 py-4 rounded-xl font-semibold text-lg transition transform hover:scale-105">
+                    Comenzar Tutorial <i class="fa-solid fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- Step 1: Architecture -->
+        <section class="step min-h-screen flex items-center px-6 hidden" data-step="1">
+            <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+                <div class="slide-in">
+                    <span class="text-blue-400 font-semibold">PASO 1</span>
+                    <h2 class="text-4xl font-bold mt-2 mb-6">Arquitectura</h2>
+                    <p class="text-gray-300 mb-6">
+                        DirectOS tiene dos componentes principales que trabajan juntos:
+                    </p>
+                    <ul class="space-y-4">
+                        <li class="flex items-start gap-3">
+                            <div class="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                                <i class="fa-solid fa-desktop text-blue-400"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold">Frontend (index.html)</div>
+                                <div class="text-sm text-gray-400">Single Page Application con Pipeline Builder, Prompt Builder, y Dashboard.</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                                <i class="fa-solid fa-server text-purple-400"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold">Backend (FastAPI)</div>
+                                <div class="text-sm text-gray-400">API REST en puerto 8000. Ejecuta pipelines, Claude CLI, y gestiona datos.</div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="glass rounded-2xl p-8">
+                    <div class="code-block">
+                        <pre class="text-sm text-gray-300">
+<span class="text-blue-400">Frontend</span> (Browser)
+    │
+    │ REST API
+    ▼
+<span class="text-purple-400">Backend</span> (FastAPI :8000)
+    ├── /api/tools
+    ├── /api/patterns
+    ├── /api/claude/ask
+    └── /api/agent/execute
+    │
+    ▼
+<span class="text-amber-400">Claude CLI</span> (subprocess)
+    └── Tu suscripción Pro/Max</pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 2: Starting DirectOS -->
+        <section class="step min-h-screen flex items-center px-6 hidden" data-step="2">
+            <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+                <div class="slide-in">
+                    <span class="text-blue-400 font-semibold">PASO 2</span>
+                    <h2 class="text-4xl font-bold mt-2 mb-6">Arrancar DirectOS</h2>
+                    <p class="text-gray-300 mb-6">
+                        Sigue estos pasos para poner DirectOS en marcha:
+                    </p>
+                    <div class="code-block mb-6">
+                        <pre class="text-sm">
+<span class="text-gray-500"># 1. Crear entorno virtual</span>
+<span class="text-green-400">python3</span> -m venv venv
+<span class="text-green-400">source</span> venv/bin/activate
+
+<span class="text-gray-500"># 2. Instalar dependencias</span>
+<span class="text-green-400">pip</span> install fastapi uvicorn
+
+<span class="text-gray-500"># 3. Arrancar</span>
+<span class="text-green-400">./start.sh</span></pre>
+                    </div>
+                    <div class="flex items-center gap-3 text-sm">
+                        <div class="w-3 h-3 bg-green-500 rounded-full pulse"></div>
+                        <span class="text-gray-400">Backend corriendo en http://localhost:8000</span>
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-6">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                        <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                        <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <span class="text-gray-400 text-sm ml-2">Terminal</span>
+                    </div>
+                    <div class="bg-black/50 rounded-lg p-4 font-mono text-sm">
+                        <div class="text-gray-400">$ ./start.sh</div>
+                        <div class="text-green-400 mt-2">INFO:     Uvicorn running on http://0.0.0.0:8000</div>
+                        <div class="text-blue-400">INFO:     Application startup complete.</div>
+                        <div class="text-gray-400 mt-2">$ curl localhost:8000/api/health</div>
+                        <div class="text-white">{"status":"healthy","version":"10.5.0"}</div>
+                        <div class="text-gray-500 mt-2 pulse">▋</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 3: Dashboard Overview -->
+        <section class="step min-h-screen flex items-center px-6 hidden" data-step="3">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-12 slide-in">
+                    <span class="text-blue-400 font-semibold">PASO 3</span>
+                    <h2 class="text-4xl font-bold mt-2 mb-4">El Dashboard</h2>
+                    <p class="text-gray-300">Explora las secciones principales de DirectOS</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="feature-card cursor-pointer group" onclick="highlightFeature(this)">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center group-hover:bg-blue-500/30 transition">
+                                <i class="fa-solid fa-diagram-project text-2xl text-blue-400"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold">Pipeline Builder</div>
+                                <div class="text-xs text-gray-400">El canvas principal</div>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-400">Diseña flujos visuales arrastrando nodos. Zoom, pan, conexiones bezier.</p>
+                    </div>
+                    <div class="feature-card cursor-pointer group" onclick="highlightFeature(this)">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center group-hover:bg-purple-500/30 transition">
+                                <i class="fa-solid fa-terminal text-2xl text-purple-400"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold">Prompt Builder</div>
+                                <div class="text-xs text-gray-400">Crear slash commands</div>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-400">Constructor visual para crear comandos de Claude Code con el patrón de 6 secciones.</p>
+                    </div>
+                    <div class="feature-card cursor-pointer group" onclick="highlightFeature(this)">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center group-hover:bg-green-500/30 transition">
+                                <i class="fa-solid fa-book text-2xl text-green-400"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold">Glosario</div>
+                                <div class="text-xs text-gray-400">35+ herramientas</div>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-400">Fichas técnicas de cada herramienta con ejemplos de código y tips.</p>
+                    </div>
+                    <div class="feature-card cursor-pointer group" onclick="highlightFeature(this)">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 bg-amber-500/20 rounded-xl flex items-center justify-center group-hover:bg-amber-500/30 transition">
+                                <i class="fa-solid fa-lightbulb text-2xl text-amber-400"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold">Patrones</div>
+                                <div class="text-xs text-gray-400">42 patrones de prompts</div>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-400">Biblioteca de patrones para resolver problemas comunes de desarrollo.</p>
+                    </div>
+                    <div class="feature-card cursor-pointer group" onclick="highlightFeature(this)">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 bg-red-500/20 rounded-xl flex items-center justify-center group-hover:bg-red-500/30 transition">
+                                <i class="fa-solid fa-bolt text-2xl text-red-400"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold">Automatizaciones</div>
+                                <div class="text-xs text-gray-400">Triggers y agentes</div>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-400">Gestiona triggers activos, programaciones y webhooks.</p>
+                    </div>
+                    <div class="feature-card cursor-pointer group" onclick="highlightFeature(this)">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 bg-cyan-500/20 rounded-xl flex items-center justify-center group-hover:bg-cyan-500/30 transition">
+                                <i class="fa-solid fa-folder text-2xl text-cyan-400"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold">Proyectos</div>
+                                <div class="text-xs text-gray-400">Portfolio</div>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-400">Documentación de proyectos realizados con DirectOS.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 4: Pipeline Builder Intro -->
+        <section class="step min-h-screen flex items-center px-6 hidden" data-step="4">
+            <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+                <div class="slide-in">
+                    <span class="text-blue-400 font-semibold">PASO 4</span>
+                    <h2 class="text-4xl font-bold mt-2 mb-6">Pipeline Builder</h2>
+                    <p class="text-gray-300 mb-6">
+                        El corazón de DirectOS. Un canvas visual donde diseñas flujos arrastrando nodos.
+                    </p>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-4 p-4 glass rounded-lg">
+                            <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-hand-pointer text-blue-400"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold">Drag & Drop</div>
+                                <div class="text-sm text-gray-400">Arrastra nodos desde el toolbox al canvas</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 p-4 glass rounded-lg">
+                            <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-link text-purple-400"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold">Conectar</div>
+                                <div class="text-sm text-gray-400">Arrastra desde puerto azul a verde</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 p-4 glass rounded-lg">
+                            <div class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-play text-green-400"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold">Ejecutar</div>
+                                <div class="text-sm text-gray-400">Click en el botón verde para correr el pipeline</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-6">
+                    <div class="text-sm text-gray-400 mb-4">Atajos de teclado:</div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-slate-800/50 rounded-lg p-3 flex items-center gap-3">
+                            <kbd class="px-2 py-1 bg-slate-700 rounded text-xs">Ctrl+Z</kbd>
+                            <span class="text-sm">Deshacer</span>
+                        </div>
+                        <div class="bg-slate-800/50 rounded-lg p-3 flex items-center gap-3">
+                            <kbd class="px-2 py-1 bg-slate-700 rounded text-xs">Ctrl+Shift+Z</kbd>
+                            <span class="text-sm">Rehacer</span>
+                        </div>
+                        <div class="bg-slate-800/50 rounded-lg p-3 flex items-center gap-3">
+                            <kbd class="px-2 py-1 bg-slate-700 rounded text-xs">Ctrl+E</kbd>
+                            <span class="text-sm">Exportar JSON</span>
+                        </div>
+                        <div class="bg-slate-800/50 rounded-lg p-3 flex items-center gap-3">
+                            <kbd class="px-2 py-1 bg-slate-700 rounded text-xs">Delete</kbd>
+                            <span class="text-sm">Eliminar nodo</span>
+                        </div>
+                        <div class="bg-slate-800/50 rounded-lg p-3 flex items-center gap-3">
+                            <kbd class="px-2 py-1 bg-slate-700 rounded text-xs">Ctrl+Scroll</kbd>
+                            <span class="text-sm">Zoom</span>
+                        </div>
+                        <div class="bg-slate-800/50 rounded-lg p-3 flex items-center gap-3">
+                            <kbd class="px-2 py-1 bg-slate-700 rounded text-xs">Arrastrar fondo</kbd>
+                            <span class="text-sm">Pan</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 5: Node Types -->
+        <section class="step min-h-screen flex items-center px-6 hidden" data-step="5">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-12 slide-in">
+                    <span class="text-blue-400 font-semibold">PASO 5</span>
+                    <h2 class="text-4xl font-bold mt-2 mb-4">Tipos de Nodos</h2>
+                    <p class="text-gray-300">DirectOS tiene 35+ nodos organizados en categorías</p>
+                </div>
+                <div class="grid md:grid-cols-5 gap-4">
+                    <div class="space-y-3">
+                        <div class="text-center mb-4">
+                            <span class="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm font-semibold">Trigger</span>
+                        </div>
+                        <div class="node-demo trigger">
+                            <i class="fa-solid fa-play text-green-400 mr-2"></i>
+                            <span class="text-sm">Manual</span>
+                        </div>
+                        <div class="node-demo trigger">
+                            <i class="fa-solid fa-folder text-green-400 mr-2"></i>
+                            <span class="text-sm">File Watch</span>
+                        </div>
+                        <div class="node-demo trigger">
+                            <i class="fa-solid fa-clock text-green-400 mr-2"></i>
+                            <span class="text-sm">Cron</span>
+                        </div>
+                        <div class="node-demo trigger">
+                            <i class="fa-solid fa-webhook text-green-400 mr-2"></i>
+                            <span class="text-sm">Webhook</span>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="text-center mb-4">
+                            <span class="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm font-semibold">Proceso</span>
+                        </div>
+                        <div class="node-demo process">
+                            <i class="fa-solid fa-microphone text-blue-400 mr-2"></i>
+                            <span class="text-sm">Whisper</span>
+                        </div>
+                        <div class="node-demo process">
+                            <i class="fa-solid fa-eye text-blue-400 mr-2"></i>
+                            <span class="text-sm">Tesseract</span>
+                        </div>
+                        <div class="node-demo process">
+                            <i class="fa-solid fa-file-pdf text-blue-400 mr-2"></i>
+                            <span class="text-sm">PDF Parser</span>
+                        </div>
+                        <div class="node-demo process">
+                            <i class="fa-solid fa-spider text-blue-400 mr-2"></i>
+                            <span class="text-sm">Scraper</span>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="text-center mb-4">
+                            <span class="px-3 py-1 bg-amber-500/20 text-amber-400 rounded-full text-sm font-semibold">IA Model</span>
+                        </div>
+                        <div class="node-demo ai">
+                            <i class="fa-solid fa-brain text-amber-400 mr-2"></i>
+                            <span class="text-sm">Claude CLI</span>
+                        </div>
+                        <div class="node-demo ai">
+                            <i class="fa-solid fa-robot text-amber-400 mr-2"></i>
+                            <span class="text-sm">Ollama</span>
+                        </div>
+                        <div class="node-demo ai">
+                            <i class="fa-solid fa-comment text-amber-400 mr-2"></i>
+                            <span class="text-sm">OpenAI</span>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="text-center mb-4">
+                            <span class="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-sm font-semibold">Flow</span>
+                        </div>
+                        <div class="node-demo flow">
+                            <i class="fa-solid fa-code-branch text-purple-400 mr-2"></i>
+                            <span class="text-sm">If</span>
+                        </div>
+                        <div class="node-demo flow">
+                            <i class="fa-solid fa-repeat text-purple-400 mr-2"></i>
+                            <span class="text-sm">Loop</span>
+                        </div>
+                        <div class="node-demo flow">
+                            <i class="fa-solid fa-clock text-purple-400 mr-2"></i>
+                            <span class="text-sm">Delay</span>
+                        </div>
+                        <div class="node-demo flow">
+                            <i class="fa-solid fa-magnifying-glass text-purple-400 mr-2"></i>
+                            <span class="text-sm">Inspector</span>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="text-center mb-4">
+                            <span class="px-3 py-1 bg-orange-500/20 text-orange-400 rounded-full text-sm font-semibold">Output</span>
+                        </div>
+                        <div class="node-demo output">
+                            <i class="fa-solid fa-file text-orange-400 mr-2"></i>
+                            <span class="text-sm">File</span>
+                        </div>
+                        <div class="node-demo output">
+                            <i class="fa-solid fa-bell text-orange-400 mr-2"></i>
+                            <span class="text-sm">Notify</span>
+                        </div>
+                        <div class="node-demo output">
+                            <i class="fa-solid fa-envelope text-orange-400 mr-2"></i>
+                            <span class="text-sm">Email</span>
+                        </div>
+                        <div class="node-demo output">
+                            <i class="fa-brands fa-slack text-orange-400 mr-2"></i>
+                            <span class="text-sm">Slack</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 6: First Pipeline Demo -->
+        <section class="step min-h-screen flex items-center px-6 hidden" data-step="6">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-8 slide-in">
+                    <span class="text-blue-400 font-semibold">PASO 6</span>
+                    <h2 class="text-4xl font-bold mt-2 mb-4">Tu Primer Pipeline</h2>
+                    <p class="text-gray-300">Vamos a crear un pipeline simple que use Claude</p>
+                </div>
+
+                <div class="interactive-canvas p-8 mb-8" id="demo-canvas">
+                    <svg class="absolute inset-0 w-full h-full pointer-events-none" id="demo-connections">
+                    </svg>
+                    <div class="flex items-center justify-center gap-8" id="demo-nodes">
+                        <div class="node-demo trigger text-center opacity-30 transition-all duration-500" id="demo-node-1">
+                            <i class="fa-solid fa-play text-green-400 text-2xl mb-2"></i>
+                            <div class="text-sm font-semibold">Trigger Manual</div>
+                            <div class="w-3 h-3 bg-blue-500 rounded-full mx-auto mt-2" title="Puerto salida"></div>
+                        </div>
+                        <div class="text-gray-600 opacity-0 transition-all duration-500" id="demo-arrow-1">
+                            <i class="fa-solid fa-arrow-right text-2xl"></i>
+                        </div>
+                        <div class="node-demo ai text-center opacity-30 transition-all duration-500" id="demo-node-2">
+                            <div class="w-3 h-3 bg-green-500 rounded-full mx-auto mb-2" title="Puerto entrada"></div>
+                            <i class="fa-solid fa-brain text-amber-400 text-2xl mb-2"></i>
+                            <div class="text-sm font-semibold">Claude (CLI)</div>
+                            <div class="w-3 h-3 bg-blue-500 rounded-full mx-auto mt-2" title="Puerto salida"></div>
+                        </div>
+                        <div class="text-gray-600 opacity-0 transition-all duration-500" id="demo-arrow-2">
+                            <i class="fa-solid fa-arrow-right text-2xl"></i>
+                        </div>
+                        <div class="node-demo output text-center opacity-30 transition-all duration-500" id="demo-node-3">
+                            <div class="w-3 h-3 bg-green-500 rounded-full mx-auto mb-2" title="Puerto entrada"></div>
+                            <i class="fa-solid fa-bell text-orange-400 text-2xl mb-2"></i>
+                            <div class="text-sm font-semibold">Output Notify</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-center gap-4">
+                    <button onclick="animatePipelineDemo()" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 px-6 py-3 rounded-xl font-semibold transition">
+                        <i class="fa-solid fa-play mr-2"></i> Simular Pipeline
+                    </button>
+                    <button onclick="resetPipelineDemo()" class="bg-slate-700 hover:bg-slate-600 px-6 py-3 rounded-xl font-semibold transition">
+                        <i class="fa-solid fa-redo mr-2"></i> Reiniciar
+                    </button>
+                </div>
+
+                <div class="mt-8 glass rounded-xl p-4 max-w-2xl mx-auto">
+                    <div class="text-sm font-mono text-gray-400" id="demo-log">
+                        <div class="text-gray-500">// Click en "Simular Pipeline" para ver la ejecución</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 7: Claude CLI -->
+        <section class="step min-h-screen flex items-center px-6 hidden" data-step="7">
+            <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+                <div class="slide-in">
+                    <span class="text-blue-400 font-semibold">PASO 7</span>
+                    <h2 class="text-4xl font-bold mt-2 mb-6">Claude CLI Integration</h2>
+                    <p class="text-gray-300 mb-6">
+                        La característica estrella de DirectOS v10.3. Ejecuta Claude usando tu suscripción Pro/Max. <strong>Sin coste de API</strong>.
+                    </p>
+
+                    <div class="space-y-4 mb-6">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
+                                <i class="fa-solid fa-check text-green-400"></i>
+                            </div>
+                            <span>Usa tu suscripción existente</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
+                                <i class="fa-solid fa-check text-green-400"></i>
+                            </div>
+                            <span>Sin límites de tokens por pago</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
+                                <i class="fa-solid fa-check text-green-400"></i>
+                            </div>
+                            <span>Mismo modelo que Claude.ai</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
+                        <div class="flex items-center gap-2 text-amber-400 font-semibold mb-2">
+                            <i class="fa-solid fa-lightbulb"></i>
+                            Requisitos
+                        </div>
+                        <ul class="text-sm text-gray-300 space-y-1">
+                            <li>• Claude Code CLI instalado</li>
+                            <li>• Autenticado con <code class="bg-slate-700 px-1 rounded">claude login</code></li>
+                            <li>• Suscripción Pro o Max activa</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-6">
+                    <div class="text-sm text-gray-400 mb-4">Cómo funciona internamente:</div>
+                    <div class="code-block">
+                        <pre class="text-sm">
+<span class="text-gray-500"># DirectOS ejecuta esto:</span>
+<span class="text-green-400">claude</span> -p "tu prompt" --output-format json
+
+<span class="text-gray-500"># Y parsea la respuesta JSON</span>
+{
+  <span class="text-blue-400">"result"</span>: "Respuesta de Claude...",
+  <span class="text-blue-400">"model"</span>: "claude-sonnet-4"
+}</pre>
+                    </div>
+                    <div class="mt-4 p-4 bg-slate-800/50 rounded-lg">
+                        <div class="text-sm text-gray-400 mb-2">Probar endpoint:</div>
+                        <code class="text-xs text-blue-400 break-all">
+                            curl -X POST localhost:8000/api/claude/ask -H "Content-Type: application/json" -d '{"prompt": "Hola"}'
+                        </code>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 8: Human-in-the-Loop -->
+        <section class="step min-h-screen flex items-center px-6 hidden" data-step="8">
+            <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+                <div class="slide-in">
+                    <span class="text-blue-400 font-semibold">PASO 8</span>
+                    <h2 class="text-4xl font-bold mt-2 mb-6">Human-in-the-Loop</h2>
+                    <p class="text-gray-300 mb-6">
+                        Supervisa y controla la ejecución de pipelines. Aprende cómo funcionan las automatizaciones.
+                    </p>
+
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-4 p-4 glass rounded-lg">
+                            <div class="w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-magnifying-glass text-cyan-400"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold">Nodo Inspector</div>
+                                <div class="text-sm text-gray-400">Pausa didáctica: origen → proceso → datos → destino</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 p-4 glass rounded-lg">
+                            <div class="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-eye text-orange-400"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold">Dry Run</div>
+                                <div class="text-sm text-gray-400">Simula el pipeline sin ejecutar</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 p-4 glass rounded-lg">
+                            <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-pause text-purple-400"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold">Pausas por Nodo</div>
+                                <div class="text-sm text-gray-400">Checkbox para pausar antes/después de cada nodo</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-6">
+                    <div class="text-sm text-gray-400 mb-4">El Inspector muestra:</div>
+                    <div class="space-y-4">
+                        <div class="bg-slate-800/50 rounded-lg p-4">
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="fa-solid fa-arrow-right-from-bracket text-green-400"></i>
+                                <span class="font-semibold text-green-400">Origen</span>
+                            </div>
+                            <div class="text-sm text-gray-400">De dónde vienen los datos</div>
+                        </div>
+                        <div class="bg-slate-800/50 rounded-lg p-4">
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="fa-solid fa-gear text-blue-400"></i>
+                                <span class="font-semibold text-blue-400">Proceso</span>
+                            </div>
+                            <div class="text-sm text-gray-400">Qué herramienta los procesó</div>
+                        </div>
+                        <div class="bg-slate-800/50 rounded-lg p-4">
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="fa-solid fa-database text-amber-400"></i>
+                                <span class="font-semibold text-amber-400">Datos</span>
+                            </div>
+                            <div class="text-sm text-gray-400">Qué se extrajo (editable)</div>
+                        </div>
+                        <div class="bg-slate-800/50 rounded-lg p-4">
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="fa-solid fa-arrow-right-to-bracket text-purple-400"></i>
+                                <span class="font-semibold text-purple-400">Destino</span>
+                            </div>
+                            <div class="text-sm text-gray-400">A dónde van los datos</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 9: Prompt Builder -->
+        <section class="step min-h-screen flex items-center px-6 hidden" data-step="9">
+            <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+                <div class="slide-in">
+                    <span class="text-blue-400 font-semibold">PASO 9</span>
+                    <h2 class="text-4xl font-bold mt-2 mb-6">Prompt Builder Pro</h2>
+                    <p class="text-gray-300 mb-6">
+                        Constructor visual para crear slash commands de Claude Code con el patrón de 6 secciones.
+                    </p>
+
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3 p-3 glass rounded-lg">
+                            <span class="w-6 h-6 bg-blue-500 rounded text-center text-sm font-bold">1</span>
+                            <span class="font-semibold">Metadata</span>
+                            <span class="text-sm text-gray-400">description, allowed-tools</span>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 glass rounded-lg">
+                            <span class="w-6 h-6 bg-blue-500 rounded text-center text-sm font-bold">2</span>
+                            <span class="font-semibold">Variables</span>
+                            <span class="text-sm text-gray-400">$ARG, dinámicas</span>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 glass rounded-lg">
+                            <span class="w-6 h-6 bg-blue-500 rounded text-center text-sm font-bold">3</span>
+                            <span class="font-semibold">Workflow</span>
+                            <span class="text-sm text-gray-400">Pasos S-TIER</span>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 glass rounded-lg">
+                            <span class="w-6 h-6 bg-blue-500 rounded text-center text-sm font-bold">4</span>
+                            <span class="font-semibold">Instructions</span>
+                            <span class="text-sm text-gray-400">Reglas y guías</span>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 glass rounded-lg">
+                            <span class="w-6 h-6 bg-blue-500 rounded text-center text-sm font-bold">5</span>
+                            <span class="font-semibold">Report</span>
+                            <span class="text-sm text-gray-400">Formato de salida</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-6">
+                    <div class="text-sm text-gray-400 mb-4">Ejemplo: /code-review</div>
+                    <div class="code-block">
+                        <pre class="text-sm">
+<span class="text-purple-400">---</span>
+<span class="text-blue-400">description</span>: Code review de calidad
+<span class="text-blue-400">allowed-tools</span>: Read, Grep, Glob
+<span class="text-blue-400">argument-hint</span>: [archivo o directorio]
+<span class="text-purple-400">---</span>
+
+<span class="text-green-400"># Workflow</span>
+1. Leer el archivo o directorio
+2. Analizar calidad del código
+3. Identificar problemas
+4. Sugerir mejoras
+
+<span class="text-green-400"># Instructions</span>
+- Buscar code smells
+- Verificar naming conventions
+- Revisar complejidad ciclomática
+
+<span class="text-green-400"># Report</span>
+Formato estructurado con secciones</pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 10: Use Cases -->
+        <section class="step min-h-screen flex items-center px-6 hidden" data-step="10">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-12 slide-in">
+                    <span class="text-blue-400 font-semibold">PASO 10</span>
+                    <h2 class="text-4xl font-bold mt-2 mb-4">Casos de Uso Reales</h2>
+                    <p class="text-gray-300">Pipelines que puedes crear con DirectOS</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="glass rounded-2xl p-6">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-file-pdf text-red-400"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold">Analizar PDFs con IA</div>
+                                <div class="text-xs text-gray-400">Automático al subir archivo</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm mb-4 overflow-x-auto pb-2">
+                            <span class="px-2 py-1 bg-green-500/20 text-green-400 rounded whitespace-nowrap">Trigger File</span>
+                            <i class="fa-solid fa-arrow-right text-gray-600"></i>
+                            <span class="px-2 py-1 bg-blue-500/20 text-blue-400 rounded whitespace-nowrap">PDF Parser</span>
+                            <i class="fa-solid fa-arrow-right text-gray-600"></i>
+                            <span class="px-2 py-1 bg-amber-500/20 text-amber-400 rounded whitespace-nowrap">Claude</span>
+                            <i class="fa-solid fa-arrow-right text-gray-600"></i>
+                            <span class="px-2 py-1 bg-orange-500/20 text-orange-400 rounded whitespace-nowrap">Output File</span>
+                        </div>
+                        <p class="text-sm text-gray-400">Watch de carpeta. Cada PDF nuevo se parsea, Claude lo resume, y se guarda.</p>
+                    </div>
+                    <div class="glass rounded-2xl p-6">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-microphone text-purple-400"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold">Transcribir Audio</div>
+                                <div class="text-xs text-gray-400">Reuniones a texto</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm mb-4 overflow-x-auto pb-2">
+                            <span class="px-2 py-1 bg-green-500/20 text-green-400 rounded whitespace-nowrap">Trigger File</span>
+                            <i class="fa-solid fa-arrow-right text-gray-600"></i>
+                            <span class="px-2 py-1 bg-blue-500/20 text-blue-400 rounded whitespace-nowrap">Whisper</span>
+                            <i class="fa-solid fa-arrow-right text-gray-600"></i>
+                            <span class="px-2 py-1 bg-amber-500/20 text-amber-400 rounded whitespace-nowrap">Claude</span>
+                            <i class="fa-solid fa-arrow-right text-gray-600"></i>
+                            <span class="px-2 py-1 bg-orange-500/20 text-orange-400 rounded whitespace-nowrap">Notify</span>
+                        </div>
+                        <p class="text-sm text-gray-400">Sube grabación, Whisper transcribe, Claude extrae puntos clave.</p>
+                    </div>
+                    <div class="glass rounded-2xl p-6">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-spider text-cyan-400"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold">Web Scraping Inteligente</div>
+                                <div class="text-xs text-gray-400">Resumen diario a Slack</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm mb-4 overflow-x-auto pb-2">
+                            <span class="px-2 py-1 bg-green-500/20 text-green-400 rounded whitespace-nowrap">Trigger Cron</span>
+                            <i class="fa-solid fa-arrow-right text-gray-600"></i>
+                            <span class="px-2 py-1 bg-blue-500/20 text-blue-400 rounded whitespace-nowrap">Scraper</span>
+                            <i class="fa-solid fa-arrow-right text-gray-600"></i>
+                            <span class="px-2 py-1 bg-amber-500/20 text-amber-400 rounded whitespace-nowrap">Claude</span>
+                            <i class="fa-solid fa-arrow-right text-gray-600"></i>
+                            <span class="px-2 py-1 bg-orange-500/20 text-orange-400 rounded whitespace-nowrap">Slack</span>
+                        </div>
+                        <p class="text-sm text-gray-400">Cada mañana scrapea noticias, Claude analiza, envía a Slack.</p>
+                    </div>
+                    <div class="glass rounded-2xl p-6">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-repeat text-yellow-400"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold">Rate-Limited API Calls</div>
+                                <div class="text-xs text-gray-400">Respetar límites</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm mb-4 overflow-x-auto pb-2">
+                            <span class="px-2 py-1 bg-green-500/20 text-green-400 rounded whitespace-nowrap">Trigger Manual</span>
+                            <i class="fa-solid fa-arrow-right text-gray-600"></i>
+                            <span class="px-2 py-1 bg-purple-500/20 text-purple-400 rounded whitespace-nowrap">Loop 10x</span>
+                            <i class="fa-solid fa-arrow-right text-gray-600"></i>
+                            <span class="px-2 py-1 bg-blue-500/20 text-blue-400 rounded whitespace-nowrap">API Call</span>
+                            <i class="fa-solid fa-arrow-right text-gray-600"></i>
+                            <span class="px-2 py-1 bg-purple-500/20 text-purple-400 rounded whitespace-nowrap">Delay 1s</span>
+                        </div>
+                        <p class="text-sm text-gray-400">10 llamadas con 1 segundo entre cada una para no saturar.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 11: Finish -->
+        <section class="step min-h-screen flex items-center justify-center px-6 hidden" data-step="11">
+            <div class="max-w-4xl mx-auto text-center slide-in">
+                <div class="w-24 h-24 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-8">
+                    <i class="fa-solid fa-check text-4xl"></i>
+                </div>
+                <h1 class="text-5xl font-bold mb-6">Tutorial Completado</h1>
+                <p class="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+                    Ya conoces los fundamentos de DirectOS. Ahora es tu turno de crear pipelines increíbles.
+                </p>
+
+                <div class="grid md:grid-cols-3 gap-6 mb-12">
+                    <div class="glass rounded-xl p-6 text-center">
+                        <i class="fa-solid fa-rocket text-3xl text-blue-400 mb-4"></i>
+                        <div class="font-bold mb-2">Siguiente paso</div>
+                        <p class="text-sm text-gray-400">Crea tu primer pipeline real con Claude CLI</p>
+                    </div>
+                    <div class="glass rounded-xl p-6 text-center">
+                        <i class="fa-solid fa-book text-3xl text-purple-400 mb-4"></i>
+                        <div class="font-bold mb-2">Documentación</div>
+                        <p class="text-sm text-gray-400">Revisa TUTORIAL.md para referencia</p>
+                    </div>
+                    <div class="glass rounded-xl p-6 text-center">
+                        <i class="fa-solid fa-lightbulb text-3xl text-amber-400 mb-4"></i>
+                        <div class="font-bold mb-2">Explora</div>
+                        <p class="text-sm text-gray-400">Prueba los 35+ nodos disponibles</p>
+                    </div>
+                </div>
+
+                <a href="index.html" class="inline-block bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 px-8 py-4 rounded-xl font-semibold text-lg transition transform hover:scale-105">
+                    Abrir DirectOS <i class="fa-solid fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <!-- Navigation Buttons -->
+    <footer class="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40">
+        <div class="glass rounded-full px-6 py-3 flex items-center gap-4">
+            <button onclick="prevStep()" id="prev-btn" class="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <i class="fa-solid fa-arrow-left mr-2"></i> Anterior
+            </button>
+            <div class="flex gap-2" id="step-dots">
+            </div>
+            <button onclick="nextStep()" id="next-btn" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 transition">
+                Siguiente <i class="fa-solid fa-arrow-right ml-2"></i>
+            </button>
+        </div>
+    </footer>
+
+    <script>
+        let currentStep = 0;
+        const totalSteps = 12;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            createNavDots();
+            updateUI();
+        });
+
+        function createNavDots() {
+            const navDots = document.getElementById('nav-dots');
+            const stepDots = document.getElementById('step-dots');
+
+            for (let i = 0; i < totalSteps; i++) {
+                // Side nav
+                const dot = document.createElement('div');
+                dot.className = 'nav-dot';
+                dot.onclick = () => goToStep(i);
+                navDots.appendChild(dot);
+
+                // Bottom nav
+                const smallDot = document.createElement('div');
+                smallDot.className = 'w-2 h-2 rounded-full bg-slate-600 cursor-pointer hover:bg-slate-500 transition';
+                smallDot.onclick = () => goToStep(i);
+                stepDots.appendChild(smallDot);
+            }
+        }
+
+        function updateUI() {
+            // Update steps visibility
+            document.querySelectorAll('.step').forEach((step, i) => {
+                step.classList.toggle('hidden', i !== currentStep);
+            });
+
+            // Update nav dots
+            document.querySelectorAll('#nav-dots .nav-dot').forEach((dot, i) => {
+                dot.classList.remove('active', 'completed');
+                if (i === currentStep) dot.classList.add('active');
+                else if (i < currentStep) dot.classList.add('completed');
+            });
+
+            document.querySelectorAll('#step-dots > div').forEach((dot, i) => {
+                dot.className = 'w-2 h-2 rounded-full cursor-pointer hover:bg-slate-500 transition';
+                if (i === currentStep) dot.classList.add('bg-blue-500');
+                else if (i < currentStep) dot.classList.add('bg-green-500');
+                else dot.classList.add('bg-slate-600');
+            });
+
+            // Update progress
+            document.getElementById('current-step').textContent = currentStep + 1;
+            document.getElementById('total-steps').textContent = totalSteps;
+            document.getElementById('progress-bar').style.width = `${((currentStep + 1) / totalSteps) * 100}%`;
+
+            // Update buttons
+            document.getElementById('prev-btn').disabled = currentStep === 0;
+            document.getElementById('next-btn').textContent = currentStep === totalSteps - 1 ? 'Finalizar' : 'Siguiente';
+            if (currentStep < totalSteps - 1) {
+                document.getElementById('next-btn').innerHTML = 'Siguiente <i class="fa-solid fa-arrow-right ml-2"></i>';
+            } else {
+                document.getElementById('next-btn').innerHTML = '<i class="fa-solid fa-check ml-2"></i> Finalizar';
+            }
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                updateUI();
+            } else {
+                window.location.href = 'index.html';
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateUI();
+            }
+        }
+
+        function goToStep(step) {
+            currentStep = step;
+            updateUI();
+        }
+
+        function highlightFeature(el) {
+            document.querySelectorAll('.feature-card').forEach(card => {
+                card.style.transform = '';
+                card.style.borderColor = '';
+            });
+            el.style.transform = 'scale(1.05)';
+            el.style.borderColor = '#3b82f6';
+        }
+
+        // Pipeline demo animation
+        let demoRunning = false;
+
+        async function animatePipelineDemo() {
+            if (demoRunning) return;
+            demoRunning = true;
+
+            const log = document.getElementById('demo-log');
+            log.innerHTML = '';
+
+            // Reset
+            resetPipelineDemo();
+            await sleep(300);
+
+            // Step 1: Show trigger
+            document.getElementById('demo-node-1').style.opacity = '1';
+            document.getElementById('demo-node-1').style.boxShadow = '0 0 20px rgba(34, 197, 94, 0.5)';
+            addDemoLog('> Ejecutando Trigger Manual...');
+            await sleep(800);
+
+            // Arrow 1
+            document.getElementById('demo-arrow-1').style.opacity = '1';
+            await sleep(300);
+
+            // Step 2: Claude
+            document.getElementById('demo-node-1').style.boxShadow = '';
+            document.getElementById('demo-node-2').style.opacity = '1';
+            document.getElementById('demo-node-2').style.boxShadow = '0 0 20px rgba(245, 158, 11, 0.5)';
+            addDemoLog('> Llamando a Claude CLI...');
+            await sleep(1500);
+            addDemoLog('  Claude: "Hola, soy Claude. ¿En qué puedo ayudarte?"');
+            await sleep(500);
+
+            // Arrow 2
+            document.getElementById('demo-arrow-2').style.opacity = '1';
+            await sleep(300);
+
+            // Step 3: Output
+            document.getElementById('demo-node-2').style.boxShadow = '';
+            document.getElementById('demo-node-3').style.opacity = '1';
+            document.getElementById('demo-node-3').style.boxShadow = '0 0 20px rgba(249, 115, 22, 0.5)';
+            addDemoLog('> Enviando notificación...');
+            await sleep(800);
+
+            // Done
+            document.getElementById('demo-node-3').style.boxShadow = '';
+            addDemoLog('');
+            addDemoLog('✓ Pipeline completado exitosamente');
+
+            demoRunning = false;
+        }
+
+        function resetPipelineDemo() {
+            ['demo-node-1', 'demo-node-2', 'demo-node-3'].forEach(id => {
+                document.getElementById(id).style.opacity = '0.3';
+                document.getElementById(id).style.boxShadow = '';
+            });
+            ['demo-arrow-1', 'demo-arrow-2'].forEach(id => {
+                document.getElementById(id).style.opacity = '0';
+            });
+            document.getElementById('demo-log').innerHTML = '<div class="text-gray-500">// Click en "Simular Pipeline" para ver la ejecución</div>';
+        }
+
+        function addDemoLog(text) {
+            const log = document.getElementById('demo-log');
+            const line = document.createElement('div');
+            line.textContent = text;
+            line.className = text.includes('✓') ? 'text-green-400' : (text.includes('Claude:') ? 'text-amber-400' : '');
+            log.appendChild(line);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                nextStep();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevStep();
+            }
+        });
+    </script>
+</body>
+</html>

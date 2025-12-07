@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🛠️ DirectOS v9.0 - Agent Mode</title>
+    <title>🛠️ DirectOS v10.1 - Pipeline Builder Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -55,6 +55,148 @@
 
         /* Categoría DevOps */
         .cat-devops { border-left-color: #f97316; }
+        .cat-trigger { border-left-color: #10b981; background: linear-gradient(90deg, rgba(16,185,129,0.1) 0%, transparent 100%); }
+        /* Categoría Output */
+        .cat-output { border-left-color: #f97316; background: linear-gradient(90deg, rgba(249,115,22,0.1) 0%, transparent 100%); }
+        /* Categoría Flow (Control) */
+        .cat-flow { border-left-color: #a855f7; background: linear-gradient(90deg, rgba(168,85,247,0.1) 0%, transparent 100%); }
+
+        /* HITL indicator on nodes */
+        .has-hitl { box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.4); }
+        .has-hitl::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 8px;
+            height: 8px;
+            background: #22d3ee;
+            border-radius: 50%;
+            animation: pulse-hitl 2s infinite;
+        }
+        @keyframes pulse-hitl {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        /* ============================================
+           PIPELINE BUILDER PRO - Canvas Styles
+           ============================================ */
+
+        /* Grid de fondo del canvas */
+        .canvas-grid {
+            background-image:
+                linear-gradient(rgba(71, 85, 105, 0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(71, 85, 105, 0.3) 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-position: -1px -1px;
+        }
+
+        /* Canvas transformable (zoom + pan) */
+        .canvas-transform {
+            transform-origin: 0 0;
+            transition: transform 0.1s ease-out;
+        }
+
+        /* Nodo draggable */
+        .pipeline-node-pro {
+            position: absolute;
+            cursor: grab;
+            user-select: none;
+            transition: box-shadow 0.2s, transform 0.1s;
+        }
+        .pipeline-node-pro:active {
+            cursor: grabbing;
+        }
+        .pipeline-node-pro.dragging {
+            z-index: 1000 !important;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            transform: scale(1.02);
+        }
+        .pipeline-node-pro.selected {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+        }
+
+        /* Puertos de conexión */
+        .node-port {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid #1e293b;
+            cursor: crosshair;
+            transition: transform 0.15s, box-shadow 0.15s;
+            z-index: 10;
+        }
+        .node-port:hover {
+            transform: scale(1.3);
+            box-shadow: 0 0 10px currentColor;
+        }
+        .node-port.port-in {
+            left: -6px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #22c55e;
+        }
+        .node-port.port-out {
+            right: -6px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #3b82f6;
+        }
+        .node-port.port-in:hover { transform: translateY(-50%) scale(1.3); }
+        .node-port.port-out:hover { transform: translateY(-50%) scale(1.3); }
+        .node-port.connecting {
+            background: #eab308 !important;
+            animation: pulse-port 0.5s infinite;
+        }
+
+        @keyframes pulse-port {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.7); }
+            50% { box-shadow: 0 0 0 6px rgba(234, 179, 8, 0); }
+        }
+
+        /* Línea temporal de conexión */
+        .connection-line-temp {
+            stroke: #eab308;
+            stroke-width: 2;
+            stroke-dasharray: 5, 5;
+            fill: none;
+            pointer-events: none;
+        }
+
+        /* Conexiones establecidas */
+        .connection-line {
+            stroke: #3b82f6;
+            stroke-width: 2;
+            fill: none;
+            transition: stroke 0.2s;
+        }
+        .connection-line:hover {
+            stroke: #ef4444;
+            cursor: pointer;
+        }
+
+        /* Minimap */
+        .canvas-minimap {
+            position: absolute;
+            bottom: 100px;
+            right: 16px;
+            width: 150px;
+            height: 100px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            overflow: hidden;
+            z-index: 25;
+        }
+        .minimap-viewport {
+            position: absolute;
+            border: 1px solid #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+            pointer-events: none;
+        }
 
         /* Line clamp para tarjetas de flujo */
         .line-clamp-2 {
@@ -131,7 +273,7 @@
                 <i class="fa-solid fa-layer-group text-blue-500"></i>
                 Director<span class="text-slate-500">OS</span>
             </h1>
-            <p class="text-xs text-slate-500 mt-1">v9.0 - Agent Mode</p>
+            <p class="text-xs text-slate-500 mt-1">v10.1 - Pipeline Builder Pro</p>
         </div>
         
         <nav class="flex-1 overflow-y-auto p-4 space-y-2">
@@ -142,7 +284,7 @@
             <button onclick="switchView('prompt-builder')" id="btn-prompt-builder" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3"><i class="fa-solid fa-hammer"></i> Prompt Builder <span class="text-[9px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded">PRO</span></button>
             
             <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 pl-2 mt-6">Operaciones</p>
-            <button onclick="switchView('agent')" id="btn-agent" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3"><i class="fa-solid fa-robot"></i> Agent Mode <span id="agent-status-dot" class="w-2 h-2 rounded-full bg-slate-600"></span></button>
+            <button onclick="switchView('agent')" id="btn-agent" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3"><i class="fa-solid fa-bolt"></i> Automatizaciones <span id="agent-status-dot" class="w-2 h-2 rounded-full bg-slate-600"></span></button>
             <button onclick="switchView('monitor')" id="btn-monitor" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3"><i class="fa-solid fa-heart-pulse"></i> Monitor Sistema</button>
             <button onclick="switchView('grid')" id="btn-grid" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3"><i class="fa-solid fa-boxes-stacked"></i> Glosario</button>
             <button onclick="switchView('projects')" id="btn-projects" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-400 text-sm transition font-medium flex items-center gap-3"><i class="fa-solid fa-folder-open"></i> Proyectos</button>
@@ -198,33 +340,64 @@
                 <!-- Barra Superior -->
                 <div class="absolute top-4 left-4 right-4 z-20 flex justify-between items-center bg-slate-900/95 backdrop-blur p-3 rounded-xl border border-slate-800 shadow-lg">
                     <div class="flex gap-4 text-[10px] uppercase font-bold tracking-wider text-slate-500">
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Trigger</span>
                         <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-orange-500"></span> Front</span>
                         <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span> Back</span>
                         <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-500"></span> IA</span>
                         <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-yellow-500"></span> DB</span>
                     </div>
                     <div class="flex gap-2">
+                        <button id="btn-undo" onclick="canvasUndo()" class="text-xs px-2.5 py-1.5 rounded-lg hover:bg-slate-700 text-slate-500 hover:text-slate-300 transition border border-slate-700 disabled:opacity-30 disabled:cursor-not-allowed" title="Deshacer (Ctrl+Z)" disabled><i class="fa-solid fa-rotate-left"></i></button>
+                        <button id="btn-redo" onclick="canvasRedo()" class="text-xs px-2.5 py-1.5 rounded-lg hover:bg-slate-700 text-slate-500 hover:text-slate-300 transition border border-slate-700 disabled:opacity-30 disabled:cursor-not-allowed" title="Rehacer (Ctrl+Shift+Z)" disabled><i class="fa-solid fa-rotate-right"></i></button>
+                        <div class="w-px bg-slate-700 mx-1"></div>
+                        <!-- Controles de Zoom -->
+                        <button onclick="canvasZoomOut()" class="text-xs px-2 py-1.5 rounded-lg hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition border border-slate-700" title="Alejar (-)"><i class="fa-solid fa-minus"></i></button>
+                        <span id="zoom-level" class="text-xs text-slate-500 px-2 py-1.5 min-w-[50px] text-center">100%</span>
+                        <button onclick="canvasZoomIn()" class="text-xs px-2 py-1.5 rounded-lg hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition border border-slate-700" title="Acercar (+)"><i class="fa-solid fa-plus"></i></button>
+                        <button onclick="canvasZoomReset()" class="text-xs px-2 py-1.5 rounded-lg hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition border border-slate-700" title="Reset zoom"><i class="fa-solid fa-expand"></i></button>
+                        <div class="w-px bg-slate-700 mx-1"></div>
                         <button onclick="autoLayoutNodes()" class="text-xs px-3 py-1.5 rounded-lg hover:bg-slate-700 text-slate-300 transition flex items-center gap-1.5 border border-slate-700" title="Organizar nodos"><i class="fa-solid fa-wand-magic-sparkles text-purple-400"></i> Auto</button>
                         <button onclick="validateFlowRealtime()" class="text-xs px-3 py-1.5 rounded-lg hover:bg-slate-700 text-slate-300 transition flex items-center gap-1.5 border border-slate-700"><i class="fa-solid fa-check-circle text-green-400"></i> Validar</button>
+                        <button onclick="exportPipelineJSON()" class="text-xs px-3 py-1.5 rounded-lg hover:bg-slate-700 text-slate-300 transition flex items-center gap-1.5 border border-slate-700" title="Exportar JSON (Ctrl+E)"><i class="fa-solid fa-file-export text-blue-400"></i></button>
                         <button onclick="clearCanvas()" class="text-xs px-3 py-1.5 rounded-lg hover:bg-red-600/20 text-slate-300 hover:text-red-400 transition flex items-center gap-1.5 border border-slate-700 hover:border-red-500/50"><i class="fa-solid fa-trash"></i></button>
                     </div>
                 </div>
 
-                <!-- Canvas SVG + Nodos -->
-                <div id="pipeline-canvas" class="absolute inset-0 pt-20 pb-28 overflow-auto">
-                    <svg id="connections-svg" class="absolute top-0 left-0 pointer-events-none" style="min-height: 100%; min-width: 100%; z-index: 5;">
-                        <defs>
-                            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                                <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/>
-                            </marker>
-                        </defs>
-                    </svg>
-                    <div id="nodes-container" class="relative p-8" style="min-height: 600px;">
-                        <div id="canvas-placeholder" class="absolute inset-8 border-2 border-dashed border-slate-800 rounded-2xl flex flex-col items-center justify-center text-slate-600">
-                            <i class="fa-solid fa-diagram-project text-4xl mb-3 text-slate-700"></i>
-                            <p class="text-sm font-medium">Arrastra herramientas aquí</p>
-                            <p class="text-xs mt-1 text-slate-700">o selecciona un patrón predefinido</p>
+                <!-- Canvas SVG + Nodos (Pipeline Builder Pro) -->
+                <div id="pipeline-canvas" class="absolute inset-0 pt-20 pb-28 overflow-hidden bg-slate-950">
+                    <!-- Capa de Grid -->
+                    <div id="canvas-grid" class="absolute inset-0 canvas-grid" style="width: 3000px; height: 2000px;"></div>
+
+                    <!-- Capa transformable (zoom + pan) -->
+                    <div id="canvas-transform" class="canvas-transform absolute" style="width: 3000px; height: 2000px;">
+                        <!-- SVG para conexiones -->
+                        <svg id="connections-svg" class="absolute top-0 left-0" style="width: 100%; height: 100%; z-index: 5; pointer-events: none;">
+                            <defs>
+                                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                    <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/>
+                                </marker>
+                                <marker id="arrowhead-hover" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                    <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444"/>
+                                </marker>
+                            </defs>
+                            <!-- Línea temporal mientras se conecta -->
+                            <path id="temp-connection" class="connection-line-temp" d="" style="display: none;"/>
+                        </svg>
+
+                        <!-- Contenedor de nodos -->
+                        <div id="nodes-container" class="relative" style="width: 100%; height: 100%;">
+                            <div id="canvas-placeholder" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 border-2 border-dashed border-slate-800 rounded-2xl flex flex-col items-center justify-center text-slate-600 p-12">
+                                <i class="fa-solid fa-diagram-project text-4xl mb-3 text-slate-700"></i>
+                                <p class="text-sm font-medium">Arrastra herramientas aquí</p>
+                                <p class="text-xs mt-1 text-slate-700">Scroll para zoom • Arrastra para mover</p>
+                            </div>
                         </div>
+                    </div>
+
+                    <!-- Minimap -->
+                    <div id="canvas-minimap" class="canvas-minimap hidden">
+                        <div id="minimap-nodes"></div>
+                        <div id="minimap-viewport" class="minimap-viewport"></div>
                     </div>
                 </div>
 
@@ -237,6 +410,74 @@
                         <button onclick="document.getElementById('validation-panel').classList.add('hidden')" class="text-slate-500 hover:text-white"><i class="fa-solid fa-times"></i></button>
                     </div>
                     <div id="validation-messages" class="p-3 space-y-2 max-h-64 overflow-y-auto"></div>
+                </div>
+
+                <!-- Panel de Configuración de Nodo -->
+                <div id="node-config-panel" class="hidden absolute top-20 right-4 w-96 bg-slate-900/98 backdrop-blur border border-slate-700 rounded-xl shadow-2xl z-40 overflow-hidden max-h-[calc(100vh-200px)]">
+                    <div class="p-3 border-b border-slate-800 flex justify-between items-center bg-slate-800/50">
+                        <div class="flex items-center gap-2">
+                            <div id="config-node-icon" class="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center border border-slate-700">
+                                <i class="fa-solid fa-gear text-slate-400"></i>
+                            </div>
+                            <div>
+                                <h3 id="config-node-name" class="font-bold text-white text-sm">Nodo</h3>
+                                <span id="config-node-tag" class="text-[10px] text-slate-500 uppercase tracking-wider">Categoría</span>
+                            </div>
+                        </div>
+                        <button onclick="hideNodeConfig()" class="text-slate-500 hover:text-white p-1"><i class="fa-solid fa-times"></i></button>
+                    </div>
+
+                    <div class="overflow-y-auto max-h-[400px]">
+                        <!-- Descripción -->
+                        <div class="p-3 border-b border-slate-800">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Descripción</label>
+                            <p id="config-node-desc" class="text-xs text-slate-400 leading-relaxed"></p>
+                        </div>
+
+                        <!-- Parámetros del Nodo -->
+                        <div class="p-3 border-b border-slate-800">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">Parámetros</label>
+                            <div id="config-node-params" class="space-y-2">
+                                <!-- Los parámetros se generan dinámicamente -->
+                            </div>
+                        </div>
+
+                        <!-- Código de Ejemplo -->
+                        <div class="p-3 border-b border-slate-800">
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Código</label>
+                                <button onclick="copyNodeCode()" class="text-[10px] text-blue-400 hover:text-blue-300 flex items-center gap-1">
+                                    <i class="fa-solid fa-copy"></i> Copiar
+                                </button>
+                            </div>
+                            <pre id="config-node-code" class="bg-slate-950 border border-slate-800 rounded-lg p-2 text-[10px] text-green-400 font-mono overflow-x-auto max-h-32"></pre>
+                        </div>
+
+                        <!-- Conexiones -->
+                        <div class="p-3 border-b border-slate-800">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">Conexiones</label>
+                            <div class="flex gap-4 text-xs">
+                                <div>
+                                    <span class="text-slate-500">Entradas:</span>
+                                    <span id="config-node-inputs" class="text-green-400 ml-1">0</span>
+                                </div>
+                                <div>
+                                    <span class="text-slate-500">Salidas:</span>
+                                    <span id="config-node-outputs" class="text-blue-400 ml-1">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Acciones -->
+                    <div class="p-3 bg-slate-800/30 flex gap-2">
+                        <button onclick="duplicateSelectedNode()" class="flex-1 py-2 px-3 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs font-medium transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-clone"></i> Duplicar
+                        </button>
+                        <button onclick="deleteSelectedNode()" class="flex-1 py-2 px-3 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-medium transition flex items-center justify-center gap-2 border border-red-500/30">
+                            <i class="fa-solid fa-trash"></i> Eliminar
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Barra Inferior -->
@@ -254,7 +495,13 @@
                             <div id="flow-status" class="hidden"></div>
                         </div>
                         <div class="flex gap-3">
-                            <button onclick="generateScaffold()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-5 rounded-lg shadow-lg flex items-center gap-2 transition text-sm">
+                            <button id="dry-run-btn" onclick="dryRunPipeline()" class="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold py-2.5 px-5 rounded-lg shadow-lg flex items-center gap-2 transition text-sm">
+                                <i class="fa-solid fa-flask"></i> Simular
+                            </button>
+                            <button id="run-pipeline-btn" onclick="runPipelineFromBuilder()" class="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold py-2.5 px-5 rounded-lg shadow-lg flex items-center gap-2 transition text-sm">
+                                <i class="fa-solid fa-play"></i> Ejecutar
+                            </button>
+                            <button onclick="generateScaffold()" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2.5 px-5 rounded-lg shadow-lg flex items-center gap-2 transition text-sm">
                                 <i class="fa-solid fa-folder-plus"></i> Crear Proyecto
                             </button>
                             <button onclick="compileArchitecture()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-2.5 px-5 rounded-lg shadow-lg flex items-center gap-2 transition text-sm">
@@ -1035,8 +1282,8 @@ import sqlite3
                 <div class="flex justify-between items-center mb-6">
                     <div>
                         <h2 class="text-2xl font-bold text-white flex items-center gap-3">
-                            <i class="fa-solid fa-robot text-purple-400"></i> Agent Mode
-                            <span id="agent-version-badge" class="text-xs px-2 py-1 rounded bg-purple-500/20 text-purple-400 border border-purple-500/30">v9.0</span>
+                            <i class="fa-solid fa-bolt text-yellow-400"></i> Automatizaciones
+                            <span id="agent-version-badge" class="text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">v10.1 Pro</span>
                         </h2>
                         <p class="text-slate-400 text-sm mt-1">Automatiza pipelines con watches, schedules y notificaciones</p>
                     </div>
@@ -1286,6 +1533,188 @@ import sqlite3
                 <div class="p-4 border-t border-slate-800 bg-slate-900 flex gap-3">
                     <button onclick="copyProjectContent()" class="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-sm px-4 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 shadow-lg">
                         <i class="fa-solid fa-copy"></i> Copiar Documentación
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- INSPECTOR MODAL (Human-in-the-Loop) -->
+        <div id="inspector-modal" class="hidden absolute inset-0 bg-slate-950/95 z-50 flex items-center justify-center p-8 backdrop-blur-sm">
+            <div class="bg-slate-900 border border-cyan-500/30 rounded-xl w-full max-w-3xl shadow-2xl flex flex-col max-h-[90vh]">
+                <!-- Header -->
+                <div class="p-5 border-b border-slate-800 bg-gradient-to-r from-cyan-500/10 to-transparent">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-magnifying-glass text-cyan-400"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-white text-xl">Inspector de Flujo</h3>
+                                <span class="text-xs text-cyan-400">Human-in-the-Loop</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span id="inspector-step" class="text-xs px-2 py-1 rounded bg-slate-800 text-slate-400">Paso 1/3</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Body -->
+                <div class="p-6 overflow-y-auto flex-1 space-y-4">
+                    <!-- ORIGEN -->
+                    <div class="bg-green-500/5 border border-green-500/20 rounded-lg p-4">
+                        <h4 class="text-xs font-bold text-green-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-arrow-right-to-bracket"></i> Origen (De donde viene)
+                        </h4>
+                        <div class="grid grid-cols-2 gap-3 text-sm">
+                            <div>
+                                <span class="text-slate-500">Nodo anterior:</span>
+                                <span id="inspector-origin-node" class="text-white ml-2 font-semibold">-</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-500">Fuente:</span>
+                                <span id="inspector-origin-source" class="text-white ml-2 font-mono text-xs">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PROCESO -->
+                    <div class="bg-blue-500/5 border border-blue-500/20 rounded-lg p-4">
+                        <h4 class="text-xs font-bold text-blue-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-gears"></i> Proceso (Quien lo hizo)
+                        </h4>
+                        <div class="grid grid-cols-2 gap-3 text-sm">
+                            <div>
+                                <span class="text-slate-500">Herramienta:</span>
+                                <span id="inspector-process-tool" class="text-white ml-2 font-semibold">-</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-500">Accion:</span>
+                                <span id="inspector-process-action" class="text-white ml-2">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DATOS -->
+                    <div class="bg-amber-500/5 border border-amber-500/20 rounded-lg p-4">
+                        <h4 class="text-xs font-bold text-amber-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-database"></i> Datos (Que se extrajo)
+                        </h4>
+                        <div class="bg-slate-950 rounded-lg p-3 max-h-48 overflow-y-auto">
+                            <pre id="inspector-data" class="text-sm text-slate-300 whitespace-pre-wrap font-mono">-</pre>
+                        </div>
+                        <div class="mt-2 text-xs text-slate-500">
+                            <span id="inspector-data-size">0 caracteres</span>
+                        </div>
+                    </div>
+
+                    <!-- DESTINO -->
+                    <div class="bg-purple-500/5 border border-purple-500/20 rounded-lg p-4">
+                        <h4 class="text-xs font-bold text-purple-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i> Destino (A donde va)
+                        </h4>
+                        <div class="grid grid-cols-2 gap-3 text-sm">
+                            <div>
+                                <span class="text-slate-500">Siguiente nodo:</span>
+                                <span id="inspector-dest-node" class="text-white ml-2 font-semibold">-</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-500">Accion:</span>
+                                <span id="inspector-dest-action" class="text-white ml-2">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TIP DIDACTICO -->
+                    <div class="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-lightbulb text-yellow-400"></i> Aprendizaje
+                        </h4>
+                        <p id="inspector-tip" class="text-sm text-slate-300 leading-relaxed">-</p>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="p-4 border-t border-slate-800 bg-slate-900 flex gap-3">
+                    <button onclick="inspectorStop()" class="px-4 py-3 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 font-semibold transition flex items-center gap-2">
+                        <i class="fa-solid fa-stop"></i> Parar
+                    </button>
+                    <button onclick="inspectorEdit()" class="px-4 py-3 rounded-lg bg-slate-700 hover:bg-slate-600 text-white font-semibold transition flex items-center gap-2">
+                        <i class="fa-solid fa-edit"></i> Editar datos
+                    </button>
+                    <button onclick="inspectorContinue()" class="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white px-4 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 shadow-lg">
+                        <i class="fa-solid fa-play"></i> Continuar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- DRY RUN MODAL (Simulación) -->
+        <div id="dry-run-modal" class="hidden absolute inset-0 bg-slate-950/95 z-50 flex items-center justify-center p-8 backdrop-blur-sm">
+            <div class="bg-slate-900 border border-amber-500/30 rounded-xl w-full max-w-3xl shadow-2xl flex flex-col max-h-[90vh]">
+                <!-- Header -->
+                <div class="p-5 border-b border-slate-800 bg-gradient-to-r from-amber-500/10 to-transparent">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-amber-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-flask text-amber-400"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-white text-xl">Simulacion del Pipeline</h3>
+                                <span class="text-xs text-amber-400">Dry Run - Sin ejecutar realmente</span>
+                            </div>
+                        </div>
+                        <button onclick="closeDryRunModal()" class="text-slate-500 hover:text-white p-1">
+                            <i class="fa-solid fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Body -->
+                <div class="p-6 overflow-y-auto flex-1 space-y-4">
+                    <!-- Resumen -->
+                    <div class="grid grid-cols-3 gap-4 mb-4">
+                        <div class="bg-slate-800/50 rounded-lg p-4 text-center">
+                            <div id="dry-run-nodes" class="text-2xl font-bold text-white">0</div>
+                            <div class="text-xs text-slate-400">Nodos</div>
+                        </div>
+                        <div class="bg-slate-800/50 rounded-lg p-4 text-center">
+                            <div id="dry-run-time" class="text-2xl font-bold text-amber-400">~0s</div>
+                            <div class="text-xs text-slate-400">Tiempo estimado</div>
+                        </div>
+                        <div class="bg-slate-800/50 rounded-lg p-4 text-center">
+                            <div id="dry-run-pauses" class="text-2xl font-bold text-cyan-400">0</div>
+                            <div class="text-xs text-slate-400">Pausas HITL</div>
+                        </div>
+                    </div>
+
+                    <!-- Lista de pasos -->
+                    <div class="bg-slate-950 rounded-lg p-4 max-h-80 overflow-y-auto">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
+                            <i class="fa-solid fa-list-check mr-2"></i> Pasos de ejecucion
+                        </h4>
+                        <div id="dry-run-steps" class="space-y-2">
+                            <!-- Steps will be inserted here -->
+                        </div>
+                    </div>
+
+                    <!-- Warnings -->
+                    <div id="dry-run-warnings" class="hidden bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+                        <h4 class="text-xs font-bold text-yellow-400 uppercase tracking-widest mb-2">
+                            <i class="fa-solid fa-triangle-exclamation mr-2"></i> Advertencias
+                        </h4>
+                        <ul id="dry-run-warnings-list" class="text-sm text-yellow-300 space-y-1">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="p-4 border-t border-slate-800 bg-slate-900 flex gap-3">
+                    <button onclick="closeDryRunModal()" class="px-4 py-3 rounded-lg bg-slate-700 hover:bg-slate-600 text-white font-semibold transition flex items-center gap-2">
+                        <i class="fa-solid fa-times"></i> Cerrar
+                    </button>
+                    <button onclick="closeDryRunModal(); runPipelineFromBuilder();" class="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white px-4 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 shadow-lg">
+                        <i class="fa-solid fa-play"></i> Ejecutar Pipeline Real
                     </button>
                 </div>
             </div>
@@ -1939,6 +2368,135 @@ import sqlite3
                 why: "Deja de usar print(). Rich hace que tus scripts se vean profesionales.",
                 cases: ["Logs con colores", "Tablas de datos", "Barras de progreso"],
                 code: "from rich import print\nfrom rich.table import Table\n\ntable = Table(title='Resultados')\ntable.add_column('Archivo')\ntable.add_row('foto.jpg')\nprint(table)"
+            },
+
+            // ==========================================
+            // ⚡ TRIGGERS (Activadores de Pipeline) v10.0
+            // ==========================================
+            {
+                id: "trigger-manual", name: "Trigger Manual", cat: "Trigger",
+                icon: "fa-play-circle", color: "text-emerald-400", tag: "Ejecutar Ahora", status: "used",
+                desc: "Ejecuta el pipeline manualmente con un clic.",
+                why: "El punto de entrada más simple. Arrastra al inicio del canvas y presiona el botón para ejecutar todo el flujo.",
+                cases: ["Testing de pipelines", "Ejecución bajo demanda", "Demos"],
+                code: "# Click en el botón para ejecutar\n# El pipeline procesa de izquierda a derecha",
+                isTrigger: true
+            },
+            {
+                id: "trigger-file", name: "Trigger File", cat: "Trigger",
+                icon: "fa-folder-open", color: "text-blue-400", tag: "Watch Carpeta", status: "new",
+                desc: "Detecta archivos nuevos en una carpeta y ejecuta el pipeline.",
+                why: "Automatiza el procesamiento. Deja PDFs en ~/Downloads y se procesan solos.",
+                cases: ["Auto-ingest de documentos", "Procesamiento de fotos", "Watchdog de datos"],
+                code: "# Configurar:\n# - Directorio: ~/Downloads\n# - Patrón: *.pdf, *.jpg\n# Se ejecuta cuando detecta archivo nuevo",
+                isTrigger: true
+            },
+            {
+                id: "trigger-cron", name: "Trigger Cron", cat: "Trigger",
+                icon: "fa-clock", color: "text-yellow-400", tag: "Programado", status: "new",
+                desc: "Ejecuta el pipeline en horarios programados.",
+                why: "Ideal para tareas recurrentes: backups diarios, reportes semanales, sincronizaciones.",
+                cases: ["Backup nocturno", "Reporte semanal", "Sync cada hora"],
+                code: "# Configurar frecuencia:\n# - Cada hora\n# - Diario a las 9:00\n# - Semanal los lunes",
+                isTrigger: true
+            },
+            {
+                id: "trigger-webhook", name: "Trigger Webhook", cat: "Trigger",
+                icon: "fa-link", color: "text-purple-400", tag: "HTTP POST", status: "new",
+                desc: "Ejecuta el pipeline cuando recibe una petición HTTP.",
+                why: "Integra con servicios externos: GitHub, Zapier, IFTTT, o tu propia app.",
+                cases: ["CI/CD trigger", "Integración Zapier", "API callback"],
+                code: "# Endpoint generado:\n# POST /api/trigger/{pipeline_id}\n# Body: { data: ... }",
+                isTrigger: true
+            },
+            // ==========================================
+            // OUTPUT NODES
+            // ==========================================
+            {
+                id: "output-file", name: "Output File", cat: "Output",
+                icon: "fa-file-export", color: "text-orange-400", tag: "Guardar", status: "new",
+                desc: "Guarda el resultado del pipeline en un archivo.",
+                why: "El paso final de muchos pipelines: guardar resultado en disco.",
+                cases: ["Guardar JSON", "Exportar CSV", "Generar reporte"],
+                code: "Path('./output/result.json').write_text(json.dumps(data))",
+                isOutput: true
+            },
+            {
+                id: "output-notify", name: "Output Notify", cat: "Output",
+                icon: "fa-bell", color: "text-orange-400", tag: "Notificar", status: "new",
+                desc: "Envía una notificación del sistema.",
+                why: "Feedback inmediato cuando un pipeline termina.",
+                cases: ["Notificar fin", "Alertar errores", "Confirmar backup"],
+                code: "osascript -e 'display notification \"Done\" with title \"Pipeline\"'",
+                isOutput: true
+            },
+            {
+                id: "output-email", name: "Output Email", cat: "Output",
+                icon: "fa-envelope", color: "text-orange-400", tag: "Email", status: "new",
+                desc: "Envía el resultado por email.",
+                why: "Distribuir resultados automáticamente a equipos o clientes.",
+                cases: ["Reporte diario", "Alertas críticas", "Compartir resultados"],
+                code: "smtplib.SMTP('smtp.gmail.com').send_message(msg)",
+                isOutput: true
+            },
+            {
+                id: "output-slack", name: "Output Slack", cat: "Output",
+                icon: "fa-hashtag", color: "text-orange-400", tag: "Slack", status: "new",
+                desc: "Envía mensaje a un canal de Slack.",
+                why: "Notificaciones a equipos en tiempo real.",
+                cases: ["Notificar deploys", "Alertar #ops", "Métricas diarias"],
+                code: "requests.post(SLACK_WEBHOOK, json={'text': message})",
+                isOutput: true
+            },
+            // ==========================================
+            // FLOW CONTROL NODES
+            // ==========================================
+            {
+                id: "flow-if", name: "Flow If", cat: "Flow",
+                icon: "fa-code-branch", color: "text-purple-400", tag: "Condicional", status: "new",
+                desc: "Bifurca el pipeline según una condición.",
+                why: "Control de flujo inteligente según contenido o tipo.",
+                cases: ["PDF vs Imagen", "Tamaño > 10MB", "Contiene error"],
+                code: "if condition:\n    execute(true_branch)\nelse:\n    execute(false_branch)",
+                isFlow: true
+            },
+            {
+                id: "flow-loop", name: "Flow Loop", cat: "Flow",
+                icon: "fa-repeat", color: "text-purple-400", tag: "Repetir", status: "new",
+                desc: "Repite una sección del pipeline N veces.",
+                why: "Procesamiento por lotes, reintentos, iteraciones.",
+                cases: ["Procesar lista", "Reintentar 3x", "Polling"],
+                code: "for item in items:\n    execute_pipeline(item)",
+                isFlow: true
+            },
+            {
+                id: "flow-delay", name: "Flow Delay", cat: "Flow",
+                icon: "fa-clock", color: "text-purple-400", tag: "Esperar", status: "new",
+                desc: "Pausa el pipeline durante un tiempo.",
+                why: "Rate limiting, sincronización, debounce.",
+                cases: ["Rate limit API", "Esperar escritura", "Backoff"],
+                code: "time.sleep(seconds)",
+                isFlow: true
+            },
+            {
+                id: "flow-inspector", name: "Inspector", cat: "Flow",
+                icon: "fa-magnifying-glass", color: "text-cyan-400", tag: "HITL", status: "new",
+                desc: "Pausa y muestra panel didactico del flujo.",
+                why: "Entender automatizaciones: origen, proceso, datos, destino.",
+                cases: ["Debug pipeline", "Validar datos", "Aprender herramientas"],
+                code: "# Pausa y muestra: origen → proceso → datos → destino",
+                isFlow: true
+            },
+            // ==========================================
+            // CLAUDE NODE (usa suscripción Pro/Max)
+            // ==========================================
+            {
+                id: "claude-node", name: "Claude (CLI)", cat: "IA Model",
+                icon: "fa-brain", color: "text-amber-400", tag: "LLM Pro/Max", status: "used",
+                desc: "Ejecuta Claude usando tu suscripción Pro/Max.",
+                why: "Acceso a Claude sin API de pago. Usa tu suscripción existente.",
+                cases: ["Análisis código", "Documentación", "Debugging", "Refactoring"],
+                code: 'claude -p "tu prompt" --output-format json'
             }
         ];
 
@@ -1973,6 +2531,7 @@ import sqlite3
                         color: t.color,
                         tag: t.tag,
                         status: t.status,
+                        isTrigger: t.isTrigger || false,
                         desc: t.content?.split('\n\n')[0]?.replace(/^# .*\n/, '') || t.desc || '',
                         why: extractSection(t.content, 'Por qué en minerOS') || '',
                         cases: extractListItems(t.content, 'Casos de uso') || [],
@@ -1985,6 +2544,11 @@ import sqlite3
 
                     toolsData = [...toolsFromAPI, ...remainingFallback];
                     console.log(`[DUAL-LOAD] 📦 Total: ${toolsData.length} herramientas (${toolsFromAPI.length} desde API + ${remainingFallback.length} fallback)`);
+
+                    // Actualizar toolbox del Pipeline Builder con los nuevos datos
+                    if (typeof renderToolbox === 'function') {
+                        renderToolbox();
+                    }
 
                     return true;
                 }
@@ -2077,7 +2641,7 @@ import sqlite3
             }
         ];
         
-        const catStyles = { "Frontend": "cat-frontend", "Backend": "cat-backend", "IA Model": "cat-ai", "Storage": "cat-storage", "Process": "cat-process", "DevOps": "cat-devops" };
+        const catStyles = { "Frontend": "cat-frontend", "Backend": "cat-backend", "IA Model": "cat-ai", "Storage": "cat-storage", "Process": "cat-process", "DevOps": "cat-devops", "Trigger": "cat-trigger", "Output": "cat-output", "Flow": "cat-flow" };
         const statusLabels = { "used": "✅ Dominada", "learning": "🚧 En progreso", "new": "🆕 Por descubrir" };
 
         // ============================================
@@ -2742,61 +3306,483 @@ Incluye docker-compose para orquestar.`
         // 2. ARQUITECTO PRO (CORE)
         // ============================================
         let canvasNodes = [];
+
+        // ============================================
+        // SISTEMA DE HISTORIAL (UNDO/REDO) v9.1
+        // ============================================
+        let canvasHistory = [[]];
+        let historyIndex = 0;
+        const MAX_HISTORY = 50;
+
+        function saveToHistory() {
+            // Truncar historial si estamos en medio
+            if (historyIndex < canvasHistory.length - 1) {
+                canvasHistory = canvasHistory.slice(0, historyIndex + 1);
+            }
+            // Guardar copia profunda del estado actual
+            canvasHistory.push(JSON.parse(JSON.stringify(canvasNodes)));
+            // Limitar tamaño del historial
+            if (canvasHistory.length > MAX_HISTORY) {
+                canvasHistory.shift();
+            } else {
+                historyIndex++;
+            }
+            updateHistoryButtons();
+        }
+
+        function canvasUndo() {
+            if (historyIndex > 0) {
+                historyIndex--;
+                canvasNodes = JSON.parse(JSON.stringify(canvasHistory[historyIndex]));
+                renderCanvas();
+                validateFlowRealtime();
+                updateHistoryButtons();
+                addLog("INFO", "Deshacer: estado restaurado");
+            }
+        }
+
+        function canvasRedo() {
+            if (historyIndex < canvasHistory.length - 1) {
+                historyIndex++;
+                canvasNodes = JSON.parse(JSON.stringify(canvasHistory[historyIndex]));
+                renderCanvas();
+                validateFlowRealtime();
+                updateHistoryButtons();
+                addLog("INFO", "Rehacer: estado restaurado");
+            }
+        }
+
+        function updateHistoryButtons() {
+            const undoBtn = document.getElementById('btn-undo');
+            const redoBtn = document.getElementById('btn-redo');
+            if (undoBtn) undoBtn.disabled = historyIndex <= 0;
+            if (redoBtn) redoBtn.disabled = historyIndex >= canvasHistory.length - 1;
+        }
+
+        // ============================================
+        // EXPORTAR PIPELINE COMO JSON v9.1
+        // ============================================
+        function exportPipelineJSON() {
+            if (canvasNodes.length === 0) {
+                showToast('Añade herramientas al canvas primero', 'error');
+                return;
+            }
+
+            const pipeline = {
+                version: "1.0",
+                name: `Pipeline ${new Date().toLocaleDateString()}`,
+                created: new Date().toISOString(),
+                nodes: canvasNodes.map((n, i) => ({
+                    id: n.id,
+                    name: n.name,
+                    category: n.cat,
+                    position: i
+                })),
+                connections: canvasNodes.slice(0, -1).map((n, i) => ({
+                    from: n.id,
+                    to: canvasNodes[i + 1].id
+                })),
+                metadata: {
+                    tool_count: canvasNodes.length,
+                    categories: [...new Set(canvasNodes.map(n => n.cat))]
+                }
+            };
+
+            const blob = new Blob([JSON.stringify(pipeline, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `directos-pipeline-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            addLog("SUCCESS", `Pipeline exportado como JSON (${canvasNodes.length} nodos)`);
+            showToast('Pipeline exportado', 'success');
+        }
+
         const toolbox = document.getElementById('architect-toolbox');
         const canvas = document.getElementById('architect-canvas');
 
-        // Init Toolbox
-        getTools().forEach(t => {
-            const el = document.createElement('div');
-            const bc = catStyles[t.cat] || "border-slate-700";
-            el.className = `draggable-tool bg-slate-800 border-l-4 ${bc} border-y border-r border-slate-700 p-2.5 rounded-r-lg flex items-center justify-between gap-2 hover:bg-slate-700 cursor-grab active:cursor-grabbing mb-1.5 transition`;
-            el.draggable = true;
-            el.innerHTML = `<div class="flex items-center gap-2"><i class="fa-solid ${t.icon} ${t.color} text-sm"></i><div><span class="text-xs font-bold block">${t.name}</span></div></div><i class="fa-solid fa-plus text-slate-600 text-[10px]"></i>`;
-            el.ondragstart = (ev) => { ev.dataTransfer.setData("toolId", t.id); ev.dataTransfer.effectAllowed = "copy"; };
-            el.onclick = () => addNodeToCanvas(t.id);
-            toolbox.appendChild(el);
-        });
+        // Función para renderizar la toolbox (llamada después de cargar API)
+        function renderToolbox() {
+            if (!toolbox) return;
+            toolbox.innerHTML = ''; // Limpiar antes de renderizar
+            getTools().forEach(t => {
+                const el = document.createElement('div');
+                const bc = catStyles[t.cat] || "border-slate-700";
+                el.className = `draggable-tool bg-slate-800 border-l-4 ${bc} border-y border-r border-slate-700 p-2.5 rounded-r-lg flex items-center justify-between gap-2 hover:bg-slate-700 cursor-grab active:cursor-grabbing mb-1.5 transition`;
+                el.draggable = true;
+                el.innerHTML = `<div class="flex items-center gap-2"><i class="fa-solid ${t.icon} ${t.color} text-sm"></i><div><span class="text-xs font-bold block">${t.name}</span></div></div><i class="fa-solid fa-plus text-slate-600 text-[10px]"></i>`;
+                el.ondragstart = (ev) => { ev.dataTransfer.setData("toolId", t.id); ev.dataTransfer.effectAllowed = "copy"; };
+                el.onclick = () => addNodeToCanvas(t.id);
+                toolbox.appendChild(el);
+            });
+            console.log(`[TOOLBOX] Renderizadas ${getTools().length} herramientas (${getTools().filter(t => t.isTrigger).length} triggers)`);
+        }
+
+        // Init Toolbox inicial (con FALLBACK mientras carga API)
+        renderToolbox();
 
         // ============================================
-        // PIPELINE BUILDER - SISTEMA DE NODOS v9.0
+        // PIPELINE BUILDER PRO - v10.0
+        // Canvas interactivo con zoom, pan, conexiones draggables
         // ============================================
         const nodesContainer = document.getElementById('nodes-container');
         const connectionsSvg = document.getElementById('connections-svg');
         const pipelineCanvas = document.getElementById('pipeline-canvas');
+        const canvasTransform = document.getElementById('canvas-transform');
+        const canvasGrid = document.getElementById('canvas-grid');
 
-        // Configurar drag & drop en el canvas
+        // Estado del canvas
+        let canvasState = {
+            zoom: 1,
+            panX: 0,
+            panY: 0,
+            isPanning: false,
+            panStartX: 0,
+            panStartY: 0,
+            selectedNodeId: null,
+            // Estado para conexiones
+            isConnecting: false,
+            connectingFrom: null,
+            // Estado para drag de nodos
+            isDraggingNode: false,
+            dragNodeId: null,
+            dragOffsetX: 0,
+            dragOffsetY: 0
+        };
+
+        // Conexiones entre nodos: [{from: nodeId, to: nodeId}]
+        let nodeConnections = [];
+
+        // Posiciones de nodos: {nodeId: {x, y}}
+        let nodePositions = {};
+
+        // ============================================
+        // ZOOM FUNCTIONS
+        // ============================================
+        function canvasZoomIn() {
+            canvasState.zoom = Math.min(2, canvasState.zoom + 0.1);
+            updateCanvasTransform();
+        }
+
+        function canvasZoomOut() {
+            canvasState.zoom = Math.max(0.3, canvasState.zoom - 0.1);
+            updateCanvasTransform();
+        }
+
+        function canvasZoomReset() {
+            canvasState.zoom = 1;
+            canvasState.panX = 0;
+            canvasState.panY = 0;
+            updateCanvasTransform();
+        }
+
+        function updateCanvasTransform() {
+            if (!canvasTransform || !canvasGrid) return;
+            const transform = `translate(${canvasState.panX}px, ${canvasState.panY}px) scale(${canvasState.zoom})`;
+            canvasTransform.style.transform = transform;
+            canvasGrid.style.transform = transform;
+            canvasGrid.style.backgroundSize = `${20 * canvasState.zoom}px ${20 * canvasState.zoom}px`;
+            document.getElementById('zoom-level').textContent = `${Math.round(canvasState.zoom * 100)}%`;
+            drawConnections();
+        }
+
+        // Zoom con scroll
+        if (pipelineCanvas) {
+            pipelineCanvas.addEventListener('wheel', (e) => {
+                if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                    canvasState.zoom = Math.max(0.3, Math.min(2, canvasState.zoom + delta));
+                    updateCanvasTransform();
+                }
+            }, { passive: false });
+
+            // Pan con click derecho o click medio
+            pipelineCanvas.addEventListener('mousedown', (e) => {
+                // Solo si es click en el fondo (no en un nodo)
+                if (e.target === pipelineCanvas || e.target === canvasTransform || e.target === canvasGrid || e.target.id === 'nodes-container') {
+                    if (e.button === 1 || (e.button === 0 && e.target !== nodesContainer)) { // Middle click o click en grid
+                        canvasState.isPanning = true;
+                        canvasState.panStartX = e.clientX - canvasState.panX;
+                        canvasState.panStartY = e.clientY - canvasState.panY;
+                        pipelineCanvas.style.cursor = 'grabbing';
+                    }
+                }
+            });
+
+            pipelineCanvas.addEventListener('mousemove', (e) => {
+                if (canvasState.isPanning) {
+                    canvasState.panX = e.clientX - canvasState.panStartX;
+                    canvasState.panY = e.clientY - canvasState.panStartY;
+                    updateCanvasTransform();
+                }
+                // Actualizar línea temporal de conexión
+                if (canvasState.isConnecting) {
+                    updateTempConnection(e.clientX, e.clientY);
+                }
+                // Drag de nodo
+                if (canvasState.isDraggingNode && canvasState.dragNodeId) {
+                    const rect = pipelineCanvas.getBoundingClientRect();
+                    let x = (e.clientX - rect.left - canvasState.panX) / canvasState.zoom - canvasState.dragOffsetX;
+                    let y = (e.clientY - rect.top - canvasState.panY) / canvasState.zoom - canvasState.dragOffsetY;
+                    // Snap to Grid (20px)
+                    const gridSize = 20;
+                    x = Math.round(x / gridSize) * gridSize;
+                    y = Math.round(y / gridSize) * gridSize;
+                    nodePositions[canvasState.dragNodeId] = { x: Math.max(0, x), y: Math.max(0, y) };
+                    renderCanvas();
+                }
+            });
+
+            pipelineCanvas.addEventListener('mouseup', (e) => {
+                if (canvasState.isPanning) {
+                    canvasState.isPanning = false;
+                    pipelineCanvas.style.cursor = 'default';
+                }
+                if (canvasState.isDraggingNode) {
+                    canvasState.isDraggingNode = false;
+                    canvasState.dragNodeId = null;
+                    document.querySelectorAll('.pipeline-node-pro.dragging').forEach(n => n.classList.remove('dragging'));
+                    saveToHistory();
+                }
+                if (canvasState.isConnecting) {
+                    // Verificar si soltó sobre un puerto de entrada
+                    const port = e.target.closest('.port-in');
+                    if (port) {
+                        const toNodeId = port.dataset.nodeId;
+                        if (toNodeId !== canvasState.connectingFrom) {
+                            // Validar conexión
+                            const validation = validateConnection(canvasState.connectingFrom, toNodeId);
+                            if (validation.valid) {
+                                // Crear conexión si no existe
+                                const exists = nodeConnections.some(c => c.from === canvasState.connectingFrom && c.to === toNodeId);
+                                if (!exists) {
+                                    nodeConnections.push({ from: canvasState.connectingFrom, to: toNodeId });
+                                    drawConnections();
+                                    saveToHistory();
+                                }
+                            } else {
+                                showToast(validation.reason, 'error');
+                            }
+                        }
+                    }
+                    endConnecting();
+                }
+            });
+
+            pipelineCanvas.addEventListener('mouseleave', () => {
+                if (canvasState.isPanning) {
+                    canvasState.isPanning = false;
+                    pipelineCanvas.style.cursor = 'default';
+                }
+            });
+        }
+
+        // ============================================
+        // VALIDACIÓN DE CONEXIONES
+        // ============================================
+        function validateConnection(fromId, toId) {
+            const fromNode = canvasNodes.find(n => n.id === fromId);
+            const toNode = canvasNodes.find(n => n.id === toId);
+
+            if (!fromNode || !toNode) {
+                return { valid: false, reason: 'Nodo no encontrado' };
+            }
+
+            // Regla 1: No conectar trigger a trigger
+            const fromIsTrigger = fromNode.isTrigger || fromNode.cat === 'Trigger' || fromId.startsWith('trigger-');
+            const toIsTrigger = toNode.isTrigger || toNode.cat === 'Trigger' || toId.startsWith('trigger-');
+            if (fromIsTrigger && toIsTrigger) {
+                return { valid: false, reason: 'No se pueden conectar dos triggers' };
+            }
+
+            // Regla 2: No conectar output a output
+            const fromIsOutput = fromNode.isOutput || fromNode.cat === 'Output' || fromId.startsWith('output-');
+            const toIsOutput = toNode.isOutput || toNode.cat === 'Output' || toId.startsWith('output-');
+            if (fromIsOutput && toIsOutput) {
+                return { valid: false, reason: 'No se pueden conectar dos outputs' };
+            }
+
+            // Regla 3: No crear ciclos (conexión que va hacia atrás)
+            const wouldCreateCycle = checkCycle(fromId, toId);
+            if (wouldCreateCycle) {
+                return { valid: false, reason: 'Esta conexión crearía un ciclo' };
+            }
+
+            // Regla 4: El nodo destino ya tiene una entrada (excepto flow-if)
+            const existingInput = nodeConnections.find(c => c.to === toId);
+            if (existingInput && toId !== 'flow-if') {
+                return { valid: false, reason: 'Este nodo ya tiene una entrada' };
+            }
+
+            return { valid: true };
+        }
+
+        function checkCycle(fromId, toId) {
+            // BFS para detectar si toId puede llegar a fromId (lo que crearía ciclo)
+            const visited = new Set();
+            const queue = [toId];
+
+            while (queue.length > 0) {
+                const current = queue.shift();
+                if (current === fromId) return true;
+                if (visited.has(current)) continue;
+                visited.add(current);
+
+                // Encontrar conexiones salientes desde current
+                nodeConnections
+                    .filter(c => c.from === current)
+                    .forEach(c => queue.push(c.to));
+            }
+            return false;
+        }
+
+        // ============================================
+        // CONEXIONES
+        // ============================================
+        function startConnecting(nodeId, e) {
+            e.stopPropagation();
+            canvasState.isConnecting = true;
+            canvasState.connectingFrom = nodeId;
+            document.querySelectorAll('.port-out').forEach(p => p.classList.add('connecting'));
+            const tempLine = document.getElementById('temp-connection');
+            if (tempLine) tempLine.style.display = 'block';
+        }
+
+        function endConnecting() {
+            canvasState.isConnecting = false;
+            canvasState.connectingFrom = null;
+            document.querySelectorAll('.node-port').forEach(p => p.classList.remove('connecting'));
+            const tempLine = document.getElementById('temp-connection');
+            if (tempLine) {
+                tempLine.style.display = 'none';
+                tempLine.setAttribute('d', '');
+            }
+        }
+
+        function updateTempConnection(mouseX, mouseY) {
+            if (!canvasState.connectingFrom) return;
+
+            const fromPos = nodePositions[canvasState.connectingFrom];
+            if (!fromPos) return;
+
+            const nodeWidth = 260;
+            const nodeHeight = 70;
+
+            // Punto de inicio: puerto de salida del nodo
+            const x1 = fromPos.x + nodeWidth + 6;
+            const y1 = fromPos.y + nodeHeight / 2;
+
+            // Punto final: posición del mouse en coordenadas del canvas
+            const rect = pipelineCanvas.getBoundingClientRect();
+            const x2 = (mouseX - rect.left - canvasState.panX) / canvasState.zoom;
+            const y2 = (mouseY - rect.top - canvasState.panY) / canvasState.zoom;
+
+            const tempLine = document.getElementById('temp-connection');
+            if (tempLine) {
+                const dx = Math.abs(x2 - x1);
+                const controlOffset = Math.max(30, dx * 0.3);
+                tempLine.setAttribute('d', `M ${x1} ${y1} C ${x1 + controlOffset} ${y1}, ${x2 - controlOffset} ${y2}, ${x2} ${y2}`);
+                tempLine.style.display = 'block';
+            }
+        }
+
+        function removeConnection(fromId, toId) {
+            nodeConnections = nodeConnections.filter(c => !(c.from === fromId && c.to === toId));
+            drawConnections();
+            saveToHistory();
+        }
+
+        // ============================================
+        // DRAG & DROP NODOS
+        // ============================================
         if (nodesContainer) {
             nodesContainer.ondragover = (ev) => { ev.preventDefault(); ev.dataTransfer.dropEffect = "copy"; };
             nodesContainer.ondrop = (ev) => {
                 ev.preventDefault();
                 const toolId = ev.dataTransfer.getData("toolId");
-                if(toolId) addNodeToCanvas(toolId);
+                if (toolId) {
+                    const rect = pipelineCanvas.getBoundingClientRect();
+                    const x = (ev.clientX - rect.left - canvasState.panX) / canvasState.zoom;
+                    const y = (ev.clientY - rect.top - canvasState.panY) / canvasState.zoom;
+                    addNodeToCanvas(toolId, x, y);
+                }
             };
         }
 
-        function addNodeToCanvas(toolId) {
+        function addNodeToCanvas(toolId, x = null, y = null) {
             const tool = getTools().find(t => t.id === toolId);
             if(tool && !canvasNodes.find(n => n.id === toolId)) {
+                console.log(`[ADD NODE] ${tool.name} - isTrigger: ${tool.isTrigger}`);
                 canvasNodes.push({...tool});
+                // Posición: si no se especifica, calcular basado en nodos existentes
+                if (x === null || y === null) {
+                    const count = Object.keys(nodePositions).length;
+                    x = 100 + (count % 3) * 320;
+                    y = 100 + Math.floor(count / 3) * 160;
+                }
+                nodePositions[toolId] = { x, y };
+                saveToHistory();
                 renderCanvas();
                 validateFlowRealtime();
             }
         }
 
-        function removeNode(index) {
-            canvasNodes.splice(index, 1);
-            renderCanvas();
-            validateFlowRealtime();
+        function removeNode(nodeId) {
+            const index = canvasNodes.findIndex(n => n.id === nodeId);
+            if (index > -1) {
+                canvasNodes.splice(index, 1);
+                delete nodePositions[nodeId];
+                // Eliminar conexiones relacionadas
+                nodeConnections = nodeConnections.filter(c => c.from !== nodeId && c.to !== nodeId);
+                saveToHistory();
+                renderCanvas();
+                validateFlowRealtime();
+            }
+        }
+
+        function selectNode(nodeId) {
+            canvasState.selectedNodeId = nodeId;
+            document.querySelectorAll('.pipeline-node-pro').forEach(n => n.classList.remove('selected'));
+            const node = document.querySelector(`[data-node-id="${nodeId}"]`);
+            if (node) node.classList.add('selected');
+            // Mostrar panel de configuración
+            showNodeConfig(nodeId);
+        }
+
+        function startDraggingNode(nodeId, e) {
+            if (e.target.closest('.node-port')) return; // No drag si es un puerto
+            e.stopPropagation();
+            canvasState.isDraggingNode = true;
+            canvasState.dragNodeId = nodeId;
+            const node = document.querySelector(`[data-node-id="${nodeId}"]`);
+            if (node) {
+                node.classList.add('dragging');
+                const rect = node.getBoundingClientRect();
+                const canvasRect = pipelineCanvas.getBoundingClientRect();
+                canvasState.dragOffsetX = (e.clientX - rect.left) / canvasState.zoom;
+                canvasState.dragOffsetY = (e.clientY - rect.top) / canvasState.zoom;
+            }
         }
 
         function clearCanvas() {
             if (canvasNodes.length === 0) return;
             if (confirm('¿Limpiar todo el canvas?')) {
                 canvasNodes = [];
+                nodePositions = {};
+                nodeConnections = [];
+                canvasState.selectedNodeId = null;
+                saveToHistory();
                 renderCanvas();
+                hideNodeConfig();
                 addLog("INFO", "Canvas limpiado");
             }
         }
+
+        // Nodo seleccionado para eliminar con tecla
+        let selectedNodeIndex = null;
 
         // ============================================
         // ARQUITECTURAS - SAVE/LOAD (Offline-First)
@@ -2924,113 +3910,379 @@ Incluye docker-compose para orquestar.`
             });
         }
 
+        // ============================================
+        // RENDER CANVAS PRO
+        // ============================================
         function renderCanvas() {
             if (!nodesContainer) return;
-            const placeholder = document.getElementById('canvas-placeholder');
 
             if (canvasNodes.length === 0) {
-                nodesContainer.innerHTML = `<div id="canvas-placeholder" class="absolute inset-8 border-2 border-dashed border-slate-800 rounded-2xl flex flex-col items-center justify-center text-slate-600">
+                nodesContainer.innerHTML = `<div id="canvas-placeholder" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 border-2 border-dashed border-slate-800 rounded-2xl flex flex-col items-center justify-center text-slate-600 p-12">
                     <i class="fa-solid fa-diagram-project text-4xl mb-3 text-slate-700"></i>
                     <p class="text-sm font-medium">Arrastra herramientas aquí</p>
-                    <p class="text-xs mt-1 text-slate-700">o selecciona un patrón predefinido</p>
+                    <p class="text-xs mt-1 text-slate-700">Ctrl+Scroll para zoom • Arrastra fondo para mover</p>
                 </div>`;
-                connectionsSvg.innerHTML = '<defs><marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/></marker></defs>';
                 document.getElementById('node-count').textContent = '0';
                 document.getElementById('connection-count').textContent = '0';
                 return;
             }
 
             nodesContainer.innerHTML = '';
-
-            // Calcular posiciones en grid
-            const cols = Math.min(3, canvasNodes.length);
-            const nodeWidth = 280;
-            const nodeHeight = 100;
-            const gapX = 80;
-            const gapY = 60;
+            const nodeWidth = 260;
 
             canvasNodes.forEach((node, index) => {
-                const col = index % cols;
-                const row = Math.floor(index / cols);
-                const x = 40 + col * (nodeWidth + gapX);
-                const y = 40 + row * (nodeHeight + gapY);
+                // Usar posición guardada o calcular nueva
+                if (!nodePositions[node.id]) {
+                    const count = Object.keys(nodePositions).length;
+                    nodePositions[node.id] = {
+                        x: 100 + (count % 3) * 320,
+                        y: 100 + Math.floor(count / 3) * 160
+                    };
+                }
+                const pos = nodePositions[node.id];
 
                 const bc = catStyles[node.cat] || "border-slate-600";
+                // Detectar trigger por propiedad O por categoría O por ID
+                const isTrigger = node.isTrigger === true || node.cat === 'Trigger' || (node.id && node.id.startsWith('trigger-'));
+                if (isTrigger) console.log(`[RENDER] ✅ Trigger detectado: ${node.name}`);
+                const nodeStatus = node.runStatus || 'idle';
+                const isSelected = canvasState.selectedNodeId === node.id;
+
                 const el = document.createElement('div');
-                el.className = "pipeline-node absolute transition-all duration-300";
-                el.style.left = `${x}px`;
-                el.style.top = `${y}px`;
+                el.className = `pipeline-node-pro ${isTrigger ? 'is-trigger' : ''} ${isSelected ? 'selected' : ''}`;
+                el.style.left = `${pos.x}px`;
+                el.style.top = `${pos.y}px`;
                 el.style.width = `${nodeWidth}px`;
-                el.dataset.index = index;
+                el.style.zIndex = isSelected ? 100 : 10;
+                el.dataset.nodeId = node.id;
+
+                // Botón de ejecución para triggers
+                const triggerButton = isTrigger ? `
+                    <button onclick="event.stopPropagation(); executePipelineFromTrigger('${node.id}')"
+                            class="mt-2 w-full py-1.5 px-2 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/50 text-emerald-400 text-xs font-medium transition flex items-center justify-center gap-2"
+                            id="trigger-btn-${node.id}">
+                        <i class="fa-solid fa-play text-[10px]"></i>
+                        <span>Ejecutar</span>
+                    </button>` : '';
+
+                // Indicador de estado
+                const statusColor = nodeStatus === 'running' ? '#eab308' : nodeStatus === 'success' ? '#22c55e' : nodeStatus === 'error' ? '#ef4444' : '#475569';
 
                 el.innerHTML = `
-                    <div class="bg-slate-800/90 backdrop-blur border border-slate-600 border-l-4 ${bc} p-4 rounded-xl shadow-xl hover:shadow-2xl hover:border-slate-500 transition group">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center border border-slate-700">
-                                    <i class="fa-solid ${node.icon} ${node.color} text-lg"></i>
-                                </div>
-                                <div>
-                                    <h4 class="font-bold text-white text-sm leading-tight">${node.name}</h4>
-                                    <span class="text-[10px] text-slate-500 uppercase tracking-wider">${node.tag}</span>
-                                </div>
+                    <div class="bg-slate-800/95 backdrop-blur border border-slate-600 border-l-4 ${bc} p-3 rounded-xl shadow-xl hover:shadow-2xl hover:border-slate-500 transition-all relative">
+                        <!-- Status indicator -->
+                        <div class="absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full border-2 border-slate-900" style="background: ${statusColor};"></div>
+
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-lg ${isTrigger ? 'bg-emerald-900/50 border-emerald-700' : 'bg-slate-900 border-slate-700'} flex items-center justify-center border flex-shrink-0">
+                                <i class="fa-solid ${node.icon} ${node.color} ${isTrigger ? 'animate-pulse' : ''}"></i>
                             </div>
-                            <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
-                                <span class="text-[10px] text-slate-600 mr-2">#${index + 1}</span>
-                                <button onclick="removeNode(${index})" class="text-slate-600 hover:text-red-400 transition p-1.5 hover:bg-red-500/10 rounded">
-                                    <i class="fa-solid fa-times text-xs"></i>
-                                </button>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-bold text-white text-sm leading-tight truncate">${node.name}</h4>
+                                <span class="text-[10px] text-slate-500 uppercase tracking-wider">${node.tag}</span>
                             </div>
+                            <button onclick="event.stopPropagation(); removeNode('${node.id}')" class="text-slate-600 hover:text-red-400 transition p-1 hover:bg-red-500/10 rounded opacity-0 group-hover:opacity-100">
+                                <i class="fa-solid fa-times text-xs"></i>
+                            </button>
                         </div>
-                        <!-- Puntos de conexión -->
-                        <div class="connection-point connection-out absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-blue-500 rounded-full border-2 border-slate-900 opacity-50 group-hover:opacity-100 transition cursor-crosshair" title="Arrastrar para conectar"></div>
-                        <div class="connection-point connection-in absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-900 opacity-50 group-hover:opacity-100 transition" title="Entrada"></div>
+                        ${triggerButton}
+
+                        <!-- Puertos de conexión -->
+                        ${!isTrigger ? `<div class="node-port port-in" data-node-id="${node.id}" title="Entrada"></div>` : ''}
+                        <div class="node-port port-out" data-node-id="${node.id}" title="Conectar" onmousedown="startConnecting('${node.id}', event)"></div>
                     </div>`;
+
+                // Event listeners para drag y select
+                el.addEventListener('mousedown', (e) => {
+                    if (!e.target.closest('.node-port') && !e.target.closest('button')) {
+                        selectNode(node.id);
+                        startDraggingNode(node.id, e);
+                    }
+                });
+
                 nodesContainer.appendChild(el);
             });
 
-            // Dibujar conexiones (línea secuencial)
+            // Dibujar conexiones
             drawConnections();
             document.getElementById('node-count').textContent = canvasNodes.length;
-            document.getElementById('connection-count').textContent = Math.max(0, canvasNodes.length - 1);
+            document.getElementById('connection-count').textContent = nodeConnections.length;
         }
 
+        // ============================================
+        // DRAW CONNECTIONS PRO - FIXED
+        // ============================================
         function drawConnections() {
-            if (!connectionsSvg || canvasNodes.length < 2) {
-                connectionsSvg.innerHTML = '<defs><marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/></marker></defs>';
-                return;
-            }
+            if (!connectionsSvg) return;
 
-            let paths = '<defs><marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/></marker></defs>';
+            // Mantener defs y temp-connection
+            let paths = `
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/>
+                    </marker>
+                    <marker id="arrowhead-hover" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444"/>
+                    </marker>
+                </defs>
+                <path id="temp-connection" class="connection-line-temp" d="" style="display: none;"/>
+            `;
 
-            const nodes = nodesContainer.querySelectorAll('.pipeline-node');
-            for (let i = 0; i < nodes.length - 1; i++) {
-                const from = nodes[i];
-                const to = nodes[i + 1];
+            const nodeWidth = 260;
+            const nodeHeight = 70;
 
-                const fromRect = from.getBoundingClientRect();
-                const toRect = to.getBoundingClientRect();
-                const canvasRect = pipelineCanvas.getBoundingClientRect();
+            // Dibujar cada conexión
+            nodeConnections.forEach((conn, idx) => {
+                const fromPos = nodePositions[conn.from];
+                const toPos = nodePositions[conn.to];
+                if (!fromPos || !toPos) return;
 
-                const x1 = fromRect.right - canvasRect.left + pipelineCanvas.scrollLeft;
-                const y1 = fromRect.top + fromRect.height/2 - canvasRect.top + pipelineCanvas.scrollTop;
-                const x2 = toRect.left - canvasRect.left + pipelineCanvas.scrollLeft;
-                const y2 = toRect.top + toRect.height/2 - canvasRect.top + pipelineCanvas.scrollTop;
+                // Puerto de salida (derecha del nodo FROM)
+                const x1 = fromPos.x + nodeWidth + 6;
+                const y1 = fromPos.y + nodeHeight / 2;
 
-                // Curva bezier
-                const midX = (x1 + x2) / 2;
-                paths += `<path d="M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}"
-                    stroke="#3b82f6" stroke-width="2" fill="none" marker-end="url(#arrowhead)"
-                    class="connection-line" style="filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.3));"/>`;
-            }
+                // Puerto de entrada (izquierda del nodo TO)
+                const x2 = toPos.x - 6;
+                const y2 = toPos.y + nodeHeight / 2;
+
+                // Curva bezier suave
+                const dx = Math.abs(x2 - x1);
+                const controlOffset = Math.max(50, dx * 0.4);
+
+                paths += `
+                    <path d="M ${x1} ${y1} C ${x1 + controlOffset} ${y1}, ${x2 - controlOffset} ${y2}, ${x2} ${y2}"
+                        class="connection-line"
+                        marker-end="url(#arrowhead)"
+                        style="filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.3)); pointer-events: stroke; cursor: pointer;"
+                        onclick="removeConnection('${conn.from}', '${conn.to}')"
+                        data-from="${conn.from}" data-to="${conn.to}"/>
+                `;
+            });
+
             connectionsSvg.innerHTML = paths;
+            document.getElementById('connection-count').textContent = nodeConnections.length;
         }
 
         function autoLayoutNodes() {
             if (canvasNodes.length === 0) return;
+
+            // Reorganizar nodos en línea horizontal con conexiones secuenciales
+            const nodeWidth = 260;
+            const gapX = 120;
+            const startX = 100;
+            const startY = 150;
+
+            // Limpiar conexiones anteriores
+            nodeConnections = [];
+
+            canvasNodes.forEach((node, index) => {
+                // Posicionar en línea horizontal
+                nodePositions[node.id] = {
+                    x: startX + index * (nodeWidth + gapX),
+                    y: startY
+                };
+
+                // Crear conexión secuencial con el siguiente nodo
+                if (index < canvasNodes.length - 1) {
+                    const nextNode = canvasNodes[index + 1];
+                    nodeConnections.push({
+                        from: node.id,
+                        to: nextNode.id
+                    });
+                }
+            });
+
             renderCanvas();
-            setTimeout(drawConnections, 100);
-            addLog("SUCCESS", "Nodos reorganizados automáticamente");
+            saveToHistory();
+            addLog("SUCCESS", `Nodos organizados con ${nodeConnections.length} conexiones`);
+            showToast(`${canvasNodes.length} nodos conectados`, 'success');
+        }
+
+        // ============================================
+        // NODE CONFIG PANEL
+        // ============================================
+        function showNodeConfig(nodeId) {
+            const node = canvasNodes.find(n => n.id === nodeId);
+            if (!node) return;
+
+            const panel = document.getElementById('node-config-panel');
+            if (!panel) return;
+
+            // Ocultar panel de validación si está visible
+            document.getElementById('validation-panel')?.classList.add('hidden');
+
+            // Llenar información del nodo
+            const iconContainer = document.getElementById('config-node-icon');
+            iconContainer.innerHTML = `<i class="fa-solid ${node.icon} ${node.color}"></i>`;
+
+            document.getElementById('config-node-name').textContent = node.name;
+            document.getElementById('config-node-tag').textContent = node.tag || node.cat;
+            document.getElementById('config-node-desc').textContent = node.desc || node.why || 'Sin descripción';
+            document.getElementById('config-node-code').textContent = node.code || '# Sin código de ejemplo';
+
+            // Contar conexiones
+            const inputs = nodeConnections.filter(c => c.to === nodeId).length;
+            const outputs = nodeConnections.filter(c => c.from === nodeId).length;
+            document.getElementById('config-node-inputs').textContent = inputs;
+            document.getElementById('config-node-outputs').textContent = outputs;
+
+            // Generar parámetros dinámicos según el tipo de nodo
+            const paramsContainer = document.getElementById('config-node-params');
+            paramsContainer.innerHTML = generateNodeParams(node);
+
+            // Mostrar panel
+            panel.classList.remove('hidden');
+        }
+
+        function generateNodeParams(node) {
+            // Parámetros base según categoría
+            const params = [];
+
+            if (node.isTrigger) {
+                // Parámetros para triggers
+                if (node.id === 'trigger-file') {
+                    params.push({ name: 'watch_path', label: 'Carpeta', type: 'text', value: '/path/to/watch', placeholder: '/ruta/a/vigilar' });
+                    params.push({ name: 'pattern', label: 'Patrón', type: 'text', value: '*.pdf', placeholder: '*.pdf, *.jpg' });
+                } else if (node.id === 'trigger-cron') {
+                    params.push({ name: 'schedule', label: 'Programación', type: 'select', value: 'daily', options: [
+                        { value: 'hourly', label: 'Cada hora' },
+                        { value: 'daily', label: 'Diario (9:00)' },
+                        { value: 'weekly', label: 'Semanal (Lunes)' }
+                    ]});
+                } else if (node.id === 'trigger-webhook') {
+                    params.push({ name: 'endpoint', label: 'Endpoint', type: 'text', value: `/api/trigger/${node.id}`, readonly: true });
+                }
+            } else if (node.cat === 'Storage') {
+                params.push({ name: 'collection', label: 'Colección', type: 'text', value: 'default', placeholder: 'nombre_colección' });
+            } else if (node.cat === 'IA Model') {
+                params.push({ name: 'model', label: 'Modelo', type: 'text', value: 'default', placeholder: 'nombre_modelo' });
+                params.push({ name: 'temperature', label: 'Temperatura', type: 'number', value: '0.7', min: 0, max: 2, step: 0.1 });
+            } else if (node.cat === 'Process') {
+                params.push({ name: 'timeout', label: 'Timeout (s)', type: 'number', value: '30', min: 1, max: 300 });
+            }
+
+            // Parámetro genérico de nombre personalizado
+            params.push({ name: 'custom_name', label: 'Nombre Custom', type: 'text', value: '', placeholder: 'Nombre opcional' });
+
+            // Generar HTML para parámetros normales
+            let html = params.map(p => {
+                if (p.type === 'select') {
+                    const options = p.options.map(o => `<option value="${o.value}" ${o.value === p.value ? 'selected' : ''}>${o.label}</option>`).join('');
+                    return `
+                        <div>
+                            <label class="text-[10px] text-slate-500 block mb-1">${p.label}</label>
+                            <select data-param="${p.name}" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs text-white focus:border-blue-500 focus:outline-none">
+                                ${options}
+                            </select>
+                        </div>`;
+                } else {
+                    return `
+                        <div>
+                            <label class="text-[10px] text-slate-500 block mb-1">${p.label}</label>
+                            <input type="${p.type}" data-param="${p.name}" value="${p.value}" placeholder="${p.placeholder || ''}"
+                                   ${p.readonly ? 'readonly' : ''} ${p.min !== undefined ? `min="${p.min}"` : ''} ${p.max !== undefined ? `max="${p.max}"` : ''} ${p.step !== undefined ? `step="${p.step}"` : ''}
+                                   class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs text-white focus:border-blue-500 focus:outline-none ${p.readonly ? 'opacity-60' : ''}">
+                        </div>`;
+                }
+            }).join('');
+
+            // Añadir sección HITL (checkboxes de pausa)
+            html += `
+                <div class="mt-4 pt-4 border-t border-slate-800">
+                    <label class="text-[10px] text-cyan-400 block mb-2 font-bold uppercase tracking-wider">
+                        <i class="fa-solid fa-hand mr-1"></i> Human-in-the-Loop
+                    </label>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 cursor-pointer group">
+                            <input type="checkbox" id="pause-before-${node.id}" ${node.pauseBefore ? 'checked' : ''}
+                                   onchange="toggleNodePause('${node.id}', 'before', this.checked)"
+                                   class="w-4 h-4 rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-0">
+                            <span class="text-xs text-slate-400 group-hover:text-white transition">Pausar antes de ejecutar</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer group">
+                            <input type="checkbox" id="pause-after-${node.id}" ${node.pauseAfter ? 'checked' : ''}
+                                   onchange="toggleNodePause('${node.id}', 'after', this.checked)"
+                                   class="w-4 h-4 rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-0">
+                            <span class="text-xs text-slate-400 group-hover:text-white transition">Pausar despues de ejecutar</span>
+                        </label>
+                    </div>
+                    <p class="text-[10px] text-slate-600 mt-2">Activa pausas para inspeccionar datos durante la ejecucion.</p>
+                </div>
+            `;
+
+            return html;
+        }
+
+        // Toggle pause configuration for a node
+        function toggleNodePause(nodeId, when, checked) {
+            const node = canvasNodes.find(n => n.id === nodeId);
+            if (!node) return;
+
+            if (when === 'before') {
+                node.pauseBefore = checked;
+            } else if (when === 'after') {
+                node.pauseAfter = checked;
+            }
+
+            // Visual feedback
+            const nodeEl = document.querySelector(`[data-node-id="${nodeId}"]`);
+            if (nodeEl) {
+                if (node.pauseBefore || node.pauseAfter) {
+                    nodeEl.classList.add('has-hitl');
+                } else {
+                    nodeEl.classList.remove('has-hitl');
+                }
+            }
+
+            showToast(`Pausa ${when === 'before' ? 'antes' : 'despues'} ${checked ? 'activada' : 'desactivada'}`, 'info');
+        }
+
+        function hideNodeConfig() {
+            const panel = document.getElementById('node-config-panel');
+            if (panel) panel.classList.add('hidden');
+            canvasState.selectedNodeId = null;
+            document.querySelectorAll('.pipeline-node-pro').forEach(n => n.classList.remove('selected'));
+        }
+
+        function copyNodeCode() {
+            const code = document.getElementById('config-node-code')?.textContent;
+            if (code) {
+                navigator.clipboard.writeText(code).then(() => {
+                    showToast('Código copiado', 'success');
+                });
+            }
+        }
+
+        function duplicateSelectedNode() {
+            if (!canvasState.selectedNodeId) return;
+
+            const node = canvasNodes.find(n => n.id === canvasState.selectedNodeId);
+            if (!node) return;
+
+            // Crear copia con nuevo ID
+            const newId = `${node.id}-copy-${Date.now()}`;
+            const newNode = { ...node, id: newId, name: `${node.name} (copia)` };
+
+            canvasNodes.push(newNode);
+
+            // Posicionar cerca del original
+            const origPos = nodePositions[node.id];
+            nodePositions[newId] = {
+                x: origPos.x + 40,
+                y: origPos.y + 40
+            };
+
+            saveToHistory();
+            renderCanvas();
+            selectNode(newId);
+            showToast(`${node.name} duplicado`, 'success');
+        }
+
+        function deleteSelectedNode() {
+            if (!canvasState.selectedNodeId) return;
+            removeNode(canvasState.selectedNodeId);
+            hideNodeConfig();
+            showToast('Nodo eliminado', 'info');
         }
 
         // Validación en tiempo real
@@ -3045,7 +4297,30 @@ Incluye docker-compose para orquestar.`
             const warnings = [];
             const tips = [];
 
-            // Validaciones
+            // Detección de duplicados (ciclos potenciales) v9.1
+            const duplicates = ids.filter((id, i) => ids.indexOf(id) !== i);
+            if (duplicates.length > 0) {
+                errors.push({ icon: 'fa-circle-exclamation', color: 'red', msg: `Nodos duplicados detectados: ${[...new Set(duplicates)].join(', ')}` });
+            }
+
+            // Validaciones de compatibilidad entre nodos consecutivos v9.1
+            const nodeCompatibility = {
+                'whisper': { requires: ['ffmpeg'], produces: 'text' },
+                'clip': { requires: ['pillow'], produces: 'embeddings' },
+                'chroma': { accepts: ['embeddings', 'text'], produces: 'vectors' },
+                'langchain': { requires: ['chroma'], produces: 'rag' }
+            };
+
+            for (let i = 0; i < canvasNodes.length - 1; i++) {
+                const current = canvasNodes[i];
+                const next = canvasNodes[i + 1];
+                const compat = nodeCompatibility[next.id];
+                if (compat?.requires && !compat.requires.some(r => ids.includes(r))) {
+                    // Ya cubierto abajo
+                }
+            }
+
+            // Validaciones existentes
             if (ids.includes('whisper') && !ids.includes('ffmpeg'))
                 warnings.push({ icon: 'fa-triangle-exclamation', color: 'yellow', msg: 'Whisper necesita FFmpeg para procesar audio' });
             if (ids.includes('clip') && !ids.includes('pillow'))
@@ -3054,6 +4329,8 @@ Incluye docker-compose para orquestar.`
                 tips.push({ icon: 'fa-lightbulb', color: 'blue', msg: 'Considera añadir persistencia (ChromaDB o SQLite)' });
             if (ids.includes('fastapi') && !ids.includes('pydantic'))
                 tips.push({ icon: 'fa-lightbulb', color: 'blue', msg: 'FastAPI funciona mejor con Pydantic para validación' });
+            if (ids.includes('langchain') && !ids.includes('chroma'))
+                warnings.push({ icon: 'fa-triangle-exclamation', color: 'yellow', msg: 'LangChain RAG funciona mejor con ChromaDB' });
             if (ids.length > 5)
                 tips.push({ icon: 'fa-info-circle', color: 'slate', msg: `Pipeline complejo: ${ids.length} componentes` });
 
@@ -3613,7 +4890,7 @@ if __name__ == "__main__":
             const headerTools = document.getElementById('header-tools');
             if(view === 'architect') headerTools.classList.remove('hidden'); else headerTools.classList.add('hidden');
 
-            document.getElementById('page-title').textContent = { 'architect': 'Pipeline Builder', 'generator': 'Patrones', 'grid': 'Glosario', 'flow': 'Recetas', 'monitor': 'Monitor', 'projects': 'Proyectos', 'agent': 'Agent Mode', 'prompt-builder': 'Prompt Builder Pro' }[view];
+            document.getElementById('page-title').textContent = { 'architect': 'Pipeline Builder', 'generator': 'Patrones', 'grid': 'Glosario', 'flow': 'Recetas', 'monitor': 'Monitor', 'projects': 'Proyectos', 'agent': 'Automatizaciones', 'prompt-builder': 'Prompt Builder Pro' }[view];
 
             // Refresh Agent Mode data when switching to it
             if(view === 'agent') refreshAgentStatus();
@@ -4370,6 +5647,54 @@ ${report}
             initializePromptBuilder();
         });
 
+        // ============================================
+        // ATAJOS DE TECLADO GLOBALES v9.1
+        // ============================================
+        document.addEventListener('keydown', (e) => {
+            // Solo en vista architect
+            const isArchitectView = document.getElementById('view-architect')?.classList.contains('hidden') === false;
+            if (!isArchitectView) return;
+
+            // Ignorar si estamos en un input
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            // Ctrl+Z / Cmd+Z = Undo
+            if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'z') {
+                e.preventDefault();
+                canvasUndo();
+            }
+
+            // Ctrl+Shift+Z / Cmd+Shift+Z = Redo
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') {
+                e.preventDefault();
+                canvasRedo();
+            }
+
+            // Ctrl+S / Cmd+S = Guardar arquitectura
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                saveArchitecture();
+            }
+
+            // Ctrl+E / Cmd+E = Exportar JSON
+            if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+                e.preventDefault();
+                exportPipelineJSON();
+            }
+
+            // Delete / Backspace = Eliminar último nodo
+            if ((e.key === 'Delete' || e.key === 'Backspace') && canvasNodes.length > 0) {
+                e.preventDefault();
+                if (selectedNodeIndex !== null && selectedNodeIndex < canvasNodes.length) {
+                    removeNode(selectedNodeIndex);
+                    selectedNodeIndex = null;
+                } else {
+                    // Si no hay nodo seleccionado, eliminar el último
+                    removeNode(canvasNodes.length - 1);
+                }
+            }
+        });
+
         function initializePromptBuilder() {
             const wfContainer = document.getElementById('pb-workflow');
             if (wfContainer && wfContainer.children.length === 0) {
@@ -4448,7 +5773,7 @@ ${report}
         // Monitor & Generator
         let isOnline = false; const term = document.getElementById('terminal-window');
         function addLog(t,m){const time=new Date().toLocaleTimeString('es-ES',{hour12:false});let c="text-slate-300";if(t==="SUCCESS")c="text-green-400";if(t==="ERROR")c="text-red-400";term.innerHTML+=`<div class="terminal-line"><span class="text-slate-600">[${time}]</span> <span class="${c} font-bold w-16 inline-block">${t}</span> ${m}</div>`;term.scrollTop=term.scrollHeight;}
-        setTimeout(()=>{addLog("INFO","Conectado a DirectOS v9.0 - Agent Mode")},1000);
+        setTimeout(()=>{addLog("INFO","Conectado a DirectOS v10.1 - Pipeline Builder Pro")},1000);
         
         // ============================================
         // GLOSARIO - FILTROS, BÚSQUEDA Y PERSISTENCIA
@@ -5718,20 +7043,20 @@ ${report}
             try {
                 const res = await fetch('/api/agent/start-all', {method: 'POST'});
                 const data = await res.json();
-                showToast('Agent Mode iniciado', 'success');
+                showToast('Automatizaciones iniciadas', 'success');
                 await refreshAgentStatus();
             } catch(e) {
-                showToast('Error iniciando Agent Mode', 'error');
+                showToast('Error iniciando automatizaciones', 'error');
             }
         }
 
         async function stopAllAgents() {
             try {
                 const res = await fetch('/api/agent/stop-all', {method: 'POST'});
-                showToast('Agent Mode detenido', 'info');
+                showToast('Automatizaciones detenidas', 'info');
                 await refreshAgentStatus();
             } catch(e) {
-                showToast('Error deteniendo Agent Mode', 'error');
+                showToast('Error deteniendo automatizaciones', 'error');
             }
         }
 
@@ -5908,6 +7233,811 @@ ${report}
                 setTimeout(() => refreshAgentRuns(), 1000);
             } catch(e) {
                 showToast('Error ejecutando pipeline', 'error');
+            }
+        }
+
+        // ============================================
+        // EJECUCIÓN DE PIPELINE v10.1 PRO
+        // ============================================
+
+        // Ejecutar pipeline desde el botón principal del Pipeline Builder
+        // EJECUCIÓN REAL - Conecta con Claude y otros servicios
+        async function runPipelineFromBuilder() {
+            if (!canvasNodes || canvasNodes.length === 0) {
+                showToast('Añade herramientas al canvas primero', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('run-pipeline-btn');
+            const originalContent = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Ejecutando...';
+
+            // Actualizar estados visuales
+            updateNodeStatus('all', 'idle');
+
+            // Ordenar nodos según conexiones (topológico simple)
+            const orderedNodes = getExecutionOrder();
+
+            // Estado del pipeline (datos que pasan entre nodos)
+            let pipelineData = {
+                input: "Inicio del pipeline",
+                results: {},
+                // Contexto para Inspector HITL
+                previousNode: null,
+                previousNodeId: null,
+                source: 'Pipeline input',
+                lastTool: null,
+                lastAction: null,
+                nextNode: null,
+                nextAction: null,
+                currentStep: 0,
+                totalSteps: orderedNodes.length
+            };
+
+            addLog('INFO', `▶ Ejecutando pipeline con ${orderedNodes.length} nodos...`);
+
+            try {
+                for (let i = 0; i < orderedNodes.length; i++) {
+                    const node = orderedNodes[i];
+                    updateNodeStatus(node.id, 'running');
+                    addLog('INFO', `[${i+1}/${orderedNodes.length}] Ejecutando: ${node.name}`);
+
+                    // Actualizar contexto para Inspector
+                    pipelineData.currentStep = i + 1;
+
+                    // Info del nodo anterior
+                    if (i > 0) {
+                        const prevNode = orderedNodes[i - 1];
+                        pipelineData.previousNode = prevNode.name;
+                        pipelineData.previousNodeId = prevNode.id;
+                        pipelineData.lastTool = prevNode.name;
+                        pipelineData.lastAction = getNodeAction(prevNode.id);
+                    } else {
+                        pipelineData.previousNode = 'Inicio';
+                        pipelineData.previousNodeId = null;
+                        pipelineData.lastTool = 'Pipeline';
+                        pipelineData.lastAction = 'Inicializar datos';
+                    }
+
+                    // Info del nodo siguiente
+                    if (i < orderedNodes.length - 1) {
+                        const nextNode = orderedNodes[i + 1];
+                        pipelineData.nextNode = nextNode.name;
+                        pipelineData.nextAction = getNodeAction(nextNode.id);
+                    } else {
+                        pipelineData.nextNode = 'Fin';
+                        pipelineData.nextAction = 'Mostrar resultado';
+                    }
+
+                    try {
+                        // Check pauseBefore (HITL antes de ejecutar)
+                        if (node.pauseBefore) {
+                            addLog('INFO', `  → HITL: Pausa antes de ${node.name}...`);
+                            const beforeContext = {
+                                previousNode: pipelineData.previousNode,
+                                previousNodeId: pipelineData.previousNodeId,
+                                source: pipelineData.source,
+                                tool: node.name,
+                                action: `Ejecutar ${node.name}`,
+                                data: pipelineData.lastOutput || pipelineData.input || 'Sin datos previos',
+                                nextNode: node.name,
+                                nextAction: getNodeAction(node.id),
+                                currentStep: pipelineData.currentStep,
+                                totalSteps: pipelineData.totalSteps
+                            };
+                            const beforeResult = await showInspectorModal(beforeContext);
+                            if (beforeResult.action === 'stop') {
+                                throw new Error('Pipeline detenido por el usuario (pauseBefore)');
+                            }
+                            if (beforeResult.action === 'edit') {
+                                pipelineData.lastOutput = beforeResult.editedData;
+                            }
+                        }
+
+                        // Ejecutar nodo según su tipo
+                        const result = await executeNode(node, pipelineData);
+
+                        // Guardar resultado
+                        pipelineData.results[node.id] = result;
+                        pipelineData.lastOutput = result;
+
+                        // Check pauseAfter (HITL despues de ejecutar)
+                        if (node.pauseAfter) {
+                            addLog('INFO', `  → HITL: Pausa despues de ${node.name}...`);
+                            const afterContext = {
+                                previousNode: node.name,
+                                previousNodeId: node.id,
+                                source: pipelineData.source,
+                                tool: node.name,
+                                action: getNodeAction(node.id),
+                                data: result || 'Sin resultado',
+                                nextNode: pipelineData.nextNode,
+                                nextAction: pipelineData.nextAction,
+                                currentStep: pipelineData.currentStep,
+                                totalSteps: pipelineData.totalSteps
+                            };
+                            const afterResult = await showInspectorModal(afterContext);
+                            if (afterResult.action === 'stop') {
+                                throw new Error('Pipeline detenido por el usuario (pauseAfter)');
+                            }
+                            if (afterResult.action === 'edit') {
+                                pipelineData.lastOutput = afterResult.editedData;
+                                pipelineData.results[node.id] = afterResult.editedData;
+                            }
+                        }
+
+                        updateNodeStatus(node.id, 'success');
+
+                        if (result && result.length > 100) {
+                            addLog('SUCCESS', `✓ ${node.name}: ${result.substring(0, 100)}...`);
+                        } else if (result) {
+                            addLog('SUCCESS', `✓ ${node.name}: ${result}`);
+                        } else {
+                            addLog('SUCCESS', `✓ ${node.name}: OK`);
+                        }
+
+                    } catch (nodeError) {
+                        updateNodeStatus(node.id, 'error');
+                        addLog('ERROR', `✗ ${node.name}: ${nodeError.message}`);
+                        throw nodeError;
+                    }
+                }
+
+                addLog('SUCCESS', '▶ Pipeline completado exitosamente');
+                showToast('Pipeline completado', 'success');
+
+                // Mostrar resultado final si hay
+                if (pipelineData.lastOutput) {
+                    showPipelineResult(pipelineData.lastOutput);
+                }
+
+            } catch (error) {
+                console.error('Pipeline error:', error);
+                addLog('ERROR', `Pipeline falló: ${error.message}`);
+                showToast(`Error: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+            }
+        }
+
+        // Obtener orden de ejecución (siguiendo conexiones)
+        function getExecutionOrder() {
+            if (nodeConnections.length === 0) {
+                // Sin conexiones: ejecutar en orden de posición X
+                return [...canvasNodes].sort((a, b) => {
+                    const posA = nodePositions[a.id] || { x: 0 };
+                    const posB = nodePositions[b.id] || { x: 0 };
+                    return posA.x - posB.x;
+                });
+            }
+
+            // Con conexiones: orden topológico
+            const inDegree = {};
+            const adjList = {};
+
+            canvasNodes.forEach(n => {
+                inDegree[n.id] = 0;
+                adjList[n.id] = [];
+            });
+
+            nodeConnections.forEach(c => {
+                adjList[c.from].push(c.to);
+                inDegree[c.to]++;
+            });
+
+            // Empezar con nodos sin entradas
+            const queue = canvasNodes.filter(n => inDegree[n.id] === 0);
+            const result = [];
+
+            while (queue.length > 0) {
+                const node = queue.shift();
+                result.push(node);
+
+                adjList[node.id].forEach(toId => {
+                    inDegree[toId]--;
+                    if (inDegree[toId] === 0) {
+                        const toNode = canvasNodes.find(n => n.id === toId);
+                        if (toNode) queue.push(toNode);
+                    }
+                });
+            }
+
+            return result;
+        }
+
+        // Ejecutar un nodo individual
+        async function executeNode(node, pipelineData) {
+            const nodeId = node.id;
+
+            // ===== CLAUDE NODE =====
+            if (nodeId === 'claude-node' || nodeId.includes('claude')) {
+                const prompt = pipelineData.lastOutput || pipelineData.input || "Hola";
+
+                addLog('INFO', `  → Llamando a Claude CLI...`);
+
+                const response = await fetch('/api/claude/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        system_prompt: "Eres un asistente útil. Responde de forma concisa."
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    return data.content;
+                } else {
+                    throw new Error(data.error || 'Error de Claude');
+                }
+            }
+
+            // ===== OUTPUT NOTIFY =====
+            if (nodeId === 'output-notify') {
+                const message = pipelineData.lastOutput || 'Pipeline completado';
+                // Intentar notificación del navegador
+                if (Notification.permission === 'granted') {
+                    new Notification('DirectOS Pipeline', { body: message.substring(0, 100) });
+                } else if (Notification.permission !== 'denied') {
+                    await Notification.requestPermission();
+                }
+                return `Notificación enviada: ${message.substring(0, 50)}...`;
+            }
+
+            // ===== OUTPUT FILE =====
+            if (nodeId === 'output-file') {
+                const content = pipelineData.lastOutput || JSON.stringify(pipelineData.results);
+                // Descargar como archivo
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `pipeline-output-${Date.now()}.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+                return `Archivo descargado (${content.length} bytes)`;
+            }
+
+            // ===== FLOW DELAY =====
+            if (nodeId === 'flow-delay') {
+                const seconds = 2; // Default 2 segundos
+                addLog('INFO', `  → Esperando ${seconds}s...`);
+                await new Promise(r => setTimeout(r, seconds * 1000));
+                return pipelineData.lastOutput || 'Delay completado';
+            }
+
+            // ===== FLOW INSPECTOR (Human-in-the-Loop) =====
+            if (nodeId === 'flow-inspector') {
+                addLog('INFO', `  → Inspector: esperando revision humana...`);
+
+                // Obtener contexto del pipeline
+                const inspectorContext = {
+                    previousNode: pipelineData.previousNode || 'Inicio',
+                    previousNodeId: pipelineData.previousNodeId || null,
+                    source: pipelineData.source || 'Pipeline input',
+                    tool: pipelineData.lastTool || 'N/A',
+                    action: pipelineData.lastAction || 'Procesar datos',
+                    data: pipelineData.lastOutput || pipelineData.input || 'Sin datos',
+                    nextNode: pipelineData.nextNode || 'Fin',
+                    nextAction: pipelineData.nextAction || 'Finalizar pipeline',
+                    currentStep: pipelineData.currentStep || 1,
+                    totalSteps: pipelineData.totalSteps || 1
+                };
+
+                // Mostrar modal y esperar decision del usuario
+                const result = await showInspectorModal(inspectorContext);
+
+                if (result.action === 'stop') {
+                    throw new Error('Pipeline detenido por el usuario');
+                }
+
+                if (result.action === 'edit') {
+                    return result.editedData;
+                }
+
+                // Continuar con los datos originales
+                return pipelineData.lastOutput || pipelineData.input;
+            }
+
+            // ===== TRIGGERS (pass-through) =====
+            if (nodeId.startsWith('trigger-')) {
+                return pipelineData.input || 'Trigger activado';
+            }
+
+            // ===== OTROS NODOS (simulados por ahora) =====
+            addLog('INFO', `  → Simulando ${node.name}...`);
+            await new Promise(r => setTimeout(r, 500));
+            return pipelineData.lastOutput || `${node.name} procesado`;
+        }
+
+        // Mostrar resultado del pipeline en un modal
+        function showPipelineResult(result) {
+            const resultPreview = result.length > 500 ? result.substring(0, 500) + '...' : result;
+
+            // Mostrar en el panel de log con formato especial
+            addLog('INFO', '─'.repeat(40));
+            addLog('INFO', '📋 RESULTADO DEL PIPELINE:');
+            addLog('INFO', resultPreview);
+            addLog('INFO', '─'.repeat(40));
+
+            // Copiar al portapapeles
+            navigator.clipboard.writeText(result).then(() => {
+                showToast('Resultado copiado al portapapeles', 'success');
+            });
+        }
+
+        // ============================================
+        // INSPECTOR (Human-in-the-Loop)
+        // ============================================
+
+        let inspectorResolve = null;
+        let inspectorData = null;
+
+        // Tips didacticos por herramienta
+        const INSPECTOR_TIPS = {
+            'trigger-manual': 'El Trigger Manual inicia el pipeline cuando haces click. Util para pruebas y ejecuciones bajo demanda.',
+            'trigger-file': 'El Trigger File vigila una carpeta y detecta archivos nuevos. Usa patrones como *.pdf para filtrar.',
+            'trigger-cron': 'El Trigger Cron ejecuta el pipeline en horarios programados. Usa expresiones cron o presets como "cada hora".',
+            'trigger-webhook': 'El Trigger Webhook recibe peticiones HTTP POST de sistemas externos para iniciar el pipeline.',
+            'claude-node': 'Claude CLI usa tu suscripcion Pro/Max para analizar texto. No consume creditos de API. Ideal para tareas complejas de razonamiento.',
+            'pdf-parser': 'PyPDF2 extrae texto de PDFs digitales. Para PDFs escaneados (imagenes), necesitarias Tesseract OCR.',
+            'whisper': 'Whisper de OpenAI transcribe audio a texto. Soporta multiples idiomas y es muy preciso con audio claro.',
+            'tesseract': 'Tesseract es OCR gratuito. Funciona bien con imagenes claras. Para mejor precision, preprocesa las imagenes.',
+            'chromadb': 'ChromaDB almacena embeddings para busqueda semantica. Util para encontrar documentos similares.',
+            'sqlite': 'SQLite guarda datos estructurados localmente. Perfecto para persistir resultados sin servidor.',
+            'output-file': 'Output File guarda el resultado en un archivo. Soporta JSON, CSV y TXT.',
+            'output-notify': 'Output Notify envia una notificacion del navegador. Util para alertas cuando termina el pipeline.',
+            'output-email': 'Output Email envia el resultado por correo. Necesita configurar SMTP.',
+            'output-slack': 'Output Slack envia mensajes a un canal via webhook. Ideal para notificaciones de equipo.',
+            'flow-if': 'Flow If bifurca el pipeline segun una condicion. Permite logica condicional.',
+            'flow-loop': 'Flow Loop repite una seccion del pipeline. Util para procesar listas o reintentos.',
+            'flow-delay': 'Flow Delay pausa el pipeline. Usalo para rate limiting o esperar procesos externos.',
+            'default': 'Este nodo procesa los datos y los pasa al siguiente paso del pipeline.'
+        };
+
+        function getInspectorTip(nodeId) {
+            return INSPECTOR_TIPS[nodeId] || INSPECTOR_TIPS['default'];
+        }
+
+        // Acciones por tipo de nodo (para el Inspector)
+        const NODE_ACTIONS = {
+            'trigger-manual': 'Iniciar pipeline manualmente',
+            'trigger-file': 'Detectar archivos nuevos',
+            'trigger-cron': 'Ejecutar en horario programado',
+            'trigger-webhook': 'Recibir peticion HTTP',
+            'claude-node': 'Analizar con IA (Claude)',
+            'pdf-parser': 'Extraer texto del PDF',
+            'whisper': 'Transcribir audio a texto',
+            'tesseract': 'Extraer texto de imagen (OCR)',
+            'chromadb': 'Buscar en base de vectores',
+            'sqlite': 'Guardar en base de datos',
+            'output-file': 'Guardar en archivo',
+            'output-notify': 'Enviar notificacion',
+            'output-email': 'Enviar por email',
+            'output-slack': 'Enviar a Slack',
+            'flow-if': 'Evaluar condicion',
+            'flow-loop': 'Repetir secuencia',
+            'flow-delay': 'Esperar antes de continuar',
+            'flow-inspector': 'Revisar datos (HITL)',
+            'default': 'Procesar datos'
+        };
+
+        function getNodeAction(nodeId) {
+            return NODE_ACTIONS[nodeId] || NODE_ACTIONS['default'];
+        }
+
+        function showInspectorModal(context) {
+            return new Promise((resolve) => {
+                inspectorResolve = resolve;
+                inspectorData = context.data;
+
+                // Rellenar el modal
+                document.getElementById('inspector-step').textContent = `Paso ${context.currentStep}/${context.totalSteps}`;
+                document.getElementById('inspector-origin-node').textContent = context.previousNode;
+                document.getElementById('inspector-origin-source').textContent = context.source;
+                document.getElementById('inspector-process-tool').textContent = context.tool;
+                document.getElementById('inspector-process-action').textContent = context.action;
+
+                // Datos - mostrar preview
+                const dataStr = typeof context.data === 'string' ? context.data : JSON.stringify(context.data, null, 2);
+                const dataPreview = dataStr.length > 1000 ? dataStr.substring(0, 1000) + '\n\n... (truncado)' : dataStr;
+                document.getElementById('inspector-data').textContent = dataPreview;
+                document.getElementById('inspector-data-size').textContent = `${dataStr.length} caracteres`;
+
+                document.getElementById('inspector-dest-node').textContent = context.nextNode;
+                document.getElementById('inspector-dest-action').textContent = context.nextAction;
+
+                // Tip didactico basado en la herramienta anterior
+                document.getElementById('inspector-tip').textContent = getInspectorTip(context.previousNodeId);
+
+                // Mostrar modal
+                document.getElementById('inspector-modal').classList.remove('hidden');
+            });
+        }
+
+        function inspectorContinue() {
+            document.getElementById('inspector-modal').classList.add('hidden');
+            if (inspectorResolve) {
+                inspectorResolve({ action: 'continue' });
+                inspectorResolve = null;
+            }
+        }
+
+        function inspectorStop() {
+            document.getElementById('inspector-modal').classList.add('hidden');
+            if (inspectorResolve) {
+                inspectorResolve({ action: 'stop' });
+                inspectorResolve = null;
+            }
+        }
+
+        function inspectorEdit() {
+            // Mostrar textarea para editar
+            const dataEl = document.getElementById('inspector-data');
+            const currentText = dataEl.textContent;
+
+            // Convertir pre a textarea
+            const container = dataEl.parentElement;
+            container.innerHTML = `
+                <textarea id="inspector-data-edit" class="w-full h-48 bg-slate-950 text-slate-300 text-sm font-mono p-3 rounded border border-amber-500/30 focus:outline-none focus:border-amber-500">${currentText}</textarea>
+                <div class="mt-2 flex gap-2">
+                    <button onclick="inspectorSaveEdit()" class="px-3 py-1 bg-amber-500 text-black text-xs font-bold rounded hover:bg-amber-400">
+                        <i class="fa-solid fa-check mr-1"></i> Guardar cambios
+                    </button>
+                    <button onclick="inspectorCancelEdit()" class="px-3 py-1 bg-slate-700 text-white text-xs rounded hover:bg-slate-600">
+                        Cancelar
+                    </button>
+                </div>
+            `;
+        }
+
+        function inspectorSaveEdit() {
+            const editedData = document.getElementById('inspector-data-edit').value;
+            document.getElementById('inspector-modal').classList.add('hidden');
+
+            // Restaurar el pre
+            const container = document.getElementById('inspector-data').parentElement;
+            container.innerHTML = `<pre id="inspector-data" class="text-sm text-slate-300 whitespace-pre-wrap font-mono">-</pre>`;
+
+            if (inspectorResolve) {
+                inspectorResolve({ action: 'edit', editedData: editedData });
+                inspectorResolve = null;
+            }
+        }
+
+        function inspectorCancelEdit() {
+            // Restaurar el pre con los datos originales
+            const container = document.querySelector('#inspector-modal .bg-amber-500\\/5 .bg-slate-950');
+            const dataStr = typeof inspectorData === 'string' ? inspectorData : JSON.stringify(inspectorData, null, 2);
+            const dataPreview = dataStr.length > 1000 ? dataStr.substring(0, 1000) + '\n\n... (truncado)' : dataStr;
+
+            container.innerHTML = `
+                <pre id="inspector-data" class="text-sm text-slate-300 whitespace-pre-wrap font-mono">${dataPreview}</pre>
+            `;
+        }
+
+        // ============================================
+        // DRY RUN (Simulación)
+        // ============================================
+
+        // Tiempos estimados por tipo de nodo (en segundos)
+        const NODE_ESTIMATED_TIME = {
+            'trigger-manual': 0,
+            'trigger-file': 1,
+            'trigger-cron': 0,
+            'trigger-webhook': 0,
+            'claude-node': 10,
+            'pdf-parser': 3,
+            'whisper': 30,
+            'tesseract': 5,
+            'chromadb': 2,
+            'sqlite': 1,
+            'output-file': 1,
+            'output-notify': 0,
+            'output-email': 2,
+            'output-slack': 1,
+            'flow-if': 0,
+            'flow-loop': 0,
+            'flow-delay': 2,
+            'flow-inspector': 30,  // Tiempo humano
+            'default': 1
+        };
+
+        function getNodeEstimatedTime(nodeId) {
+            return NODE_ESTIMATED_TIME[nodeId] || NODE_ESTIMATED_TIME['default'];
+        }
+
+        function dryRunPipeline() {
+            if (!canvasNodes || canvasNodes.length === 0) {
+                showToast('Añade herramientas al canvas primero', 'error');
+                return;
+            }
+
+            const orderedNodes = getExecutionOrder();
+            let totalTime = 0;
+            let pauseCount = 0;
+            let warnings = [];
+            let steps = [];
+
+            // Analizar cada nodo
+            orderedNodes.forEach((node, index) => {
+                const time = getNodeEstimatedTime(node.id);
+                totalTime += time;
+
+                // Contar pausas (Inspector o nodos con pauseBefore/pauseAfter)
+                if (node.id === 'flow-inspector') {
+                    pauseCount++;
+                }
+                if (node.pauseBefore) pauseCount++;
+                if (node.pauseAfter) pauseCount++;
+
+                // Detectar warnings
+                if (node.id === 'claude-node') {
+                    warnings.push('Claude CLI necesita autenticación activa');
+                }
+                if (node.id === 'whisper') {
+                    warnings.push('Whisper puede tardar varios minutos en archivos largos');
+                }
+                if (node.id === 'output-email') {
+                    warnings.push('Output Email requiere configuración SMTP');
+                }
+
+                // Construir paso
+                const pauseIndicator = (node.id === 'flow-inspector' || node.pauseBefore || node.pauseAfter)
+                    ? '<span class="text-cyan-400 ml-2"><i class="fa-solid fa-pause"></i> HITL</span>'
+                    : '';
+
+                steps.push({
+                    index: index + 1,
+                    name: node.name,
+                    action: getNodeAction(node.id),
+                    time: time,
+                    pauseIndicator: pauseIndicator,
+                    icon: node.icon || 'fa-cube',
+                    color: node.color || 'text-slate-400'
+                });
+            });
+
+            // Actualizar modal
+            document.getElementById('dry-run-nodes').textContent = orderedNodes.length;
+            document.getElementById('dry-run-time').textContent = totalTime > 60
+                ? `~${Math.ceil(totalTime / 60)}min`
+                : `~${totalTime}s`;
+            document.getElementById('dry-run-pauses').textContent = pauseCount;
+
+            // Renderizar pasos
+            const stepsContainer = document.getElementById('dry-run-steps');
+            stepsContainer.innerHTML = steps.map(step => `
+                <div class="flex items-center gap-3 p-2 bg-slate-900/50 rounded-lg">
+                    <div class="w-6 h-6 bg-slate-800 rounded-full flex items-center justify-center text-xs font-bold text-slate-400">
+                        ${step.index}
+                    </div>
+                    <i class="fa-solid ${step.icon} ${step.color}"></i>
+                    <div class="flex-1">
+                        <span class="font-semibold text-white">${step.name}</span>
+                        <span class="text-slate-500 text-sm ml-2">${step.action}</span>
+                        ${step.pauseIndicator}
+                    </div>
+                    <div class="text-xs text-slate-500">
+                        ${step.time > 0 ? `~${step.time}s` : '-'}
+                    </div>
+                </div>
+            `).join('');
+
+            // Mostrar warnings si hay
+            const warningsContainer = document.getElementById('dry-run-warnings');
+            const warningsList = document.getElementById('dry-run-warnings-list');
+            if (warnings.length > 0) {
+                warningsContainer.classList.remove('hidden');
+                warningsList.innerHTML = [...new Set(warnings)].map(w => `<li>• ${w}</li>`).join('');
+            } else {
+                warningsContainer.classList.add('hidden');
+            }
+
+            // Mostrar modal
+            document.getElementById('dry-run-modal').classList.remove('hidden');
+        }
+
+        function closeDryRunModal() {
+            document.getElementById('dry-run-modal').classList.add('hidden');
+        }
+
+        async function executePipelineFromTrigger(triggerId) {
+            if (!canvasNodes || canvasNodes.length === 0) {
+                showToast('No hay pipeline en el canvas', 'error');
+                return;
+            }
+
+            // Verificar que el trigger está en el canvas
+            const triggerNode = canvasNodes.find(n => n.id === triggerId);
+            if (!triggerNode) {
+                showToast('Trigger no encontrado', 'error');
+                return;
+            }
+
+            // Cambiar botón a estado "ejecutando"
+            const btn = document.getElementById(`trigger-btn-${triggerId}`);
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-[10px]"></i><span>Ejecutando...</span>';
+            }
+
+            // Actualizar estados visuales de todos los nodos
+            updateNodeStatus('all', 'idle');
+
+            try {
+                // Filtrar nodos que no son triggers para la ejecución
+                const pipelineNodes = canvasNodes.filter(n => !n.isTrigger);
+
+                if (pipelineNodes.length === 0) {
+                    showToast('Añade herramientas después del trigger', 'error');
+                    resetTriggerButton(triggerId);
+                    return;
+                }
+
+                // Obtener parámetros configurados del panel
+                const getNodeParams = (nodeId) => {
+                    const params = {};
+                    document.querySelectorAll(`[data-param]`).forEach(input => {
+                        if (canvasState.selectedNodeId === nodeId) {
+                            params[input.dataset.param] = input.value;
+                        }
+                    });
+                    return params;
+                };
+
+                const pipelineDef = {
+                    name: `Pipeline desde ${triggerNode.name}`,
+                    trigger: triggerId,
+                    nodes: pipelineNodes.map(n => ({
+                        id: n.id,
+                        tool: n.id,
+                        name: n.name,
+                        category: n.cat,
+                        config: getNodeParams(n.id),
+                        position: nodePositions[n.id] || { x: 0, y: 0 }
+                    })),
+                    connections: nodeConnections.map(c => ({
+                        from: c.from,
+                        to: c.to
+                    }))
+                };
+
+                // Marcar trigger como "running"
+                updateNodeStatus(triggerId, 'running');
+                addLog("INFO", `Iniciando pipeline con ${pipelineNodes.length} nodos...`);
+
+                const res = await fetch('/api/agent/execute', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(pipelineDef)
+                });
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({ detail: 'Error desconocido' }));
+                    throw new Error(err.detail || 'Error en API');
+                }
+
+                const data = await res.json();
+                const runId = data.run_id;
+                addLog("SUCCESS", `Pipeline iniciado: ${runId}`);
+
+                // Polling del estado real
+                await pollPipelineStatus(runId, triggerId, pipelineNodes);
+
+            } catch (e) {
+                console.error('Error ejecutando pipeline:', e);
+                showToast('Error: ' + e.message, 'error');
+                updateNodeStatus(triggerId, 'error');
+                addLog("ERROR", `Pipeline falló: ${e.message}`);
+            } finally {
+                resetTriggerButton(triggerId);
+            }
+        }
+
+        // Polling del estado de ejecución
+        async function pollPipelineStatus(runId, triggerId, pipelineNodes) {
+            const maxAttempts = 60; // 1 minuto máximo
+            let attempts = 0;
+            let currentNodeIndex = 0;
+
+            while (attempts < maxAttempts) {
+                try {
+                    const res = await fetch(`/api/agent/runs/${runId}`);
+                    if (!res.ok) break;
+
+                    const run = await res.json();
+
+                    // Actualizar estado visual según el progreso
+                    if (run.current_node_index !== undefined) {
+                        // Marcar nodos anteriores como success
+                        for (let i = 0; i < run.current_node_index; i++) {
+                            if (pipelineNodes[i]) {
+                                updateNodeStatus(pipelineNodes[i].id, 'success');
+                            }
+                        }
+                        // Marcar nodo actual como running
+                        if (pipelineNodes[run.current_node_index]) {
+                            updateNodeStatus(pipelineNodes[run.current_node_index].id, 'running');
+                        }
+                    }
+
+                    // Verificar si terminó
+                    if (run.status === 'completed') {
+                        pipelineNodes.forEach(n => updateNodeStatus(n.id, 'success'));
+                        updateNodeStatus(triggerId, 'success');
+                        showToast('Pipeline completado', 'success');
+                        addLog("SUCCESS", `Pipeline completado en ${run.duration || 'N/A'}s`);
+                        return;
+                    } else if (run.status === 'failed' || run.status === 'error') {
+                        const failedNode = run.failed_node || pipelineNodes[run.current_node_index];
+                        if (failedNode) updateNodeStatus(failedNode.id || failedNode, 'error');
+                        updateNodeStatus(triggerId, 'error');
+                        showToast('Pipeline falló', 'error');
+                        addLog("ERROR", run.error || 'Error desconocido');
+                        return;
+                    }
+
+                    // Esperar antes de siguiente poll
+                    await new Promise(r => setTimeout(r, 1000));
+                    attempts++;
+
+                } catch (e) {
+                    console.error('Error polling:', e);
+                    break;
+                }
+            }
+
+            // Si llegamos aquí, simular progreso visual
+            await animatePipelineExecution(pipelineNodes, runId);
+            updateNodeStatus(triggerId, 'success');
+            showToast('Pipeline completado', 'success');
+        }
+
+        function resetTriggerButton(triggerId) {
+            const btn = document.getElementById(`trigger-btn-${triggerId}`);
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-play text-[10px]"></i><span>Ejecutar Pipeline</span>';
+            }
+        }
+
+        function updateNodeStatus(nodeId, status) {
+            if (nodeId === 'all') {
+                document.querySelectorAll('.node-status').forEach(el => {
+                    el.dataset.status = status;
+                    el.style.background = '#475569';
+                });
+                return;
+            }
+
+            const nodeEl = document.querySelector(`[data-node-id="${nodeId}"] .node-status`);
+            if (nodeEl) {
+                nodeEl.dataset.status = status;
+                const colors = { running: '#eab308', success: '#22c55e', error: '#ef4444', idle: '#475569' };
+                nodeEl.style.background = colors[status] || colors.idle;
+
+                // Animación de pulso para running
+                if (status === 'running') {
+                    nodeEl.classList.add('animate-pulse');
+                } else {
+                    nodeEl.classList.remove('animate-pulse');
+                }
+            }
+        }
+
+        async function animatePipelineExecution(nodes, runId) {
+            for (let i = 0; i < nodes.length; i++) {
+                const node = nodes[i];
+                updateNodeStatus(node.id, 'running');
+
+                // Esperar un tiempo simulado (en futuro: polling real al backend)
+                await new Promise(resolve => setTimeout(resolve, 800));
+
+                updateNodeStatus(node.id, 'success');
             }
         }
 

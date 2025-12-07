@@ -1,77 +1,67 @@
-# DirectOS v9.0 - Agent Mode
+# DirectOS v10.5 - Pipeline Builder Pro
 
-> Centro de operaciones para diseñar arquitecturas, crear prompts agénticos y dominar tu stack
+> Tu cockpit de desarrollo con IA integrada y Human-in-the-Loop
 
 ## Qué es
 
-DirectOS es tu **cockpit de desarrollo** para el ecosistema minerOS. Diseña pipelines visualmente, crea prompts agénticos estructurados, aprende nuevas herramientas con contexto, y documenta tus proyectos.
+DirectOS es tu **cockpit de desarrollo** para el ecosistema minerOS. Diseña pipelines visualmente, ejecútalos con IA real (Claude CLI), supervisa cada paso con HITL, y aprende cómo funcionan las automatizaciones.
 
-## Novedades v9.0
+## Novedades v10.5
+
+### Human-in-the-Loop Completo
+| Feature | Descripción |
+|---------|-------------|
+| **Nodo Inspector** | Pausa didáctica mostrando origen → proceso → datos → destino |
+| **Dry Run** | Simula el pipeline sin ejecutar, muestra tiempo estimado y pausas |
+| **Pausas por Nodo** | Checkbox para pausar antes/después de cada nodo |
+| **Tips Didácticos** | Explicaciones contextuales para aprender automatización |
+| **Edición en Pausa** | Modifica datos intermedios antes de continuar |
+
+### Claude CLI Integration (v10.3)
+| Feature | Descripción |
+|---------|-------------|
+| **Sin coste API** | Usa tu suscripción Pro/Max directamente |
+| **Nodo Claude** | Arrastra al canvas y conecta |
+| **Endpoint REST** | `/api/claude/ask` para integración |
+
+### Pipeline Execution Real (v10.1)
+| Feature | Descripción |
+|---------|-------------|
+| **35 Nodos** | Triggers, Proceso, IA, Storage, Flow, Output |
+| **Conexiones SVG** | Bezier curves arrastrables |
+| **Ejecución Secuencial** | Los pipelines se ejecutan de verdad |
+| **Snap to Grid** | Alineación automática 20px |
 
 ### Prompt Builder Pro
 | Feature | Descripción |
 |---------|-------------|
 | **Constructor Visual** | Crea prompts agénticos con el patrón de 6 secciones |
 | **8 Plantillas** | code-review, doc, test, security, refactor, vault, scan-projects, update-context |
-| **Drag & Drop** | Reordena pasos del workflow arrastrando |
 | **Instalar Directo** | Guarda en `~/.claude/commands/` con un click |
-| **Editar Existentes** | Carga comandos instalados y edítalos visualmente |
-| **Validación en Tiempo Real** | Checklist de calidad para prompts |
 
-### Agent Mode Backend
-| Feature | Descripción |
-|---------|-------------|
-| **Pipeline Executor** | Ejecuta pipelines diseñados como código real |
-| **Watchdog Service** | Detecta archivos nuevos y procesa automáticamente |
-| **Scheduler** | Programa tareas con cron o intervalos |
-| **Notificaciones** | Alertas macOS nativas cuando terminan procesos |
-| **API Commands** | CRUD completo para slash commands |
+### Versiones anteriores
 
-### Prompt Builder Pro - El Patrón de 6 Secciones
-
-```
-┌─────────────────────────────────────────┐
-│ 1. METADATA     → description, tools    │
-│ 2. VARIABLES    → dinámicas/estáticas   │
-│ 3. WORKFLOW     → pasos secuenciales    │  ★ S-TIER
-│ 4. INSTRUCTIONS → cómo ejecutar         │
-│ 5. REPORT       → formato de salida     │
-└─────────────────────────────────────────┘
-```
-
-### Novedades v8.1
-
-| Feature | Descripción |
+| v8.x | Descripción |
 |---------|-------------|
 | **Portfolio de Proyectos** | 11 proyectos documentados con stack, estado y métricas |
-| **Comando /vault Inteligente** | Auto-detecta y actualiza herramientas/proyectos/patrones |
-| **Migración a Markdown** | 85 archivos (tools, patterns, flows, presets, projects) |
-| **Backend API REST** | Endpoints para todos los tipos de contenido |
-| **ContentManager** | Cache inteligente con reload dinámico |
-
-### Novedades v8.0
-
-| Feature | Descripción |
-|---------|-------------|
 | **Pipeline Builder** | Canvas visual con conexiones SVG entre nodos |
-| **Validación Real-time** | Panel lateral con warnings/errors del stack |
-| **Compilar a Python** | Genera código completo desde el diagrama |
-| **Scaffold Proyecto** | Crea estructura de carpetas + script ejecutable |
 | **App Store de Flujos** | 12 recetas de arquitectura listas para clonar |
-| **33 Patrones** | Biblioteca completa de prompt patterns |
-| **Glosario Mejorado** | Filtros, búsqueda, progreso visual, 28 herramientas |
+| **42 Patrones** | Biblioteca completa de prompt patterns |
+| **Glosario** | Filtros, búsqueda, progreso visual |
 
 ### Historial de versiones
 
 | Versión | Highlights |
 |---------|------------|
-| **v8.1** | Portfolio de 11 proyectos + Comando /vault + Migración Markdown |
-| **v8.0** | Pipeline Builder + Scaffold + App Store Flujos |
-| **v7.2** | 42 Patrones (Pack 14-15: RAG Avanzado, DevOps CI/CD) |
-| **v7.1** | 33 Patrones en 13 packs |
-| **v7.0** | Knowledge Base (RAG) + Scout + Glosario Interactivo |
-| **v6.0** | Backend FastAPI + Monitor |
-| **v5.x** | Arquitecto Visual + Generador de Prompts |
+| **v10.5** | Human-in-the-Loop: Dry Run + Pausas por nodo |
+| **v10.4** | Inspector didáctico (origen → proceso → datos → destino) |
+| **v10.3** | Claude CLI Integration (sin coste API) |
+| **v10.2** | Output nodes, Flow nodes, Snap to Grid |
+| **v10.1** | Pipeline Builder Pro, ejecución real |
+| **v10.0** | Trigger nodes (Manual, File, Cron, Webhook) |
+| **v9.0** | Prompt Builder Pro + Agent Mode Backend |
+| **v8.0** | Pipeline Builder + App Store Flujos |
+| **v7.0** | Knowledge Base (RAG) + Scout + Glosario |
 
 ## El problema que resuelve
 
@@ -118,7 +108,7 @@ cp .env.example .env
 ### Pipeline Builder (v8.0) ⭐ NUEVO
 
 **Canvas Visual:**
-- Drag & drop de 28 herramientas al canvas
+- Drag & drop de 35 nodos al canvas
 - **Conexiones SVG** automáticas entre nodos (bezier curves)
 - Layout automático en grid
 - Indicadores de posición en pipeline
@@ -216,16 +206,16 @@ cp .env.example .env
 - Sugiere la solución directamente
 - Contexto de tu stack (minerOS)
 
-## Herramientas incluidas (28)
+## Nodos disponibles (35)
 
-| Categoría | Herramientas |
-|-----------|--------------|
-| **Frontend** | HTML5, Tailwind, HTMX, Alpine.js |
-| **Backend** | Python, FastAPI, Pydantic, Loguru, BeautifulSoup, Watchdog, HTTPX, Typer, Rich |
-| **IA Model** | CLIP, Whisper, Sentence-BERT, Claude API, Ollama |
-| **Storage** | ChromaDB, SQLite, Markdown |
-| **Process** | OpenCV/Pillow, FFmpeg, Tesseract OCR, jq |
-| **DevOps** | Git, Ruff/Black, Docker, Pytest |
+| Categoría | Nodos |
+|-----------|-------|
+| **Trigger** | Manual, File Watch, Cron, Webhook |
+| **Proceso** | Whisper, Tesseract OCR, PDF Parser, BeautifulSoup |
+| **IA** | Claude (CLI), Ollama, OpenAI |
+| **Storage** | ChromaDB, SQLite, Redis |
+| **Flow** | If, Loop, Delay, Inspector |
+| **Output** | File, Notify, Email, Slack |
 
 ## Arquitectura
 
@@ -271,16 +261,25 @@ DirectOS/
 | Endpoint | Método | Descripción |
 |----------|--------|-------------|
 | `/api/health` | GET | Estado del sistema |
+| `/api/tools` | GET | Lista de 35 nodos |
+| `/api/claude/ask` | POST | Ejecutar Claude CLI |
+| `/api/claude/status` | GET | Verificar Claude disponible |
+| `/api/agent/execute` | POST | Ejecutar pipeline |
 | `/api/search` | POST | Búsqueda semántica |
-| `/api/index` | POST | Indexar archivos markdown |
-| `/api/stats` | GET | Estadísticas de la KB |
 | `/api/scout/analyze` | POST | Analizar error con Claude |
 
 ## Requisitos
 
 - Python 3.9+
+- Claude Code CLI (para nodo Claude)
 - ~2GB RAM (para embeddings)
 - ANTHROPIC_API_KEY (opcional, para Scout)
+
+## Documentación
+
+- **TUTORIAL.md**: Guía paso a paso de todas las funcionalidades
+- **CHANGELOG.md**: Historial detallado de cambios
+- **tutorial.html**: Tutorial interactivo con demos
 
 ## Filosofía
 
@@ -315,4 +314,4 @@ DirectOS/
 
 ---
 
-Parte del ecosistema **minerOS** | Creado por Carlos | Nov 2025
+Parte del ecosistema **minerOS** | Creado por Carlos | Dic 2024

@@ -6,6 +6,194 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 ---
 
+## [10.5.0] - 2025-12-07
+
+### Added - Dry Run (Simulación)
+- **Botón "Simular"**: Nuevo botón naranja en toolbar del Pipeline Builder
+- **Modal de simulación** con:
+  - Número de nodos a ejecutar
+  - Tiempo estimado total
+  - Contador de pausas HITL
+  - Lista detallada de pasos con iconos y tiempos
+  - Warnings contextuales (Claude necesita auth, etc.)
+- **Ejecutar desde simulación**: Botón para pasar directamente a ejecución real
+
+### Added - Configuración HITL por Nodo
+- **Checkboxes en panel de configuración**:
+  - "Pausar antes de ejecutar"
+  - "Pausar después de ejecutar"
+- **Indicador visual**: Nodos con HITL muestran borde cyan y punto pulsante
+- **Ejecución inteligente**: Cada nodo respeta sus flags de pausa
+- **Edición de datos**: Modificar datos durante pausas antes de continuar
+
+### Technical
+- Tiempos estimados por tipo de nodo (Claude ~10s, Whisper ~30s, etc.)
+- CSS animations para indicador HITL
+- toggleNodePause() para gestionar estado
+- Integración con Inspector modal existente
+
+---
+
+## [10.4.0] - 2025-12-07
+
+### Added - Inspector (Human-in-the-Loop)
+- **Nodo "Inspector"**: Pausa el pipeline y muestra panel didactico
+- **Panel visual** con 4 secciones:
+  - **Origen**: De donde vienen los datos (nodo anterior, fuente)
+  - **Proceso**: Quien lo hizo (herramienta, accion)
+  - **Datos**: Que se extrajo (preview editable)
+  - **Destino**: A donde van (siguiente nodo, accion)
+- **Tips didacticos**: Explicaciones contextuales de cada herramienta
+- **Acciones**: Continuar, Parar, Editar datos
+- **Edicion en linea**: Modifica datos antes de continuar
+
+### Technical
+- Promise-based modal para pausar ejecucion
+- Contexto completo del pipeline (previous/next node)
+- 20+ tips didacticos por herramienta
+- Total nodos: 36 (35 + Inspector)
+
+---
+
+## [10.3.0] - 2025-12-07
+
+### Added - Claude CLI Integration
+- **Endpoint `/api/claude/ask`**: Ejecuta Claude usando suscripción Pro/Max
+- **Endpoint `/api/claude/status`**: Verifica disponibilidad de Claude CLI
+- **Nodo "Claude (CLI)"**: Disponible en Pipeline Builder (categoría IA Model)
+- **Sin coste API**: Usa tu suscripción existente, no créditos de API
+
+### Added - Tutorial Interactivo
+- **TUTORIAL.md**: Documentación completa en markdown (10 secciones)
+- **tutorial.html**: Tutorial interactivo con animaciones y demos
+- Cobertura: Arquitectura, Pipeline Builder, Nodos, Claude CLI, Prompt Builder
+- Demo interactiva de ejecución de pipeline
+
+### Technical
+- Subprocess con timeout de 3 minutos
+- Output format JSON para parsing
+- Manejo de errores robusto
+
+---
+
+## [10.2.0] - 2025-12-07
+
+### Added - Nodos Output
+- **Output File**: Guardar resultado en archivo (JSON, CSV, TXT)
+- **Output Notify**: Notificación nativa de macOS
+- **Output Email**: Enviar resultado por email
+- **Output Slack**: Mensaje a canal de Slack via webhook
+
+### Added - Nodos Control de Flujo
+- **Flow If**: Bifurcación condicional del pipeline
+- **Flow Loop**: Repetir sección N veces o iterar lista
+- **Flow Delay**: Pausar pipeline X segundos (rate limiting)
+
+### Added - UX Improvements
+- **Snap to Grid**: Nodos se alinean automáticamente a cuadrícula de 20px
+- **Validación de conexiones**:
+  - No conectar trigger → trigger
+  - No conectar output → output
+  - Detección de ciclos
+  - Máximo 1 entrada por nodo (excepto flow-if)
+- **Botón Ejecutar**: En barra de herramientas del Pipeline Builder
+
+### Changed
+- Nueva categoría **Output** (naranja) con 4 nodos
+- Nueva categoría **Flow** (púrpura) con 3 nodos
+- Total herramientas: 28 → 35
+
+---
+
+## [10.1.0] - 2025-12-07
+
+### Added - Pipeline Builder Pro
+- **Canvas con Grid**: Fondo con cuadrícula visual estilo n8n
+- **Zoom y Pan**: Ctrl+Scroll para zoom, arrastra fondo para mover
+- **Nodos Draggables**: Arrastra nodos libremente por el canvas
+- **Conexiones Draggables**: Arrastra desde puerto de salida a entrada
+- **Puertos de Conexión**: Verde (entrada) y Azul (salida) con hover effects
+- **Eliminar Conexiones**: Click en línea para eliminar
+- **Auto Layout**: Botón para reorganizar nodos automáticamente
+- **Controles de Zoom**: Botones +/- y reset en barra de herramientas
+
+### Added - Panel de Configuración de Nodo
+- **Panel lateral derecho** al seleccionar un nodo
+- **Información del nodo**: icono, nombre, descripción, código
+- **Parámetros dinámicos** según tipo de nodo (triggers, storage, IA)
+- **Contador de conexiones**: entradas y salidas
+- **Acciones rápidas**: Duplicar nodo, eliminar nodo
+- **Copiar código** al portapapeles
+
+### Added - Ejecución Real de Pipelines
+- **Conexión con API backend** `/api/agent/execute`
+- **Polling de estado** en tiempo real
+- **Estados visuales**: idle, running, success, error
+- **Log de ejecución** en el panel de sistema
+- **Parámetros del nodo** enviados al backend
+
+### Changed
+- Canvas ahora usa posiciones libres en vez de grid fijo
+- Conexiones se definen manualmente (no secuenciales)
+- Nodos con clase `pipeline-node-pro` con estilos mejorados
+
+---
+
+## [10.0.0] - 2025-12-07
+
+### Added - Trigger Nodes (Automatizaciones v10)
+- **Nueva categoría Trigger**: 4 tipos de nodos activadores de pipeline
+  - **Trigger Manual**: Botón "Ejecutar Pipeline" con estado visual
+  - **Trigger File**: Watch de carpeta con patrones (*.pdf, *.jpg)
+  - **Trigger Cron**: Programación horaria (diario, semanal, por hora)
+  - **Trigger Webhook**: Endpoint HTTP POST para integraciones
+- **Ejecución visual desde canvas**: Click en trigger ejecuta todo el pipeline
+- **Indicadores de estado por nodo**: Círculos de color (idle/running/success/error)
+- **Animación de progreso**: Los nodos se iluminan secuencialmente al ejecutar
+- **Leyenda actualizada**: Nueva categoría "Trigger" en barra del canvas
+
+### Changed
+- Nodos trigger no tienen puerto de entrada (son el inicio del flujo)
+- Icono de trigger con animación pulse para destacar
+- Fondo con gradiente verde para nodos trigger
+
+### Fixed
+- Archivos markdown creados para triggers (trigger-manual.md, trigger-file.md, trigger-cron.md, trigger-webhook.md)
+- Triggers ahora visibles en toolbox después de refresh de cache del backend
+
+---
+
+## [9.1.0] - 2025-12-07
+
+### Added - Pipeline Builder v9.1
+- **Undo/Redo en canvas**: Sistema de historial con hasta 50 estados
+  - `Ctrl+Z` / `Cmd+Z` para deshacer
+  - `Ctrl+Shift+Z` / `Cmd+Shift+Z` para rehacer
+  - Botones visuales en la barra del canvas
+- **Exportar pipeline como JSON**: Descarga el pipeline completo en formato JSON portable
+  - Incluye nodos, conexiones y metadata
+  - Botón en barra + atajo `Ctrl+E` / `Cmd+E`
+- **Atajos de teclado globales**:
+  - `Ctrl+S` / `Cmd+S` - Guardar arquitectura
+  - `Ctrl+E` / `Cmd+E` - Exportar JSON
+  - `Delete` / `Backspace` - Eliminar último nodo
+- **Detección de duplicados**: Validación que alerta si hay nodos duplicados
+- **Validación de compatibilidad**: Nuevas validaciones para LangChain + ChromaDB
+
+### Changed - Renaming Agent Mode → Automatizaciones
+- **Sidebar**: Nuevo icono bolt y nombre "Automatizaciones"
+- **Vista Agent Mode**: Título actualizado a "Automatizaciones"
+- **Toasts**: Mensajes actualizados ("Automatizaciones iniciadas/detenidas")
+- **Badge versión**: Actualizado a v9.1 con color amarillo
+- **Título página**: "DirectOS v9.1 - Automatizaciones"
+
+### Improved
+- Historial de canvas con persistencia entre acciones
+- UI de botones undo/redo con estados disabled cuando no aplica
+- Separador visual en barra de herramientas del canvas
+
+---
+
 ## [9.0.0] - 2025-12-06
 
 ### Added - Prompt Builder Pro
