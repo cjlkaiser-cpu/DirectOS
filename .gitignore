@@ -18,6 +18,12 @@ __pycache__/
 # Data (generada en runtime)
 data/vectors/
 data/logs/
+data/runs/
+data/agent/
+data/sync/
+
+# Backups
+*.bak
 
 # Versiones antiguas (opcional incluir en git)
 # versions/
