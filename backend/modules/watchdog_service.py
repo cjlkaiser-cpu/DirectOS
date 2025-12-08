@@ -33,6 +33,10 @@ try:
     WATCHDOG_AVAILABLE = True
 except ImportError:
     WATCHDOG_AVAILABLE = False
+    Observer = None
+    FileSystemEventHandler = object  # Dummy base class
+    FileCreatedEvent = None
+    FileMovedEvent = None
     logger.warning("watchdog no instalado - pip install watchdog")
 
 

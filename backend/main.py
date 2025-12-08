@@ -22,6 +22,7 @@ import time
 import json
 import uuid
 import asyncio
+import subprocess
 
 # Importar módulos
 from modules.knowledge import KnowledgeBase
@@ -41,7 +42,7 @@ from modules.notifier import NotifierService
 app = FastAPI(
     title="DirectOS API",
     description="Backend para Knowledge Base, Scout y Agent Mode",
-    version="9.0.0"
+    version="10.8.0"
 )
 
 # CORS para desarrollo local
@@ -189,7 +190,7 @@ async def health_check():
     return {
         "status": "online",
         "timestamp": time.time(),
-        "version": "9.0.0",
+        "version": "10.8.0",
         "modules": {
             "knowledge": knowledge.is_ready(),
             "scout": scout.is_ready(),
@@ -1096,6 +1097,121 @@ async def stop_all_agents():
     scheduler.stop()
     notifier.info("Agent Mode", "Todos los servicios detenidos")
     return {"stopped": True}
+
+# =============================================================================
+# CLAUDE CODE CLI INTEGRATION (usa suscripción Pro/Max)
+# =============================================================================
+
+class ClaudeRequest(BaseModel):
+    """Request para Claude Code CLI"""
+    prompt: str
+    max_tokens: int = 4000
+    system_prompt: str = ""
+
+class ClaudeResponse(BaseModel):
+    """Response de Claude"""
+    success: bool
+    content: str = ""
+    error: str = ""
+    model: str = ""
+    usage: dict = {}
+
+@app.post("/api/claude/ask", response_model=ClaudeResponse)
+async def ask_claude(request: ClaudeRequest):
+    """
+    Ejecuta Claude Code CLI en modo no-interactivo.
+    Usa tu suscripción Pro/Max, no la API de pago.
+    """
+    try:
+        # Construir prompt completo
+        full_prompt = request.prompt
+        if request.system_prompt:
+            full_prompt = f"{request.system_prompt}\n\n{request.prompt}"
+
+        logger.info(f"[CLAUDE] Ejecutando prompt ({len(full_prompt)} chars)...")
+
+        # Ejecutar claude CLI
+        result = subprocess.run(
+            ["claude", "-p", full_prompt, "--output-format", "json"],
+            capture_output=True,
+            text=True,
+            timeout=180  # 3 minutos máximo
+        )
+
+        if result.returncode != 0:
+            logger.error(f"[CLAUDE] Error: {result.stderr}")
+            return ClaudeResponse(
+                success=False,
+                error=result.stderr or "Error ejecutando Claude CLI"
+            )
+
+        # Parsear respuesta JSON
+        try:
+            data = json.loads(result.stdout)
+            content = data.get("result", data.get("content", str(data)))
+
+            logger.info(f"[CLAUDE] Respuesta recibida ({len(content)} chars)")
+
+            return ClaudeResponse(
+                success=True,
+                content=content,
+                model=data.get("model", "claude"),
+                usage=data.get("usage", {})
+            )
+        except json.JSONDecodeError:
+            # Si no es JSON, devolver como texto plano
+            return ClaudeResponse(
+                success=True,
+                content=result.stdout.strip(),
+                model="claude"
+            )
+
+    except subprocess.TimeoutExpired:
+        logger.error("[CLAUDE] Timeout después de 180s")
+        return ClaudeResponse(
+            success=False,
+            error="Timeout: Claude tardó más de 3 minutos"
+        )
+    except FileNotFoundError:
+        logger.error("[CLAUDE] CLI no encontrado")
+        return ClaudeResponse(
+            success=False,
+            error="Claude CLI no encontrado. Instálalo con: npm install -g @anthropic-ai/claude-code"
+        )
+    except Exception as e:
+        logger.error(f"[CLAUDE] Exception: {str(e)}")
+        return ClaudeResponse(
+            success=False,
+            error=str(e)
+        )
+
+@app.get("/api/claude/status")
+async def claude_status():
+    """Verificar si Claude CLI está disponible"""
+    try:
+        result = subprocess.run(
+            ["claude", "--version"],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        return {
+            "available": result.returncode == 0,
+            "version": result.stdout.strip() if result.returncode == 0 else None,
+            "error": result.stderr if result.returncode != 0 else None
+        }
+    except FileNotFoundError:
+        return {
+            "available": False,
+            "version": None,
+            "error": "Claude CLI no instalado"
+        }
+    except Exception as e:
+        return {
+            "available": False,
+            "version": None,
+            "error": str(e)
+        }
 
 # =============================================================================
 # FRONTEND (SERVIR ARCHIVOS ESTÁTICOS)

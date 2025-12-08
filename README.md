@@ -1,12 +1,47 @@
-# DirectOS v10.5 - Pipeline Builder Pro
 
-> Tu cockpit de desarrollo con IA integrada y Human-in-the-Loop
+# DirectOS v10.9 - Pipeline Builder Pro
+
+> Tu cockpit de desarrollo con IA integrada, Human-in-the-Loop y Memoria Evolutiva
 
 ## Qué es
 
 DirectOS es tu **cockpit de desarrollo** para el ecosistema minerOS. Diseña pipelines visualmente, ejecútalos con IA real (Claude CLI), supervisa cada paso con HITL, y aprende cómo funcionan las automatizaciones.
 
-## Novedades v10.5
+## Novedades v10.9
+
+### MINEROS BRAIN - Claude Intelligence Core
+Sistema centralizado para todas las interacciones con Claude:
+
+| Componente | Descripción |
+|------------|-------------|
+| **System Prompt** | Identidad consistente de DirectOS Assistant |
+| **Context Builder** | Construye contexto dinámico (pipeline, historial, nodos) |
+| **JSON Parser** | Parser robusto que auto-repara respuestas |
+| **API Unificada** | `askClaudeUnified()` para todas las llamadas |
+
+### MINEROS MEMORY - Memoria Evolutiva
+Sistema de aprendizaje continuo basado en localStorage:
+
+| Feature | Descripción |
+|---------|-------------|
+| **Tracking de Nodos** | Registra qué nodos usas más frecuentemente |
+| **Flujos Favoritos** | Detecta secuencias de nodos que repites |
+| **Sugerencias** | Trackea aceptadas/rechazadas para mejorar |
+| **Chat Persistente** | Historial entre sesiones (últimos 50 msgs) |
+| **Resumen para Claude** | Contexto de memoria para el LLM |
+
+### Claude Intelligence Suite (v10.8)
+| Feature | Descripción |
+|---------|-------------|
+| **Crear con IA** | Describe tu pipeline en lenguaje natural → Claude lo genera |
+| **Claude Transform** | Nodo para procesar datos con prompts personalizados |
+| **Debug Inteligente** | Claude sugiere soluciones cuando hay errores |
+| **Validación Semántica** | Claude analiza y optimiza tu pipeline |
+| **Auto-documentación** | Genera documentación Markdown del pipeline |
+| **Sugerencias Proactivas** | Sugiere nodos al añadir otros |
+| **Chat Contextual** | Chat flotante que conoce tu pipeline |
+
+## Novedades v10.7
 
 ### Human-in-the-Loop Completo
 | Feature | Descripción |
@@ -27,7 +62,7 @@ DirectOS es tu **cockpit de desarrollo** para el ecosistema minerOS. Diseña pip
 ### Pipeline Execution Real (v10.1)
 | Feature | Descripción |
 |---------|-------------|
-| **35 Nodos** | Triggers, Proceso, IA, Storage, Flow, Output |
+| **36 Nodos** | Triggers, Proceso, IA, Storage, Flow, Output |
 | **Conexiones SVG** | Bezier curves arrastrables |
 | **Ejecución Secuencial** | Los pipelines se ejecutan de verdad |
 | **Snap to Grid** | Alineación automática 20px |
@@ -49,10 +84,20 @@ DirectOS es tu **cockpit de desarrollo** para el ecosistema minerOS. Diseña pip
 | **42 Patrones** | Biblioteca completa de prompt patterns |
 | **Glosario** | Filtros, búsqueda, progreso visual |
 
+### Persistencia & Logs (v10.7)
+| Feature | Descripción |
+|---------|-------------|
+| **Mis Pipelines** | Guarda, carga y elimina pipelines desde sidebar |
+| **Logs Inline** | Click o doble-click en nodo para ver output |
+| **Copy Output** | Copia resultado de cualquier nodo al portapapeles |
+
 ### Historial de versiones
 
 | Versión | Highlights |
 |---------|------------|
+| **v10.9** | MINEROS BRAIN & MEMORY (Memoria Evolutiva) |
+| **v10.8** | Claude Intelligence Suite (7 funcionalidades IA) |
+| **v10.7** | Persistencia de pipelines + Logs inline por nodo |
 | **v10.5** | Human-in-the-Loop: Dry Run + Pausas por nodo |
 | **v10.4** | Inspector didáctico (origen → proceso → datos → destino) |
 | **v10.3** | Claude CLI Integration (sin coste API) |
@@ -206,13 +251,13 @@ cp .env.example .env
 - Sugiere la solución directamente
 - Contexto de tu stack (minerOS)
 
-## Nodos disponibles (35)
+## Nodos disponibles (36)
 
 | Categoría | Nodos |
 |-----------|-------|
 | **Trigger** | Manual, File Watch, Cron, Webhook |
 | **Proceso** | Whisper, Tesseract OCR, PDF Parser, BeautifulSoup |
-| **IA** | Claude (CLI), Ollama, OpenAI |
+| **IA** | Claude (CLI), Claude Transform, Ollama, OpenAI |
 | **Storage** | ChromaDB, SQLite, Redis |
 | **Flow** | If, Loop, Delay, Inspector |
 | **Output** | File, Notify, Email, Slack |

@@ -21,7 +21,8 @@ except ImportError:
     logger.warning("Dependencias de Scout no instaladas")
 
 # Cargar variables de entorno
-load_dotenv()
+if DEPS_AVAILABLE:
+    load_dotenv()
 
 
 class Scout:

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🛠️ DirectOS v10.1 - Pipeline Builder Pro</title>
+    <title>🛠️ DirectOS v10.8 - Pipeline Builder Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -77,6 +77,31 @@
         @keyframes pulse-hitl {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        /* Node logs indicator */
+        .has-logs::before {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            width: 6px;
+            height: 6px;
+            background: #3b82f6;
+            border-radius: 50%;
+            z-index: 15;
+        }
+        .has-logs:hover::after {
+            content: 'Ver logs';
+            position: absolute;
+            bottom: -20px;
+            right: 0;
+            font-size: 9px;
+            background: #1e293b;
+            color: #94a3b8;
+            padding: 2px 6px;
+            border-radius: 4px;
+            white-space: nowrap;
         }
 
         /* ============================================
@@ -273,7 +298,7 @@
                 <i class="fa-solid fa-layer-group text-blue-500"></i>
                 Director<span class="text-slate-500">OS</span>
             </h1>
-            <p class="text-xs text-slate-500 mt-1">v10.1 - Pipeline Builder Pro</p>
+            <p class="text-xs text-slate-500 mt-1">v10.8 - Pipeline Builder Pro</p>
         </div>
         
         <nav class="flex-1 overflow-y-auto p-4 space-y-2">
@@ -318,7 +343,20 @@
         <div id="view-architect" class="flex-1 overflow-hidden flex relative">
             <!-- Sidebar Herramientas -->
             <div class="w-64 bg-slate-900 border-r border-slate-800 p-4 overflow-y-auto flex-shrink-0">
+                <!-- Mis Pipelines -->
                 <div class="mb-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Mis Pipelines</h3>
+                        <button onclick="savePipelineModal()" class="text-[10px] text-blue-400 hover:text-blue-300 flex items-center gap-1" title="Guardar pipeline actual">
+                            <i class="fa-solid fa-plus"></i> Guardar
+                        </button>
+                    </div>
+                    <div id="saved-pipelines-list" class="space-y-1 max-h-32 overflow-y-auto">
+                        <p class="text-xs text-slate-600 italic">Sin pipelines guardados</p>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-800 pt-4 mb-6">
                     <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Patrones</h3>
                     <select id="preset-selector" onchange="loadPreset(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-slate-300 mb-2">
                         <option value="">-- Seleccionar patrón --</option>
@@ -356,8 +394,10 @@
                         <button onclick="canvasZoomIn()" class="text-xs px-2 py-1.5 rounded-lg hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition border border-slate-700" title="Acercar (+)"><i class="fa-solid fa-plus"></i></button>
                         <button onclick="canvasZoomReset()" class="text-xs px-2 py-1.5 rounded-lg hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition border border-slate-700" title="Reset zoom"><i class="fa-solid fa-expand"></i></button>
                         <div class="w-px bg-slate-700 mx-1"></div>
+                        <button onclick="showPipelineAssistant()" class="text-xs px-3 py-1.5 rounded-lg hover:bg-gradient-to-r hover:from-purple-600/20 hover:to-blue-600/20 text-slate-300 hover:text-white transition flex items-center gap-1.5 border border-slate-700 hover:border-purple-500/50" title="Crear pipeline con lenguaje natural"><i class="fa-solid fa-robot text-purple-400"></i> Crear con IA</button>
                         <button onclick="autoLayoutNodes()" class="text-xs px-3 py-1.5 rounded-lg hover:bg-slate-700 text-slate-300 transition flex items-center gap-1.5 border border-slate-700" title="Organizar nodos"><i class="fa-solid fa-wand-magic-sparkles text-purple-400"></i> Auto</button>
                         <button onclick="validateFlowRealtime()" class="text-xs px-3 py-1.5 rounded-lg hover:bg-slate-700 text-slate-300 transition flex items-center gap-1.5 border border-slate-700"><i class="fa-solid fa-check-circle text-green-400"></i> Validar</button>
+                        <button onclick="validateWithAI()" class="text-xs px-3 py-1.5 rounded-lg hover:bg-purple-600/20 text-slate-300 hover:text-purple-300 transition flex items-center gap-1.5 border border-slate-700 hover:border-purple-500/50" title="Validación semántica con Claude"><i class="fa-solid fa-robot text-purple-400"></i> IA</button>
                         <button onclick="exportPipelineJSON()" class="text-xs px-3 py-1.5 rounded-lg hover:bg-slate-700 text-slate-300 transition flex items-center gap-1.5 border border-slate-700" title="Exportar JSON (Ctrl+E)"><i class="fa-solid fa-file-export text-blue-400"></i></button>
                         <button onclick="clearCanvas()" class="text-xs px-3 py-1.5 rounded-lg hover:bg-red-600/20 text-slate-300 hover:text-red-400 transition flex items-center gap-1.5 border border-slate-700 hover:border-red-500/50"><i class="fa-solid fa-trash"></i></button>
                     </div>
@@ -506,6 +546,9 @@
                             </button>
                             <button onclick="compileArchitecture()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-2.5 px-5 rounded-lg shadow-lg flex items-center gap-2 transition text-sm">
                                 <i class="fa-solid fa-code"></i> Generar Código
+                            </button>
+                            <button onclick="generateDocumentation()" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-2.5 px-5 rounded-lg shadow-lg flex items-center gap-2 transition text-sm" title="Generar documentación con IA">
+                                <i class="fa-solid fa-book"></i> Documentar
                             </button>
                         </div>
                     </div>
@@ -1719,6 +1762,214 @@ import sqlite3
                 </div>
             </div>
         </div>
+
+        <!-- Modal Guardar Pipeline -->
+        <div id="save-pipeline-modal" class="hidden absolute inset-0 bg-slate-950/95 z-50 flex items-center justify-center p-8 backdrop-blur-sm">
+            <div class="bg-slate-900 border border-blue-500/30 rounded-xl w-full max-w-md shadow-2xl">
+                <div class="p-5 border-b border-slate-800 bg-gradient-to-r from-blue-500/10 to-transparent">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-floppy-disk text-blue-400"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-white text-lg">Guardar Pipeline</h3>
+                                <span class="text-xs text-slate-400">Guarda el pipeline actual para usarlo después</span>
+                            </div>
+                        </div>
+                        <button onclick="closeSavePipelineModal()" class="text-slate-500 hover:text-white p-1">
+                            <i class="fa-solid fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Nombre del Pipeline</label>
+                    <input type="text" id="pipeline-name-input" placeholder="Mi pipeline..."
+                           class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white placeholder-slate-600 focus:border-blue-500 focus:outline-none">
+                    <p id="save-pipeline-info" class="text-xs text-slate-500 mt-2">
+                        <span id="save-node-count">0</span> nodos, <span id="save-conn-count">0</span> conexiones
+                    </p>
+                </div>
+                <div class="p-4 border-t border-slate-800 flex gap-3">
+                    <button onclick="closeSavePipelineModal()" class="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white font-medium transition">
+                        Cancelar
+                    </button>
+                    <button onclick="savePipelineConfirm()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-bold transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-save"></i> Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Pipeline Assistant -->
+        <div id="pipeline-assistant-modal" class="hidden absolute inset-0 bg-slate-950/95 z-50 flex items-center justify-center p-8 backdrop-blur-sm">
+            <div class="bg-slate-900 border border-purple-500/30 rounded-xl w-full max-w-lg shadow-2xl">
+                <div class="p-5 border-b border-slate-800 bg-gradient-to-r from-purple-500/10 to-blue-500/10">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-robot text-purple-400"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-white text-lg">Pipeline Assistant</h3>
+                                <span class="text-xs text-slate-400">Describe tu pipeline en lenguaje natural</span>
+                            </div>
+                        </div>
+                        <button onclick="closePipelineAssistant()" class="text-slate-500 hover:text-white p-1">
+                            <i class="fa-solid fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">¿Qué necesitas automatizar?</label>
+                    <textarea id="assistant-prompt" rows="3" placeholder="Ej: Quiero procesar PDFs, extraer el texto, resumirlo con IA y guardarlo en una base de datos"
+                              class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white placeholder-slate-500 focus:border-purple-500 focus:outline-none resize-none text-sm"></textarea>
+                    <div class="flex gap-2 mt-3 flex-wrap">
+                        <button onclick="setAssistantExample('Procesar PDFs y extraer información clave')" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-400 px-2 py-1 rounded transition">PDFs → Info</button>
+                        <button onclick="setAssistantExample('Transcribir audios y generar resúmenes')" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-400 px-2 py-1 rounded transition">Audio → Resumen</button>
+                        <button onclick="setAssistantExample('Monitorear carpeta y procesar archivos nuevos')" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-400 px-2 py-1 rounded transition">Watch → Proceso</button>
+                        <button onclick="setAssistantExample('Crear un RAG para buscar en mis documentos')" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-400 px-2 py-1 rounded transition">RAG</button>
+                    </div>
+                    <div id="assistant-preview" class="hidden mt-4 p-4 bg-slate-800/50 border border-slate-700 rounded-lg">
+                        <label class="text-xs font-bold text-green-400 uppercase tracking-wider block mb-2">Pipeline sugerido</label>
+                        <div id="assistant-nodes-preview" class="text-sm text-slate-300"></div>
+                    </div>
+                </div>
+                <div class="p-4 border-t border-slate-800 flex gap-3">
+                    <button onclick="closePipelineAssistant()" class="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white font-medium transition">
+                        Cancelar
+                    </button>
+                    <button id="assistant-generate-btn" onclick="generatePipelineFromDescription()" class="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white px-4 py-2 rounded-lg font-bold transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Generar Pipeline
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Contextual FAB -->
+        <div id="chat-fab" onclick="toggleChatPanel()" class="fixed bottom-6 right-6 z-40 w-14 h-14 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full shadow-xl cursor-pointer flex items-center justify-center hover:scale-110 transition group">
+            <i class="fa-solid fa-comments text-white text-xl group-hover:hidden"></i>
+            <i class="fa-solid fa-robot text-white text-xl hidden group-hover:block"></i>
+        </div>
+
+        <!-- Panel de Chat Contextual -->
+        <div id="chat-panel" class="hidden fixed bottom-24 right-6 z-40 w-96 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl flex flex-col max-h-[500px]">
+            <div class="p-4 border-b border-slate-800 bg-gradient-to-r from-purple-500/10 to-blue-500/10 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-robot text-purple-400"></i>
+                    <span class="font-bold text-white text-sm">Chat del Pipeline</span>
+                </div>
+                <button onclick="toggleChatPanel()" class="text-slate-500 hover:text-white">
+                    <i class="fa-solid fa-minus"></i>
+                </button>
+            </div>
+            <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-3 min-h-[200px]">
+                <div class="text-xs text-slate-500 text-center py-4">
+                    <i class="fa-solid fa-lightbulb text-yellow-400 mr-1"></i>
+                    Pregúntame sobre tu pipeline
+                </div>
+            </div>
+            <div class="p-3 border-t border-slate-800">
+                <div class="flex gap-2">
+                    <input type="text" id="chat-input" placeholder="¿Qué hace este pipeline?"
+                           onkeypress="if(event.key === 'Enter') sendChatMessage()"
+                           class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-purple-500 focus:outline-none">
+                    <button onclick="sendChatMessage()" class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg transition">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="flex gap-1 mt-2 flex-wrap">
+                    <button onclick="quickChatQuestion('¿Qué hace este pipeline?')" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-400 px-2 py-1 rounded transition">¿Qué hace?</button>
+                    <button onclick="quickChatQuestion('¿Cómo puedo optimizarlo?')" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-400 px-2 py-1 rounded transition">Optimizar</button>
+                    <button onclick="quickChatQuestion('¿Qué nodo debería añadir?')" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-400 px-2 py-1 rounded transition">Sugerir nodo</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Debug Inteligente -->
+        <div id="debug-modal" class="hidden absolute inset-0 bg-slate-950/95 z-50 flex items-center justify-center p-8 backdrop-blur-sm">
+            <div class="bg-slate-900 border border-red-500/30 rounded-xl w-full max-w-2xl shadow-2xl max-h-[85vh] flex flex-col">
+                <div class="p-5 border-b border-slate-800 bg-gradient-to-r from-red-500/10 to-transparent">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-bug text-red-400"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-white text-lg">Debug Inteligente</h3>
+                                <span id="debug-node-name" class="text-xs text-red-400">Error en nodo</span>
+                            </div>
+                        </div>
+                        <button onclick="closeDebugModal()" class="text-slate-500 hover:text-white p-1">
+                            <i class="fa-solid fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6 flex-1 overflow-y-auto space-y-4">
+                    <!-- Error -->
+                    <div>
+                        <label class="text-xs font-bold text-red-400 uppercase tracking-wider block mb-2">Error</label>
+                        <pre id="debug-error-content" class="bg-red-950/30 border border-red-500/30 rounded-lg p-3 text-sm text-red-300 font-mono overflow-x-auto whitespace-pre-wrap"></pre>
+                    </div>
+                    <!-- Contexto -->
+                    <div>
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Contexto del Pipeline</label>
+                        <pre id="debug-context" class="bg-slate-800/50 border border-slate-700 rounded-lg p-3 text-xs text-slate-400 font-mono overflow-x-auto whitespace-pre-wrap max-h-32"></pre>
+                    </div>
+                    <!-- Respuesta de Claude -->
+                    <div id="debug-response-container" class="hidden">
+                        <label class="text-xs font-bold text-green-400 uppercase tracking-wider block mb-2">
+                            <i class="fa-solid fa-robot mr-1"></i> Sugerencia de Claude
+                        </label>
+                        <div id="debug-response" class="bg-green-950/30 border border-green-500/30 rounded-lg p-4 text-sm text-green-300 whitespace-pre-wrap"></div>
+                    </div>
+                </div>
+                <div class="p-4 border-t border-slate-800 flex gap-3">
+                    <button onclick="closeDebugModal()" class="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white font-medium transition">
+                        Cerrar
+                    </button>
+                    <button id="debug-ask-btn" onclick="askClaudeForHelp()" class="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white px-4 py-2 rounded-lg font-bold transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Preguntar a Claude
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Ver Logs de Nodo -->
+        <div id="node-logs-modal" class="hidden absolute inset-0 bg-slate-950/95 z-50 flex items-center justify-center p-8 backdrop-blur-sm">
+            <div class="bg-slate-900 border border-green-500/30 rounded-xl w-full max-w-2xl shadow-2xl max-h-[80vh] flex flex-col">
+                <div class="p-5 border-b border-slate-800 bg-gradient-to-r from-green-500/10 to-transparent">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div id="node-logs-icon" class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-terminal text-green-400"></i>
+                            </div>
+                            <div>
+                                <h3 id="node-logs-title" class="font-bold text-white text-lg">Logs del Nodo</h3>
+                                <span id="node-logs-status" class="text-xs text-green-400">Ejecutado exitosamente</span>
+                            </div>
+                        </div>
+                        <button onclick="closeNodeLogsModal()" class="text-slate-500 hover:text-white p-1">
+                            <i class="fa-solid fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6 flex-1 overflow-y-auto">
+                    <div class="flex justify-between items-center mb-3">
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Output</label>
+                        <button onclick="copyNodeLogs()" class="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1">
+                            <i class="fa-solid fa-copy"></i> Copiar
+                        </button>
+                    </div>
+                    <pre id="node-logs-content" class="bg-slate-950 border border-slate-800 rounded-lg p-4 text-sm text-green-400 font-mono overflow-x-auto whitespace-pre-wrap max-h-96"></pre>
+                </div>
+                <div class="p-4 border-t border-slate-800">
+                    <button onclick="closeNodeLogsModal()" class="w-full px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white font-medium transition">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
     </main>
 
     <script>
@@ -1746,6 +1997,7 @@ import sqlite3
                 toolStates: 'directos_tool_states',
                 projects: 'directos_projects',
                 architectures: 'directos_architectures',
+                pipelines: 'directos_pipelines',
                 queue: 'directos_sync_queue',
                 lastSync: 'directos_last_sync'
             },
@@ -2497,6 +2749,19 @@ import sqlite3
                 why: "Acceso a Claude sin API de pago. Usa tu suscripción existente.",
                 cases: ["Análisis código", "Documentación", "Debugging", "Refactoring"],
                 code: 'claude -p "tu prompt" --output-format json'
+            },
+            // ==========================================
+            // CLAUDE TRANSFORM (prompt personalizable)
+            // ==========================================
+            {
+                id: "claude-transform", name: "Claude Transform", cat: "IA Model",
+                icon: "fa-wand-magic-sparkles", color: "text-purple-400", tag: "Transformación IA", status: "new",
+                desc: "Transforma datos con un prompt personalizado.",
+                why: "Procesamiento inteligente de datos con instrucciones específicas.",
+                cases: ["Extraer emails", "Resumir texto", "Traducir", "Formatear JSON", "Clasificar"],
+                code: '// Configura el prompt en el panel del nodo\n// Ejemplo: "Extrae todos los emails del siguiente texto"',
+                configurable: true,
+                defaultPrompt: "Procesa el siguiente contenido y devuelve el resultado:"
             }
         ];
 
@@ -3458,6 +3723,9 @@ Incluye docker-compose para orquestar.`
         // Posiciones de nodos: {nodeId: {x, y}}
         let nodePositions = {};
 
+        // Resultados de ejecución por nodo: {nodeId: {output, status, timestamp}}
+        let nodeExecutionResults = {};
+
         // ============================================
         // ZOOM FUNCTIONS
         // ============================================
@@ -3712,6 +3980,82 @@ Incluye docker-compose para orquestar.`
             };
         }
 
+        // Mapa de sugerencias proactivas por tipo de nodo
+        const NODE_SUGGESTIONS = {
+            'whisper': { suggest: 'claude-transform', reason: 'Whisper genera texto largo. ¿Resumir o extraer info?' },
+            'pdf-parser': { suggest: 'claude-transform', reason: 'Texto extraído del PDF. ¿Procesarlo con IA?' },
+            'tesseract': { suggest: 'claude-transform', reason: 'Texto del OCR. ¿Estructurarlo o analizarlo?' },
+            'beautifulsoup': { suggest: 'claude-transform', reason: 'HTML parseado. ¿Extraer datos específicos?' },
+            'trigger-file': { suggest: 'pdf-parser', reason: 'Archivos detectados. ¿Procesar PDFs?' },
+            'trigger-webhook': { suggest: 'claude-node', reason: 'Datos del webhook. ¿Analizarlos con IA?' },
+            'claude-node': { suggest: 'sqlite', reason: 'Respuesta de Claude. ¿Guardarla en BD?' },
+            'claude-transform': { suggest: 'output-file', reason: 'Datos transformados. ¿Guardarlos?' },
+            'chromadb': { suggest: 'claude-node', reason: 'Contexto recuperado. ¿Usarlo con Claude?' }
+        };
+
+        let suggestionTimeout = null;
+
+        function showNodeSuggestion(nodeId) {
+            const suggestion = NODE_SUGGESTIONS[nodeId];
+            if (!suggestion) return;
+
+            // No mostrar si ya existe el nodo sugerido
+            if (canvasNodes.find(n => n.id === suggestion.suggest)) return;
+
+            // Cancelar sugerencia anterior si existe
+            if (suggestionTimeout) clearTimeout(suggestionTimeout);
+
+            // Crear toast interactivo
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.id = 'suggestion-toast';
+            toast.className = 'bg-purple-900/95 border border-purple-500/50 text-white px-4 py-3 rounded-lg shadow-xl animate-slide-in flex flex-col gap-2 max-w-xs';
+            toast.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-lightbulb text-yellow-400"></i>
+                    <span class="text-xs font-bold">Sugerencia</span>
+                </div>
+                <p class="text-xs text-purple-200">${suggestion.reason}</p>
+                <div class="flex gap-2 mt-1">
+                    <button onclick="acceptSuggestion('${suggestion.suggest}')" class="flex-1 bg-purple-600 hover:bg-purple-500 text-white text-xs px-3 py-1.5 rounded font-medium transition">
+                        <i class="fa-solid fa-plus mr-1"></i> Añadir
+                    </button>
+                    <button onclick="dismissSuggestion()" class="px-3 py-1.5 text-purple-300 hover:text-white text-xs transition">
+                        Ignorar
+                    </button>
+                </div>
+            `;
+            container.appendChild(toast);
+
+            // Auto-dismiss después de 8 segundos
+            suggestionTimeout = setTimeout(() => {
+                dismissSuggestion();
+            }, 8000);
+        }
+
+        function acceptSuggestion(toolId) {
+            // v10.9: Trackear sugerencia aceptada
+            if (typeof MinerosMemory !== 'undefined') {
+                MinerosMemory.trackSuggestion(toolId, true);
+            }
+            dismissSuggestion(false); // No trackear como rechazada
+            addNodeToCanvas(toolId);
+            showToast('Nodo añadido', 'success');
+        }
+
+        function dismissSuggestion(track = true) {
+            const toast = document.getElementById('suggestion-toast');
+            // v10.9: Trackear sugerencia rechazada (solo si se ignora explícitamente)
+            if (track && toast && typeof MinerosMemory !== 'undefined') {
+                MinerosMemory.trackSuggestion('dismissed', false);
+            }
+            if (toast) toast.remove();
+            if (suggestionTimeout) {
+                clearTimeout(suggestionTimeout);
+                suggestionTimeout = null;
+            }
+        }
+
         function addNodeToCanvas(toolId, x = null, y = null) {
             const tool = getTools().find(t => t.id === toolId);
             if(tool && !canvasNodes.find(n => n.id === toolId)) {
@@ -3727,6 +4071,14 @@ Incluye docker-compose para orquestar.`
                 saveToHistory();
                 renderCanvas();
                 validateFlowRealtime();
+
+                // v10.9: Trackear nodo usado en memoria evolutiva
+                if (typeof MinerosMemory !== 'undefined') {
+                    MinerosMemory.trackNodeUsed(toolId);
+                }
+
+                // v10.8: Sugerencias proactivas
+                setTimeout(() => showNodeSuggestion(toolId), 500);
             }
         }
 
@@ -3949,7 +4301,9 @@ Incluye docker-compose para orquestar.`
                 const isSelected = canvasState.selectedNodeId === node.id;
 
                 const el = document.createElement('div');
-                el.className = `pipeline-node-pro ${isTrigger ? 'is-trigger' : ''} ${isSelected ? 'selected' : ''}`;
+                // v10.6: Check if node has execution results
+                const hasLogs = nodeExecutionResults[node.id] !== undefined;
+                el.className = `pipeline-node-pro ${isTrigger ? 'is-trigger' : ''} ${isSelected ? 'selected' : ''} ${hasLogs ? 'has-logs' : ''}`;
                 el.style.left = `${pos.x}px`;
                 el.style.top = `${pos.y}px`;
                 el.style.width = `${nodeWidth}px`;
@@ -3965,13 +4319,21 @@ Incluye docker-compose para orquestar.`
                         <span>Ejecutar</span>
                     </button>` : '';
 
+                // v10.6: Botón de logs si hay resultados
+                const logsButton = hasLogs ? `
+                    <button onclick="event.stopPropagation(); showNodeLogs('${node.id}')"
+                            class="absolute bottom-2 right-2 text-blue-400 hover:text-blue-300 p-1 rounded hover:bg-blue-500/10 transition"
+                            title="Ver logs">
+                        <i class="fa-solid fa-terminal text-[10px]"></i>
+                    </button>` : '';
+
                 // Indicador de estado
                 const statusColor = nodeStatus === 'running' ? '#eab308' : nodeStatus === 'success' ? '#22c55e' : nodeStatus === 'error' ? '#ef4444' : '#475569';
 
                 el.innerHTML = `
-                    <div class="bg-slate-800/95 backdrop-blur border border-slate-600 border-l-4 ${bc} p-3 rounded-xl shadow-xl hover:shadow-2xl hover:border-slate-500 transition-all relative">
+                    <div class="bg-slate-800/95 backdrop-blur border border-slate-600 border-l-4 ${bc} p-3 rounded-xl shadow-xl hover:shadow-2xl hover:border-slate-500 transition-all relative group">
                         <!-- Status indicator -->
-                        <div class="absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full border-2 border-slate-900" style="background: ${statusColor};"></div>
+                        <div class="absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full border-2 border-slate-900 node-status" style="background: ${statusColor};"></div>
 
                         <div class="flex items-center gap-3">
                             <div class="w-9 h-9 rounded-lg ${isTrigger ? 'bg-emerald-900/50 border-emerald-700' : 'bg-slate-900 border-slate-700'} flex items-center justify-center border flex-shrink-0">
@@ -3986,6 +4348,7 @@ Incluye docker-compose para orquestar.`
                             </button>
                         </div>
                         ${triggerButton}
+                        ${logsButton}
 
                         <!-- Puertos de conexión -->
                         ${!isTrigger ? `<div class="node-port port-in" data-node-id="${node.id}" title="Entrada"></div>` : ''}
@@ -3997,6 +4360,13 @@ Incluye docker-compose para orquestar.`
                     if (!e.target.closest('.node-port') && !e.target.closest('button')) {
                         selectNode(node.id);
                         startDraggingNode(node.id, e);
+                    }
+                });
+
+                // v10.6: Double-click to view logs
+                el.addEventListener('dblclick', (e) => {
+                    if (hasLogs && !e.target.closest('.node-port') && !e.target.closest('button')) {
+                        showNodeLogs(node.id);
                     }
                 });
 
@@ -4154,6 +4524,18 @@ Incluye docker-compose para orquestar.`
                 }
             } else if (node.cat === 'Storage') {
                 params.push({ name: 'collection', label: 'Colección', type: 'text', value: 'default', placeholder: 'nombre_colección' });
+            } else if (node.id === 'claude-transform') {
+                // Nodo especial: Claude Transform con prompt personalizable
+                const currentPrompt = node.customPrompt || node.defaultPrompt || 'Procesa el siguiente contenido:';
+                params.push({
+                    name: 'transform_prompt',
+                    label: 'Prompt de Transformación',
+                    type: 'textarea',
+                    value: currentPrompt,
+                    placeholder: 'Ej: Extrae todos los emails del texto\nEj: Resume en 3 puntos\nEj: Traduce al inglés',
+                    rows: 4
+                });
+                params.push({ name: 'temperature', label: 'Temperatura', type: 'number', value: node.temperature || '0.3', min: 0, max: 2, step: 0.1 });
             } else if (node.cat === 'IA Model') {
                 params.push({ name: 'model', label: 'Modelo', type: 'text', value: 'default', placeholder: 'nombre_modelo' });
                 params.push({ name: 'temperature', label: 'Temperatura', type: 'number', value: '0.7', min: 0, max: 2, step: 0.1 });
@@ -4175,12 +4557,23 @@ Incluye docker-compose para orquestar.`
                                 ${options}
                             </select>
                         </div>`;
+                } else if (p.type === 'textarea') {
+                    // Textarea para prompts largos (Claude Transform)
+                    return `
+                        <div>
+                            <label class="text-[10px] text-slate-500 block mb-1">${p.label}</label>
+                            <textarea data-param="${p.name}" rows="${p.rows || 3}" placeholder="${p.placeholder || ''}"
+                                      onchange="updateNodeParam('${node.id}', '${p.name}', this.value)"
+                                      class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs text-white focus:border-blue-500 focus:outline-none resize-none">${p.value}</textarea>
+                            <p class="text-[9px] text-slate-600 mt-1">El contenido del nodo anterior se añadirá automáticamente.</p>
+                        </div>`;
                 } else {
                     return `
                         <div>
                             <label class="text-[10px] text-slate-500 block mb-1">${p.label}</label>
                             <input type="${p.type}" data-param="${p.name}" value="${p.value}" placeholder="${p.placeholder || ''}"
                                    ${p.readonly ? 'readonly' : ''} ${p.min !== undefined ? `min="${p.min}"` : ''} ${p.max !== undefined ? `max="${p.max}"` : ''} ${p.step !== undefined ? `step="${p.step}"` : ''}
+                                   onchange="updateNodeParam('${node.id}', '${p.name}', this.value)"
                                    class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs text-white focus:border-blue-500 focus:outline-none ${p.readonly ? 'opacity-60' : ''}">
                         </div>`;
                 }
@@ -4211,6 +4604,29 @@ Incluye docker-compose para orquestar.`
             `;
 
             return html;
+        }
+
+        // Update node parameter (for configurable nodes like Claude Transform)
+        function updateNodeParam(nodeId, paramName, value) {
+            const node = canvasNodes.find(n => n.id === nodeId);
+            if (!node) return;
+
+            // Map param names to node properties
+            const paramMap = {
+                'transform_prompt': 'customPrompt',
+                'temperature': 'temperature',
+                'custom_name': 'customName',
+                'collection': 'collection',
+                'model': 'model',
+                'watch_path': 'watchPath',
+                'pattern': 'pattern',
+                'schedule': 'schedule'
+            };
+
+            const propName = paramMap[paramName] || paramName;
+            node[propName] = value;
+
+            console.log(`[CONFIG] ${node.name}: ${propName} = ${value.substring(0, 50)}...`);
         }
 
         // Toggle pause configuration for a node
@@ -7342,6 +7758,13 @@ ${report}
                         pipelineData.results[node.id] = result;
                         pipelineData.lastOutput = result;
 
+                        // Guardar en nodeExecutionResults para logs inline (v10.6)
+                        nodeExecutionResults[node.id] = {
+                            output: result,
+                            status: 'success',
+                            timestamp: Date.now()
+                        };
+
                         // Check pauseAfter (HITL despues de ejecutar)
                         if (node.pauseAfter) {
                             addLog('INFO', `  → HITL: Pausa despues de ${node.name}...`);
@@ -7380,6 +7803,22 @@ ${report}
                     } catch (nodeError) {
                         updateNodeStatus(node.id, 'error');
                         addLog('ERROR', `✗ ${node.name}: ${nodeError.message}`);
+                        // Guardar error en nodeExecutionResults (v10.6)
+                        nodeExecutionResults[node.id] = {
+                            output: nodeError.message,
+                            status: 'error',
+                            timestamp: Date.now()
+                        };
+
+                        // v10.8: Mostrar modal de Debug Inteligente
+                        const debugContext = {
+                            nodes: orderedNodes.map(n => n.name),
+                            currentStep: i + 1,
+                            totalSteps: orderedNodes.length,
+                            lastInput: pipelineData.lastOutput?.substring(0, 500) || pipelineData.input?.substring(0, 500)
+                        };
+                        showDebugModal(node.name, nodeError.message, debugContext);
+
                         throw nodeError;
                     }
                 }
@@ -7387,15 +7826,25 @@ ${report}
                 addLog('SUCCESS', '▶ Pipeline completado exitosamente');
                 showToast('Pipeline completado', 'success');
 
+                // v10.9: Trackear ejecución en memoria evolutiva
+                if (typeof MinerosMemory !== 'undefined') {
+                    MinerosMemory.trackPipelineExecuted();
+                }
+
                 // Mostrar resultado final si hay
                 if (pipelineData.lastOutput) {
                     showPipelineResult(pipelineData.lastOutput);
                 }
 
+                // v10.6: Re-render canvas to show logs indicators
+                renderCanvas();
+
             } catch (error) {
                 console.error('Pipeline error:', error);
                 addLog('ERROR', `Pipeline falló: ${error.message}`);
                 showToast(`Error: ${error.message}`, 'error');
+                // v10.6: Re-render canvas to show error indicators
+                renderCanvas();
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalContent;
@@ -7451,8 +7900,37 @@ ${report}
         async function executeNode(node, pipelineData) {
             const nodeId = node.id;
 
-            // ===== CLAUDE NODE =====
-            if (nodeId === 'claude-node' || nodeId.includes('claude')) {
+            // ===== CLAUDE TRANSFORM (prompt personalizable) =====
+            if (nodeId === 'claude-transform') {
+                const inputData = pipelineData.lastOutput || pipelineData.input || '';
+                const customPrompt = node.customPrompt || 'Procesa el siguiente contenido:';
+                const temperature = parseFloat(node.temperature) || 0.3;
+
+                // Combinar prompt personalizado con datos de entrada
+                const fullPrompt = `${customPrompt}\n\n---\nContenido a procesar:\n${inputData}`;
+
+                addLog('INFO', `  → Claude Transform: "${customPrompt.substring(0, 40)}..."`);
+
+                const response = await fetch('/api/claude/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: fullPrompt,
+                        system_prompt: "Eres un asistente de procesamiento de datos. Responde solo con el resultado procesado, sin explicaciones adicionales a menos que se soliciten."
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    return data.content;
+                } else {
+                    throw new Error(data.error || 'Error en Claude Transform');
+                }
+            }
+
+            // ===== CLAUDE NODE (general) =====
+            if (nodeId === 'claude-node') {
                 const prompt = pipelineData.lastOutput || pipelineData.input || "Hola";
 
                 addLog('INFO', `  → Llamando a Claude CLI...`);
@@ -8042,6 +8520,1018 @@ ${report}
         }
 
         // ============================================
+        // PIPELINE PERSISTENCE (v10.7)
+        // ============================================
+
+        function savePipelineModal() {
+            if (canvasNodes.length === 0) {
+                showToast('No hay nodos en el canvas', 'error');
+                return;
+            }
+            document.getElementById('save-pipeline-modal').classList.remove('hidden');
+            document.getElementById('pipeline-name-input').value = '';
+            document.getElementById('pipeline-name-input').focus();
+            document.getElementById('save-node-count').textContent = canvasNodes.length;
+            document.getElementById('save-conn-count').textContent = nodeConnections.length;
+        }
+
+        function closeSavePipelineModal() {
+            document.getElementById('save-pipeline-modal').classList.add('hidden');
+        }
+
+        function savePipelineConfirm() {
+            const name = document.getElementById('pipeline-name-input').value.trim();
+            if (!name) {
+                showToast('Ingresa un nombre para el pipeline', 'error');
+                return;
+            }
+
+            const pipelineData = {
+                name,
+                nodes: canvasNodes.map(n => ({...n})),
+                connections: [...nodeConnections],
+                positions: {...nodePositions},
+                createdAt: Date.now()
+            };
+
+            // Guardar usando OfflineStore
+            const pipelines = OfflineStore.get('pipelines') || {};
+            const id = 'pipe_' + Date.now().toString(36);
+            pipelines[id] = { ...pipelineData, id };
+            OfflineStore.set('pipelines', pipelines);
+
+            // v10.9: Trackear pipeline creado en memoria evolutiva
+            if (typeof MinerosMemory !== 'undefined') {
+                MinerosMemory.trackPipelineCreated(canvasNodes);
+            }
+
+            closeSavePipelineModal();
+            showToast(`Pipeline "${name}" guardado`, 'success');
+            renderSavedPipelines();
+        }
+
+        function loadPipeline(pipelineId) {
+            const pipelines = OfflineStore.get('pipelines') || {};
+            const pipeline = pipelines[pipelineId];
+            if (!pipeline) {
+                showToast('Pipeline no encontrado', 'error');
+                return;
+            }
+
+            // Limpiar canvas actual
+            canvasNodes = pipeline.nodes.map(n => ({...n}));
+            nodeConnections = [...pipeline.connections];
+            nodePositions = {...pipeline.positions};
+            nodeExecutionResults = {}; // Reset results
+
+            renderCanvas();
+            showToast(`Pipeline "${pipeline.name}" cargado`, 'success');
+        }
+
+        function deletePipeline(pipelineId, event) {
+            event.stopPropagation();
+            const pipelines = OfflineStore.get('pipelines') || {};
+            const pipeline = pipelines[pipelineId];
+            if (!pipeline) return;
+
+            if (confirm(`¿Eliminar pipeline "${pipeline.name}"?`)) {
+                delete pipelines[pipelineId];
+                OfflineStore.set('pipelines', pipelines);
+                showToast('Pipeline eliminado', 'info');
+                renderSavedPipelines();
+            }
+        }
+
+        function renderSavedPipelines() {
+            const container = document.getElementById('saved-pipelines-list');
+            if (!container) return;
+
+            const pipelines = OfflineStore.get('pipelines') || {};
+            const pipelineList = Object.values(pipelines).sort((a, b) => b.createdAt - a.createdAt);
+
+            if (pipelineList.length === 0) {
+                container.innerHTML = '<p class="text-xs text-slate-600 italic">Sin pipelines guardados</p>';
+                return;
+            }
+
+            container.innerHTML = pipelineList.map(p => `
+                <div onclick="loadPipeline('${p.id}')" class="flex items-center justify-between p-2 bg-slate-800/50 hover:bg-slate-800 rounded-lg cursor-pointer group transition">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <i class="fa-solid fa-diagram-project text-blue-400 text-xs"></i>
+                        <span class="text-xs text-slate-300 truncate">${p.name}</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span class="text-[10px] text-slate-500">${p.nodes?.length || 0}n</span>
+                        <button onclick="deletePipeline('${p.id}', event)" class="text-slate-600 hover:text-red-400 p-1 opacity-0 group-hover:opacity-100 transition">
+                            <i class="fa-solid fa-trash text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ============================================
+        // PIPELINE ASSISTANT (v10.8)
+        // ============================================
+
+        function showPipelineAssistant() {
+            document.getElementById('pipeline-assistant-modal').classList.remove('hidden');
+            document.getElementById('assistant-prompt').value = '';
+            document.getElementById('assistant-prompt').focus();
+            document.getElementById('assistant-preview').classList.add('hidden');
+        }
+
+        function closePipelineAssistant() {
+            document.getElementById('pipeline-assistant-modal').classList.add('hidden');
+        }
+
+        function setAssistantExample(text) {
+            document.getElementById('assistant-prompt').value = text;
+        }
+
+        async function generatePipelineFromDescription() {
+            const description = document.getElementById('assistant-prompt').value.trim();
+            if (!description) {
+                showToast('Describe qué quieres automatizar', 'info');
+                return;
+            }
+
+            const btn = document.getElementById('assistant-generate-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generando...';
+
+            try {
+                // Usar el nuevo sistema unificado MINEROS BRAIN
+                const result = await askClaudeUnified({
+                    userPrompt: `Quiero crear un pipeline para: "${description}"
+
+Genera el pipeline. Responde SOLO con JSON en este formato exacto:
+{
+  "nodes": ["node-id-1", "node-id-2"],
+  "connections": [{"from": "node-id-1", "to": "node-id-2"}],
+  "explanation": "Breve explicación"
+}
+
+REGLAS:
+- Usa solo IDs de la lista de nodos disponibles
+- Incluye trigger si es necesario (trigger-manual, trigger-file, trigger-webhook, trigger-cron)
+- Máximo 6 nodos`,
+                    task: 'generate',
+                    expectedFormat: 'json',
+                    contextOptions: {
+                        includeAvailableNodes: true  // Lista todos los nodos disponibles
+                    },
+                    additionalSystemPrompt: 'Respondes SOLO con JSON válido. Sin texto adicional, sin bloques de código markdown, solo el objeto JSON.'
+                });
+
+                if (result.success && result.data) {
+                    const pipelineConfig = result.data;
+
+                    // Mostrar preview
+                    const preview = document.getElementById('assistant-preview');
+                    const nodesPreview = document.getElementById('assistant-nodes-preview');
+
+                    const nodeNames = pipelineConfig.nodes.map(id => {
+                        const tool = getTools().find(t => t.id === id);
+                        return tool ? `<span class="inline-block bg-slate-700 px-2 py-0.5 rounded text-xs mr-1 mb-1">${tool.name}</span>` : id;
+                    }).join(' → ');
+
+                    nodesPreview.innerHTML = `
+                        <div class="mb-2">${nodeNames}</div>
+                        <p class="text-xs text-slate-400">${pipelineConfig.explanation || ''}</p>
+                        <button onclick="applyPipelineConfig(${JSON.stringify(pipelineConfig).replace(/"/g, '&quot;')})"
+                                class="mt-3 w-full bg-green-600 hover:bg-green-500 text-white text-xs px-3 py-2 rounded font-medium transition">
+                            <i class="fa-solid fa-check mr-1"></i> Aplicar este pipeline
+                        </button>
+                    `;
+                    preview.classList.remove('hidden');
+
+                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Pipeline generado';
+                } else {
+                    throw new Error(result.error || 'Error al generar pipeline');
+                }
+            } catch (e) {
+                showToast(`Error: ${e.message}`, 'error');
+                btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Reintentar';
+            }
+
+            btn.disabled = false;
+        }
+
+        function applyPipelineConfig(config) {
+            // Limpiar canvas actual
+            canvasNodes = [];
+            nodeConnections = [];
+            nodePositions = {};
+            nodeExecutionResults = {};
+
+            // Añadir nodos
+            config.nodes.forEach((nodeId, index) => {
+                const tool = getTools().find(t => t.id === nodeId);
+                if (tool) {
+                    canvasNodes.push({...tool});
+                    nodePositions[nodeId] = {
+                        x: 100 + index * 300,
+                        y: 150
+                    };
+                }
+            });
+
+            // Añadir conexiones
+            config.connections.forEach(conn => {
+                if (canvasNodes.find(n => n.id === conn.from) && canvasNodes.find(n => n.id === conn.to)) {
+                    nodeConnections.push(conn);
+                }
+            });
+
+            // Renderizar
+            renderCanvas();
+            autoLayoutNodes();
+            closePipelineAssistant();
+            showToast(`Pipeline creado con ${canvasNodes.length} nodos`, 'success');
+        }
+
+        // ============================================
+        // MINEROS MEMORY - Memoria Evolutiva (v10.9)
+        // ============================================
+
+        /**
+         * Sistema de memoria persistente para aprendizaje continuo
+         * Guarda: historial de chat, patrones de uso, feedback de sugerencias
+         */
+        const MinerosMemory = {
+            STORAGE_KEY: 'mineros_memory',
+
+            // Estructura de memoria por defecto
+            defaultMemory: {
+                version: '1.0',
+                createdAt: null,
+                lastSessionAt: null,
+                sessions: 0,
+
+                // Historial de conversaciones (últimas 50)
+                chatHistory: [],
+
+                // Patrones de uso
+                patterns: {
+                    nodesUsed: {},        // { nodeId: count }
+                    pipelinesCreated: 0,
+                    pipelinesExecuted: 0,
+                    favoriteFlows: [],    // [{ nodes: [...], count }]
+                    lastUsedNodes: []     // últimos 10 nodos usados
+                },
+
+                // Feedback de sugerencias
+                suggestions: {
+                    accepted: 0,
+                    rejected: 0,
+                    history: []  // [{ suggestion, accepted, timestamp }]
+                },
+
+                // Preferencias aprendidas
+                preferences: {
+                    preferredTrigger: null,
+                    preferredOutput: null,
+                    commonPatterns: []
+                }
+            },
+
+            // Cargar memoria desde localStorage
+            load() {
+                try {
+                    const stored = localStorage.getItem(this.STORAGE_KEY);
+                    if (stored) {
+                        const memory = JSON.parse(stored);
+                        // Actualizar sesión
+                        memory.sessions = (memory.sessions || 0) + 1;
+                        memory.lastSessionAt = new Date().toISOString();
+                        this.save(memory);
+                        return memory;
+                    }
+                } catch (e) {
+                    console.error('[MEMORY] Error loading:', e);
+                }
+                // Crear memoria nueva
+                const newMemory = {
+                    ...this.defaultMemory,
+                    createdAt: new Date().toISOString(),
+                    lastSessionAt: new Date().toISOString(),
+                    sessions: 1
+                };
+                this.save(newMemory);
+                return newMemory;
+            },
+
+            // Guardar memoria
+            save(memory) {
+                try {
+                    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(memory));
+                } catch (e) {
+                    console.error('[MEMORY] Error saving:', e);
+                }
+            },
+
+            // Obtener memoria actual
+            get() {
+                return this.load();
+            },
+
+            // === CHAT HISTORY ===
+
+            addChatMessage(question, answer) {
+                const memory = this.load();
+                memory.chatHistory.push({
+                    q: question,
+                    a: answer,
+                    timestamp: new Date().toISOString()
+                });
+                // Mantener solo últimos 50 mensajes
+                if (memory.chatHistory.length > 50) {
+                    memory.chatHistory = memory.chatHistory.slice(-50);
+                }
+                this.save(memory);
+            },
+
+            getChatHistory(limit = 10) {
+                const memory = this.load();
+                return memory.chatHistory.slice(-limit);
+            },
+
+            // === PATRONES DE USO ===
+
+            trackNodeUsed(nodeId) {
+                const memory = this.load();
+                memory.patterns.nodesUsed[nodeId] = (memory.patterns.nodesUsed[nodeId] || 0) + 1;
+
+                // Actualizar últimos usados
+                memory.patterns.lastUsedNodes = memory.patterns.lastUsedNodes.filter(n => n !== nodeId);
+                memory.patterns.lastUsedNodes.unshift(nodeId);
+                memory.patterns.lastUsedNodes = memory.patterns.lastUsedNodes.slice(0, 10);
+
+                this.save(memory);
+            },
+
+            trackPipelineCreated(nodes) {
+                const memory = this.load();
+                memory.patterns.pipelinesCreated++;
+
+                // Detectar flujo favorito
+                const flowKey = nodes.map(n => n.id || n).join('→');
+                const existing = memory.patterns.favoriteFlows.find(f => f.key === flowKey);
+                if (existing) {
+                    existing.count++;
+                } else {
+                    memory.patterns.favoriteFlows.push({ key: flowKey, nodes: nodes.map(n => n.id || n), count: 1 });
+                }
+                // Mantener top 10 flujos
+                memory.patterns.favoriteFlows.sort((a, b) => b.count - a.count);
+                memory.patterns.favoriteFlows = memory.patterns.favoriteFlows.slice(0, 10);
+
+                this.save(memory);
+            },
+
+            trackPipelineExecuted() {
+                const memory = this.load();
+                memory.patterns.pipelinesExecuted++;
+                this.save(memory);
+            },
+
+            getTopNodes(limit = 5) {
+                const memory = this.load();
+                return Object.entries(memory.patterns.nodesUsed)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, limit)
+                    .map(([id, count]) => ({ id, count }));
+            },
+
+            // === FEEDBACK DE SUGERENCIAS ===
+
+            trackSuggestion(suggestion, accepted) {
+                const memory = this.load();
+                if (accepted) {
+                    memory.suggestions.accepted++;
+                } else {
+                    memory.suggestions.rejected++;
+                }
+                memory.suggestions.history.push({
+                    suggestion,
+                    accepted,
+                    timestamp: new Date().toISOString()
+                });
+                // Mantener últimas 100 sugerencias
+                if (memory.suggestions.history.length > 100) {
+                    memory.suggestions.history = memory.suggestions.history.slice(-100);
+                }
+                this.save(memory);
+            },
+
+            getSuggestionStats() {
+                const memory = this.load();
+                const total = memory.suggestions.accepted + memory.suggestions.rejected;
+                return {
+                    accepted: memory.suggestions.accepted,
+                    rejected: memory.suggestions.rejected,
+                    total,
+                    acceptRate: total > 0 ? (memory.suggestions.accepted / total * 100).toFixed(1) : 0
+                };
+            },
+
+            // === RESUMEN PARA CLAUDE ===
+
+            getSummaryForClaude() {
+                const memory = this.load();
+                const topNodes = this.getTopNodes(5);
+                const suggestionStats = this.getSuggestionStats();
+                const recentChat = this.getChatHistory(5);
+
+                let summary = `## Memoria del Usuario (${memory.sessions} sesiones)\n`;
+
+                if (topNodes.length > 0) {
+                    summary += `\n**Nodos favoritos:** ${topNodes.map(n => n.id).join(', ')}\n`;
+                }
+
+                if (memory.patterns.favoriteFlows.length > 0) {
+                    const topFlow = memory.patterns.favoriteFlows[0];
+                    summary += `**Flujo más usado:** ${topFlow.nodes.join(' → ')} (${topFlow.count}x)\n`;
+                }
+
+                summary += `**Pipelines:** ${memory.patterns.pipelinesCreated} creados, ${memory.patterns.pipelinesExecuted} ejecutados\n`;
+
+                if (suggestionStats.total > 0) {
+                    summary += `**Sugerencias aceptadas:** ${suggestionStats.acceptRate}%\n`;
+                }
+
+                if (recentChat.length > 0) {
+                    summary += `\n**Conversación reciente:**\n`;
+                    recentChat.slice(-3).forEach(msg => {
+                        summary += `- Usuario: "${msg.q.substring(0, 50)}..."\n`;
+                    });
+                }
+
+                return summary;
+            },
+
+            // Reset memoria (para debug)
+            reset() {
+                localStorage.removeItem(this.STORAGE_KEY);
+                console.log('[MEMORY] Reset complete');
+            }
+        };
+
+        // Inicializar memoria al cargar
+        const minerosMemory = MinerosMemory.load();
+        console.log(`[MEMORY] Sesión #${minerosMemory.sessions} iniciada`);
+
+        // ============================================
+        // MINEROS BRAIN - Claude Intelligence Core (v10.9)
+        // ============================================
+
+        /**
+         * System Prompt maestro para todas las interacciones con Claude
+         * Centralizado y consistente en toda la aplicación
+         */
+        const MINEROS_SYSTEM_PROMPT = `Eres el asistente IA de DirectOS, parte del ecosistema minerOS.
+
+## Tu Identidad
+- Nombre: DirectOS Assistant
+- Rol: Experto en pipelines de datos, automatización y desarrollo
+- Estilo: Conciso, práctico, orientado a soluciones. Máximo 3-4 oraciones por respuesta salvo que se pida más.
+
+## Ecosistema minerOS
+minerOS es un sistema de productividad personal que incluye:
+- **DirectOS**: Pipeline builder visual (donde estás ahora)
+- **Dashboard Mobile**: Hub de conocimiento móvil
+- **Vault**: Base de conocimiento personal
+- **Proyectos activos**: farmacia-colon-web, educacion-auditiva, tesis-corelli-op5, entre otros
+
+## Capacidades en DirectOS
+- Diseñar pipelines visuales con nodos drag & drop
+- 36 nodos disponibles: Triggers (Manual, File, Cron, Webhook), Proceso (Whisper, Tesseract, PDF Parser), IA (Claude, Ollama, OpenAI), Storage (ChromaDB, SQLite), Flow (If, Loop, Delay, Inspector), Output (File, Notify, Email, Slack)
+- Human-in-the-Loop: pausas, inspección, dry run
+- Persistencia: guardar/cargar pipelines
+
+## Reglas de Respuesta
+1. Cuando sugieras nodos, usa sus IDs exactos (ej: "whisper", "claude-transform", "pdf-parser")
+2. Para JSON, responde SOLO el JSON sin bloques de código markdown
+3. Cuando no sepas algo, admítelo y sugiere alternativas
+4. Prioriza soluciones simples sobre complejas
+5. Si el usuario habla en español, responde en español`;
+
+        /**
+         * Construye contexto dinámico basado en el estado actual
+         * @param {Object} options - Opciones de contexto
+         * @returns {string} Contexto formateado
+         */
+        function buildClaudeContext(options = {}) {
+            const parts = [];
+
+            // 1. Pipeline actual (siempre incluido)
+            if (canvasNodes.length > 0) {
+                const nodesDesc = canvasNodes.map(n => `- ${n.name} (${n.cat})`).join('\n');
+                const connsDesc = nodeConnections.map(c => {
+                    const from = canvasNodes.find(n => n.id === c.from)?.name || c.from;
+                    const to = canvasNodes.find(n => n.id === c.to)?.name || c.to;
+                    return `${from} → ${to}`;
+                }).join(', ') || 'Ninguna';
+
+                parts.push(`## Pipeline Actual (${canvasNodes.length} nodos)
+${nodesDesc}
+
+Conexiones: ${connsDesc}`);
+            } else {
+                parts.push('## Pipeline Actual\nCanvas vacío - sin nodos');
+            }
+
+            // 2. Historial de chat (últimos 5 mensajes para contexto)
+            if (options.includeHistory && chatHistory.length > 0) {
+                const recentHistory = chatHistory.slice(-5).map(h =>
+                    `Usuario: ${h.q}\nAsistente: ${h.a}`
+                ).join('\n\n');
+                parts.push(`## Conversación Reciente\n${recentHistory}`);
+            }
+
+            // 3. Pipelines guardados (si se solicita)
+            if (options.includeSavedPipelines) {
+                const saved = OfflineStore.getAll('pipelines');
+                if (saved.length > 0) {
+                    const pipelinesList = saved.slice(0, 5).map(p =>
+                        `- ${p.name} (${p.nodes?.length || 0} nodos)`
+                    ).join('\n');
+                    parts.push(`## Pipelines Guardados\n${pipelinesList}`);
+                }
+            }
+
+            // 4. Nodos disponibles (para generación de pipelines)
+            if (options.includeAvailableNodes) {
+                const nodes = getTools().map(t =>
+                    `${t.id}: ${t.name} (${t.cat})`
+                ).join('\n');
+                parts.push(`## Nodos Disponibles\n${nodes}`);
+            }
+
+            // 5. Resultados de ejecución (para debug)
+            if (options.includeExecutionResults && Object.keys(nodeExecutionResults).length > 0) {
+                const results = Object.entries(nodeExecutionResults).slice(-3).map(([id, data]) => {
+                    const node = canvasNodes.find(n => n.id === id);
+                    const status = data.success ? '✓' : '✗';
+                    return `- ${node?.name || id}: ${status} ${data.output?.substring(0, 100) || ''}`;
+                }).join('\n');
+                parts.push(`## Últimas Ejecuciones\n${results}`);
+            }
+
+            // 6. Memoria evolutiva (patrones, preferencias, historial)
+            if (options.includeMemory !== false) {  // Incluido por defecto
+                const memorySummary = MinerosMemory.getSummaryForClaude();
+                if (memorySummary) {
+                    parts.push(memorySummary);
+                }
+            }
+
+            // 7. Contexto adicional personalizado
+            if (options.additionalContext) {
+                parts.push(options.additionalContext);
+            }
+
+            return parts.join('\n\n');
+        }
+
+        /**
+         * Parser robusto para respuestas de Claude
+         * Maneja JSON, markdown, y texto plano
+         * @param {string} content - Respuesta raw de Claude
+         * @param {string} expectedFormat - 'json' | 'text' | 'markdown'
+         * @returns {Object} { success, data, raw, error }
+         */
+        function parseClaudeResponse(content, expectedFormat = 'text') {
+            const result = { success: false, data: null, raw: content, error: null };
+
+            if (!content || typeof content !== 'string') {
+                result.error = 'Respuesta vacía o inválida';
+                return result;
+            }
+
+            // Limpiar respuesta
+            let cleaned = content.trim();
+
+            if (expectedFormat === 'json') {
+                // Remover bloques de código markdown
+                cleaned = cleaned
+                    .replace(/^```json\s*/i, '')
+                    .replace(/^```\s*/i, '')
+                    .replace(/\s*```$/i, '')
+                    .trim();
+
+                // Intentar encontrar JSON válido si hay texto adicional
+                const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    cleaned = jsonMatch[0];
+                }
+
+                try {
+                    result.data = JSON.parse(cleaned);
+                    result.success = true;
+                } catch (e) {
+                    result.error = `JSON inválido: ${e.message}`;
+                    // Intentar reparar JSON común
+                    try {
+                        // Reemplazar comillas simples por dobles
+                        const repaired = cleaned.replace(/'/g, '"');
+                        result.data = JSON.parse(repaired);
+                        result.success = true;
+                        result.error = null;
+                    } catch (e2) {
+                        // Mantener error original
+                    }
+                }
+            } else {
+                // Texto o Markdown - devolver limpio
+                result.data = cleaned;
+                result.success = true;
+            }
+
+            return result;
+        }
+
+        /**
+         * Función unificada para llamar a Claude
+         * @param {Object} options - Configuración de la llamada
+         * @returns {Promise<Object>} Respuesta procesada
+         */
+        async function askClaudeUnified(options = {}) {
+            const {
+                userPrompt,
+                task = 'general', // 'chat', 'generate', 'debug', 'document', 'validate'
+                expectedFormat = 'text',
+                contextOptions = {},
+                additionalSystemPrompt = ''
+            } = options;
+
+            // Construir contexto
+            const context = buildClaudeContext(contextOptions);
+
+            // System prompt completo
+            let systemPrompt = MINEROS_SYSTEM_PROMPT;
+            if (additionalSystemPrompt) {
+                systemPrompt += `\n\n## Instrucciones Adicionales\n${additionalSystemPrompt}`;
+            }
+
+            // Prompt final
+            const fullPrompt = `${context}\n\n## Solicitud del Usuario\n${userPrompt}`;
+
+            try {
+                const response = await fetch('/api/claude/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: fullPrompt,
+                        system_prompt: systemPrompt
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    return { success: false, error: data.error || 'Error en Claude API' };
+                }
+
+                // Parsear respuesta según formato esperado
+                const parsed = parseClaudeResponse(data.content, expectedFormat);
+
+                return {
+                    success: parsed.success,
+                    data: parsed.data,
+                    raw: data.content,
+                    model: data.model,
+                    error: parsed.error
+                };
+
+            } catch (e) {
+                return { success: false, error: e.message };
+            }
+        }
+
+        // ============================================
+        // CHAT CONTEXTUAL DEL PIPELINE (v10.8)
+        // ============================================
+
+        let chatHistory = [];
+
+        function toggleChatPanel() {
+            const panel = document.getElementById('chat-panel');
+            panel.classList.toggle('hidden');
+        }
+
+        function quickChatQuestion(question) {
+            document.getElementById('chat-input').value = question;
+            sendChatMessage();
+        }
+
+        function addChatMessage(content, isUser = false) {
+            const container = document.getElementById('chat-messages');
+
+            // Limpiar mensaje inicial si existe
+            if (container.querySelector('.text-center')) {
+                container.innerHTML = '';
+            }
+
+            const msg = document.createElement('div');
+            msg.className = isUser
+                ? 'flex justify-end'
+                : 'flex justify-start';
+            msg.innerHTML = `
+                <div class="${isUser ? 'bg-purple-600 text-white' : 'bg-slate-800 text-slate-300'} px-3 py-2 rounded-lg text-xs max-w-[85%] whitespace-pre-wrap">
+                    ${content}
+                </div>
+            `;
+            container.appendChild(msg);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const question = input.value.trim();
+            if (!question) return;
+
+            input.value = '';
+            addChatMessage(question, true);
+
+            // Mostrar indicador de escritura
+            const typingId = 'typing-' + Date.now();
+            const container = document.getElementById('chat-messages');
+            const typing = document.createElement('div');
+            typing.id = typingId;
+            typing.className = 'flex justify-start';
+            typing.innerHTML = `<div class="bg-slate-800 text-slate-400 px-3 py-2 rounded-lg text-xs"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Pensando...</div>`;
+            container.appendChild(typing);
+            container.scrollTop = container.scrollHeight;
+
+            try {
+                // Usar el nuevo sistema unificado MINEROS BRAIN
+                const result = await askClaudeUnified({
+                    userPrompt: question,
+                    task: 'chat',
+                    expectedFormat: 'text',
+                    contextOptions: {
+                        includeHistory: true,  // Incluye historial de chat
+                        includeSavedPipelines: true  // Menciona pipelines guardados
+                    }
+                });
+
+                // Remover indicador de escritura
+                document.getElementById(typingId)?.remove();
+
+                if (result.success) {
+                    addChatMessage(result.data);
+                    chatHistory.push({ q: question, a: result.data });
+                    // Guardar en memoria persistente
+                    MinerosMemory.addChatMessage(question, result.data);
+                } else {
+                    throw new Error(result.error || 'Error al obtener respuesta');
+                }
+            } catch (e) {
+                document.getElementById(typingId)?.remove();
+                addChatMessage(`Error: ${e.message}`);
+            }
+        }
+
+        // ============================================
+        // AUTO-DOCUMENTACIÓN CON IA (v10.8)
+        // ============================================
+
+        async function generateDocumentation() {
+            if (canvasNodes.length === 0) {
+                showToast('Añade nodos al pipeline primero', 'info');
+                return;
+            }
+
+            showToast('Generando documentación con Claude...', 'info');
+
+            try {
+                // Construir descripción detallada del pipeline para contexto adicional
+                const pipelineDesc = canvasNodes.map((n, i) => {
+                    const connsFrom = nodeConnections.filter(c => c.from === n.id).map(c => {
+                        const toNode = canvasNodes.find(node => node.id === c.to);
+                        return toNode?.name || c.to;
+                    });
+                    const connsTo = nodeConnections.filter(c => c.to === n.id).map(c => {
+                        const fromNode = canvasNodes.find(node => node.id === c.from);
+                        return fromNode?.name || c.from;
+                    });
+                    return `- **${n.name}** (${n.cat}): ${n.desc || 'Sin descripción'}
+    - Recibe de: ${connsTo.length ? connsTo.join(', ') : 'Ninguno (inicio)'}
+    - Envía a: ${connsFrom.length ? connsFrom.join(', ') : 'Ninguno (fin)'}`;
+                }).join('\n');
+
+                // Usar el nuevo sistema unificado MINEROS BRAIN
+                const result = await askClaudeUnified({
+                    userPrompt: `Genera documentación técnica para mi pipeline actual.
+
+**Detalle de nodos:**
+${pipelineDesc}
+
+Genera documentación Markdown con:
+1. **# Título descriptivo**
+2. **## Descripción**: Qué hace (2-3 oraciones)
+3. **## Flujo de datos**: Diagrama ASCII simple
+4. **## Nodos**: Tabla con: Nodo | Función | Input | Output
+5. **## Configuración**: Parámetros importantes
+6. **## Casos de uso**: 2-3 ejemplos
+7. **## Notas**: Consideraciones`,
+                    task: 'document',
+                    expectedFormat: 'markdown',
+                    contextOptions: {},  // El pipeline ya está en contexto automático
+                    additionalSystemPrompt: 'Eres technical writer experto. Documentación clara, concisa y profesional. Formato Markdown.'
+                });
+
+                if (result.success) {
+                    // Mostrar en el modal de output
+                    document.getElementById('architect-prompt-output').textContent = result.data;
+                    document.getElementById('architect-output-modal').classList.remove('hidden');
+                    showToast('Documentación generada', 'success');
+                } else {
+                    throw new Error(result.error || 'Error al generar documentación');
+                }
+            } catch (e) {
+                showToast(`Error: ${e.message}`, 'error');
+            }
+        }
+
+        // ============================================
+        // VALIDACIÓN SEMÁNTICA CON IA (v10.8)
+        // ============================================
+
+        async function validateWithAI() {
+            if (canvasNodes.length === 0) {
+                showToast('Añade nodos al pipeline primero', 'info');
+                return;
+            }
+
+            showToast('Analizando pipeline con Claude...', 'info');
+
+            try {
+                // Usar el nuevo sistema unificado MINEROS BRAIN
+                const result = await askClaudeUnified({
+                    userPrompt: `Analiza mi pipeline actual y dame feedback constructivo.
+
+Por favor analiza:
+1. **Flujo lógico**: ¿Tiene sentido la secuencia?
+2. **Nodos faltantes**: ¿Falta algún paso importante?
+3. **Optimizaciones**: ¿Se puede mejorar?
+4. **Compatibilidad**: ¿Los nodos conectados son compatibles?
+
+Responde con:
+- ✅ Lo que está bien
+- ⚠️ Advertencias o sugerencias
+- ❌ Problemas que corregir`,
+                    task: 'validate',
+                    expectedFormat: 'text',
+                    contextOptions: {
+                        includeSavedPipelines: true  // Para comparar con pipelines existentes
+                    },
+                    additionalSystemPrompt: 'Eres arquitecto de pipelines experto. Feedback constructivo sobre arquitectura y mejores prácticas.'
+                });
+
+                if (result.success) {
+                    // Mostrar resultado en el panel de validación
+                    const panel = document.getElementById('validation-panel');
+                    const messages = document.getElementById('validation-messages');
+
+                    messages.innerHTML = `
+                        <div class="text-xs space-y-2">
+                            <div class="flex items-center gap-2 text-purple-400 font-bold mb-3">
+                                <i class="fa-solid fa-robot"></i> Análisis de Claude
+                            </div>
+                            <div class="text-slate-300 whitespace-pre-wrap text-xs leading-relaxed">${result.data}</div>
+                        </div>
+                    `;
+
+                    panel.classList.remove('hidden');
+                    showToast('Análisis completado', 'success');
+                } else {
+                    throw new Error(result.error || 'Error al analizar');
+                }
+            } catch (e) {
+                showToast(`Error: ${e.message}`, 'error');
+            }
+        }
+
+        // ============================================
+        // DEBUG INTELIGENTE (v10.8)
+        // ============================================
+
+        let currentDebugContext = null;
+
+        function showDebugModal(nodeName, error, context) {
+            currentDebugContext = { nodeName, error, context };
+
+            document.getElementById('debug-node-name').textContent = `Error en: ${nodeName}`;
+            document.getElementById('debug-error-content').textContent = error;
+            document.getElementById('debug-context').textContent = JSON.stringify(context, null, 2);
+
+            // Reset response
+            document.getElementById('debug-response-container').classList.add('hidden');
+            document.getElementById('debug-response').textContent = '';
+            document.getElementById('debug-ask-btn').disabled = false;
+            document.getElementById('debug-ask-btn').innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Preguntar a Claude';
+
+            document.getElementById('debug-modal').classList.remove('hidden');
+        }
+
+        function closeDebugModal() {
+            document.getElementById('debug-modal').classList.add('hidden');
+            currentDebugContext = null;
+        }
+
+        async function askClaudeForHelp() {
+            if (!currentDebugContext) return;
+
+            const btn = document.getElementById('debug-ask-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Consultando...';
+
+            try {
+                const { nodeName, error, context } = currentDebugContext;
+
+                // Usar el nuevo sistema unificado MINEROS BRAIN
+                const result = await askClaudeUnified({
+                    userPrompt: `Mi pipeline falló. Ayúdame a resolver el error.
+
+**Nodo que falló:** ${nodeName}
+
+**Error:**
+${error}
+
+**Input previo:** ${context.lastInput?.substring(0, 200) || 'No disponible'}
+
+Por favor:
+1. Explica qué causó este error
+2. Sugiere cómo solucionarlo
+3. Si es un problema de configuración, indica qué parámetros revisar`,
+                    task: 'debug',
+                    expectedFormat: 'text',
+                    contextOptions: {
+                        includeExecutionResults: true  // Incluye resultados de ejecución
+                    },
+                    additionalSystemPrompt: 'Eres experto en debugging. Responde de forma clara y práctica. Usa formato markdown.'
+                });
+
+                if (result.success) {
+                    document.getElementById('debug-response').textContent = result.data;
+                    document.getElementById('debug-response-container').classList.remove('hidden');
+                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Respondido';
+                } else {
+                    throw new Error(result.error || 'Error al consultar Claude');
+                }
+            } catch (e) {
+                showToast(`Error: ${e.message}`, 'error');
+                btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Reintentar';
+                btn.disabled = false;
+            }
+        }
+
+        // ============================================
+        // NODE LOGS (v10.6)
+        // ============================================
+
+        function showNodeLogs(nodeId) {
+            const result = nodeExecutionResults[nodeId];
+            if (!result) {
+                showToast('Este nodo no tiene logs de ejecución', 'info');
+                return;
+            }
+
+            const node = canvasNodes.find(n => n.id === nodeId);
+            const modal = document.getElementById('node-logs-modal');
+
+            // Update modal content
+            document.getElementById('node-logs-title').textContent = node ? node.name : 'Nodo';
+            document.getElementById('node-logs-status').textContent = result.status === 'success' ? 'Ejecutado exitosamente' : 'Error en ejecución';
+            document.getElementById('node-logs-status').className = `text-xs ${result.status === 'success' ? 'text-green-400' : 'text-red-400'}`;
+
+            // Format output
+            let content = result.output;
+            if (typeof content === 'object') {
+                content = JSON.stringify(content, null, 2);
+            }
+            document.getElementById('node-logs-content').textContent = content || '(sin output)';
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeNodeLogsModal() {
+            document.getElementById('node-logs-modal').classList.add('hidden');
+        }
+
+        function copyNodeLogs() {
+            const content = document.getElementById('node-logs-content').textContent;
+            navigator.clipboard.writeText(content).then(() => {
+                showToast('Output copiado al portapapeles', 'success');
+            }).catch(() => {
+                showToast('Error al copiar', 'error');
+            });
+        }
+
+        // ============================================
         // INICIALIZACIÓN
         // ============================================
         SyncManager.init();  // Offline-first sync
@@ -8049,6 +9539,7 @@ ${report}
         initPatternsAccordion();
         initFlowsGallery();
         initProjects();
+        renderSavedPipelines();  // v10.7 - Load saved pipelines list
         switchView('architect');
         renderCanvas();
     </script>

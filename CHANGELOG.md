@@ -6,6 +6,148 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 ---
 
+## [10.9.0] - 2025-12-08
+
+### Added - MINEROS BRAIN & MEMORY
+
+#### MINEROS BRAIN - Claude Intelligence Core
+Sistema centralizado para todas las interacciones con Claude:
+
+- **MINEROS_SYSTEM_PROMPT**: Prompt maestro que define la identidad de DirectOS Assistant
+  - Conoce el ecosistema minerOS (DirectOS, Dashboard Mobile, Vault)
+  - Conoce los 36 nodos disponibles y sus categorías
+  - Reglas de respuesta consistentes (conciso, práctico, IDs exactos)
+
+- **buildClaudeContext()**: Constructor de contexto dinámico
+  - Pipeline actual (nodos + conexiones)
+  - Historial de chat (últimos 5 mensajes)
+  - Pipelines guardados
+  - Nodos disponibles
+  - Resultados de ejecución
+  - Memoria evolutiva (patrones, preferencias)
+
+- **parseClaudeResponse()**: Parser robusto de respuestas
+  - Maneja JSON, Markdown y texto plano
+  - Auto-limpia bloques de código ```json
+  - Intenta reparar JSON con comillas simples
+
+- **askClaudeUnified()**: API unificada para llamar a Claude
+  - Combina system prompt + contexto + query
+  - Formato esperado configurable (json/text/markdown)
+  - Todas las funciones de Claude refactorizadas para usarla
+
+#### MINEROS MEMORY - Memoria Evolutiva Persistente
+Sistema de aprendizaje continuo basado en localStorage:
+
+- **Tracking de uso**:
+  - `trackNodeUsed()`: Registra cada nodo añadido al canvas
+  - `trackPipelineCreated()`: Detecta flujos favoritos (secuencias repetidas)
+  - `trackPipelineExecuted()`: Cuenta ejecuciones exitosas
+
+- **Tracking de sugerencias**:
+  - `trackSuggestion(id, accepted)`: Registra sugerencias aceptadas/rechazadas
+  - `getSuggestionStats()`: Calcula tasa de aceptación
+
+- **Historial persistente**:
+  - `addChatMessage()`: Guarda conversaciones (últimas 50)
+  - `getChatHistory()`: Recupera historial entre sesiones
+
+- **Resumen para Claude**:
+  - `getSummaryForClaude()`: Genera contexto de memoria para el LLM
+  - Incluye: nodos favoritos, flujo más usado, pipelines creados/ejecutados, tasa de aceptación
+
+### Changed
+- `sendChatMessage()`: Ahora usa `askClaudeUnified` + guarda en memoria persistente
+- `generatePipelineFromDescription()`: Refactorizado con nuevo sistema + parser JSON robusto
+- `askClaudeForHelp()`: Incluye resultados de ejecución en contexto
+- `generateDocumentation()`: Usa sistema unificado
+- `validateWithAI()`: Compara con pipelines guardados
+- `acceptSuggestion()`: Trackea sugerencias aceptadas
+- `dismissSuggestion()`: Trackea sugerencias rechazadas
+
+### Technical
+- Objeto `MinerosMemory` con API completa de persistencia
+- localStorage key: `mineros_memory`
+- Contador de sesiones automático
+- Integración automática de memoria en `buildClaudeContext()`
+- Hooks en: `addNodeToCanvas`, `runPipelineFromBuilder`, `savePipelineConfirm`
+
+---
+
+## [10.8.0] - 2025-12-08
+
+### Added - Claude Intelligence Suite
+Suite completa de funcionalidades potenciadas por Claude:
+
+#### 1. Nodo Claude Transform
+- Nuevo nodo "Claude Transform" en categoría IA Model
+- Prompt personalizable en panel de configuración
+- Procesa datos con instrucciones específicas (extraer, resumir, traducir, etc.)
+
+#### 2. Debug Inteligente
+- Modal de debug automático cuando un nodo falla
+- Muestra error + contexto del pipeline
+- Botón "Preguntar a Claude" para obtener sugerencias de solución
+
+#### 3. Validación Semántica
+- Botón "IA" en barra de herramientas
+- Claude analiza el flujo lógico del pipeline
+- Sugiere nodos faltantes y optimizaciones
+
+#### 4. Auto-documentación
+- Botón "Documentar" en barra inferior
+- Genera documentación Markdown completa
+- Incluye flujo, nodos, configuración y casos de uso
+
+#### 5. Sugerencias Proactivas
+- Toast interactivo al añadir nodos
+- Sugiere nodos complementarios basado en el contexto
+- Botón para añadir sugerencia directamente
+
+#### 6. Chat Contextual
+- FAB flotante para abrir chat
+- Chat que conoce el estado del pipeline
+- Preguntas rápidas: "¿Qué hace?", "Optimizar", "Sugerir nodo"
+
+#### 7. Pipeline Assistant
+- Botón "Crear con IA" en barra de herramientas
+- Describe en lenguaje natural lo que necesitas
+- Claude genera el pipeline completo (nodos + conexiones)
+- Preview antes de aplicar
+
+### Technical
+- Funciones: `validateWithAI()`, `generateDocumentation()`, `showDebugModal()`, `askClaudeForHelp()`
+- Funciones: `showNodeSuggestion()`, `toggleChatPanel()`, `sendChatMessage()`
+- Funciones: `showPipelineAssistant()`, `generatePipelineFromDescription()`, `applyPipelineConfig()`
+- Mapa `NODE_SUGGESTIONS` para sugerencias proactivas
+- Variable `chatHistory` para historial de chat
+
+---
+
+## [10.7.0] - 2025-12-08
+
+### Added - Persistencia de Pipelines
+- **Panel "Mis Pipelines"**: Nueva sección en sidebar del Pipeline Builder
+- **Guardar pipeline**: Modal con input de nombre, guarda nodos, conexiones y posiciones
+- **Cargar pipeline**: Click en pipeline guardado lo restaura en el canvas
+- **Eliminar pipeline**: Botón de eliminar con confirmación
+- **Persistencia localStorage**: Usando OfflineStore con key `directos_pipelines`
+
+### Added - Logs Inline por Nodo (v10.6)
+- **Indicador visual**: Nodos ejecutados muestran punto azul y botón de terminal
+- **Modal de logs**: Muestra output del nodo con formato mono
+- **Copiar output**: Botón para copiar resultado al portapapeles
+- **Doble-click**: Ver logs haciendo doble-click en nodo ejecutado
+- **Estados**: Muestra si ejecución fue exitosa o con error
+
+### Technical
+- Variable `nodeExecutionResults` para almacenar resultados de ejecución
+- CSS `.has-logs` para indicador visual en nodos
+- Funciones: `showNodeLogs()`, `copyNodeLogs()`, `savePipelineModal()`, `loadPipeline()`, `deletePipeline()`, `renderSavedPipelines()`
+- Re-render automático del canvas tras ejecución para mostrar indicadores
+
+---
+
 ## [10.5.0] - 2025-12-07
 
 ### Added - Dry Run (Simulación)
