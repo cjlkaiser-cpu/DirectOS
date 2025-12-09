@@ -143,6 +143,63 @@
             outline-offset: 2px;
         }
 
+        /* Estados de ejecución de nodos */
+        .pipeline-node-pro.node-executing {
+            outline: 2px solid #eab308;
+            outline-offset: 2px;
+            animation: nodeExecutingPulse 1s ease-in-out infinite;
+        }
+        @keyframes nodeExecutingPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.4); }
+            50% { box-shadow: 0 0 20px 4px rgba(234, 179, 8, 0.2); }
+        }
+
+        .pipeline-node-pro.node-success {
+            outline: 2px solid #22c55e;
+            outline-offset: 2px;
+        }
+        .pipeline-node-pro.node-success::after {
+            content: '✓';
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 20px;
+            height: 20px;
+            background: #22c55e;
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .pipeline-node-pro.node-error {
+            outline: 2px solid #ef4444;
+            outline-offset: 2px;
+        }
+        .pipeline-node-pro.node-error::after {
+            content: '✗';
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 20px;
+            height: 20px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .pipeline-node-pro.node-pending {
+            opacity: 0.6;
+        }
+
         /* Puertos de conexión */
         .node-port {
             position: absolute;
@@ -196,18 +253,75 @@
             stroke: #3b82f6;
             stroke-width: 2;
             fill: none;
-            transition: stroke 0.2s;
+            transition: stroke 0.2s, stroke-width 0.2s;
         }
         .connection-line:hover {
-            stroke: #ef4444;
-            cursor: pointer;
+            stroke: #22c55e;
+            stroke-width: 3;
+            cursor: help;
+        }
+
+        /* Animación de flujo en conexiones */
+        .connection-line.flowing {
+            stroke-dasharray: 10, 5;
+            animation: flowAnimation 1s linear infinite;
+        }
+        @keyframes flowAnimation {
+            from { stroke-dashoffset: 15; }
+            to { stroke-dashoffset: 0; }
+        }
+
+        /* Conexión activa (ejecutando) */
+        .connection-line.active {
+            stroke: #22c55e;
+            stroke-width: 3;
+            filter: drop-shadow(0 0 6px rgba(34, 197, 94, 0.6));
+        }
+
+        /* Colores por tipo de dato */
+        .connection-line[data-type="text"] { stroke: #3b82f6; }
+        .connection-line[data-type="json"] { stroke: #22c55e; }
+        .connection-line[data-type="filepath"] { stroke: #f97316; }
+        .connection-line[data-type="embeddings"] { stroke: #a855f7; }
+        .connection-line[data-type="trigger"] { stroke: #10b981; }
+
+        /* Tooltip educativo para conexiones */
+        .connection-tooltip {
+            position: absolute;
+            z-index: 1000;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid #3b82f6;
+            border-radius: 12px;
+            padding: 12px 16px;
+            max-width: 320px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 20px rgba(59, 130, 246, 0.2);
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.2s, transform 0.2s;
+        }
+        .connection-tooltip.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .connection-tooltip::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: 20px;
+            width: 12px;
+            height: 12px;
+            background: #1e293b;
+            border-left: 1px solid #3b82f6;
+            border-top: 1px solid #3b82f6;
+            transform: rotate(45deg);
         }
 
         /* Minimap */
         .canvas-minimap {
             position: absolute;
-            bottom: 100px;
-            right: 16px;
+            bottom: 120px;
+            right: 20px;
             width: 150px;
             height: 100px;
             background: rgba(15, 23, 42, 0.9);
@@ -405,6 +519,31 @@
 
                 <!-- Canvas SVG + Nodos (Pipeline Builder Pro) -->
                 <div id="pipeline-canvas" class="absolute inset-0 pt-20 pb-28 overflow-hidden bg-slate-950">
+                    <!-- Tooltip educativo para conexiones -->
+                    <div id="connection-tooltip" class="connection-tooltip">
+                        <div class="flex items-center gap-2 mb-2 pb-2 border-b border-slate-700">
+                            <span id="tooltip-from" class="text-sm font-bold text-green-400">Nodo A</span>
+                            <i class="fa-solid fa-arrow-right text-slate-500 text-xs"></i>
+                            <span id="tooltip-to" class="text-sm font-bold text-blue-400">Nodo B</span>
+                        </div>
+                        <div class="space-y-2 text-xs">
+                            <div class="flex items-start gap-2">
+                                <span class="text-slate-500 w-16 flex-shrink-0">📤 Output:</span>
+                                <span id="tooltip-output" class="text-slate-300">texto</span>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <span class="text-slate-500 w-16 flex-shrink-0">📥 Input:</span>
+                                <span id="tooltip-input" class="text-slate-300">texto</span>
+                            </div>
+                            <div class="mt-2 pt-2 border-t border-slate-700">
+                                <div class="flex items-start gap-2">
+                                    <span class="text-yellow-400">💡</span>
+                                    <span id="tooltip-explanation" class="text-slate-400 leading-relaxed">Explicación de la conexión</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Capa de Grid -->
                     <div id="canvas-grid" class="absolute inset-0 canvas-grid" style="width: 3000px; height: 2000px;"></div>
 
@@ -435,7 +574,7 @@
                     </div>
 
                     <!-- Minimap -->
-                    <div id="canvas-minimap" class="canvas-minimap hidden">
+                    <div id="canvas-minimap" class="canvas-minimap">
                         <div id="minimap-nodes"></div>
                         <div id="minimap-viewport" class="minimap-viewport"></div>
                     </div>
@@ -468,10 +607,35 @@
                     </div>
 
                     <div class="overflow-y-auto max-h-[400px]">
-                        <!-- Descripción -->
+                        <!-- Qué hace (descripción clara) -->
+                        <div class="p-3 border-b border-slate-800 bg-gradient-to-r from-blue-500/5 to-transparent">
+                            <label class="text-[10px] font-bold text-blue-400 uppercase tracking-wider block mb-1.5">
+                                <i class="fa-solid fa-circle-info mr-1"></i> Qué hace
+                            </label>
+                            <p id="config-node-desc" class="text-sm text-slate-300 leading-relaxed"></p>
+                        </div>
+
+                        <!-- Input/Output -->
                         <div class="p-3 border-b border-slate-800">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Descripción</label>
-                            <p id="config-node-desc" class="text-xs text-slate-400 leading-relaxed"></p>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">Datos</label>
+                            <div class="grid grid-cols-2 gap-3 text-xs">
+                                <div class="bg-green-500/10 border border-green-500/20 rounded-lg p-2">
+                                    <span class="text-green-400 font-medium block mb-1">📥 Recibe</span>
+                                    <span id="config-node-input-type" class="text-slate-400">-</span>
+                                </div>
+                                <div class="bg-blue-500/10 border border-blue-500/20 rounded-lg p-2">
+                                    <span class="text-blue-400 font-medium block mb-1">📤 Produce</span>
+                                    <span id="config-node-output-type" class="text-slate-400">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cuándo usarlo (tip) -->
+                        <div id="config-node-tip-container" class="p-3 border-b border-slate-800 bg-gradient-to-r from-yellow-500/5 to-transparent">
+                            <label class="text-[10px] font-bold text-yellow-400 uppercase tracking-wider block mb-1.5">
+                                <i class="fa-solid fa-lightbulb mr-1"></i> Cuándo usarlo
+                            </label>
+                            <p id="config-node-tip" class="text-xs text-slate-400 leading-relaxed"></p>
                         </div>
 
                         <!-- Parámetros del Nodo -->
@@ -538,6 +702,9 @@
                             <button id="dry-run-btn" onclick="dryRunPipeline()" class="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold py-2.5 px-5 rounded-lg shadow-lg flex items-center gap-2 transition text-sm">
                                 <i class="fa-solid fa-flask"></i> Simular
                             </button>
+                            <button onclick="simulateFlowExecution()" class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-2.5 px-5 rounded-lg shadow-lg flex items-center gap-2 transition text-sm" title="Simular flujo visualmente">
+                                <i class="fa-solid fa-eye"></i> Preview
+                            </button>
                             <button id="run-pipeline-btn" onclick="runPipelineFromBuilder()" class="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold py-2.5 px-5 rounded-lg shadow-lg flex items-center gap-2 transition text-sm">
                                 <i class="fa-solid fa-play"></i> Ejecutar
                             </button>
@@ -549,6 +716,9 @@
                             </button>
                             <button onclick="generateDocumentation()" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-2.5 px-5 rounded-lg shadow-lg flex items-center gap-2 transition text-sm" title="Generar documentación con IA">
                                 <i class="fa-solid fa-book"></i> Documentar
+                            </button>
+                            <button onclick="exportLearningPath()" class="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold py-2.5 px-5 rounded-lg shadow-lg flex items-center gap-2 transition text-sm" title="Exportar guía de implementación con prompts para Claude Code">
+                                <i class="fa-solid fa-graduation-cap"></i> Learning Path
                             </button>
                         </div>
                     </div>
@@ -2700,6 +2870,118 @@ import sqlite3
                 code: "requests.post(SLACK_WEBHOOK, json={'text': message})",
                 isOutput: true
             },
+            {
+                id: "output-telegram", name: "Telegram Bot", cat: "Output",
+                icon: "fa-paper-plane", color: "text-sky-400", tag: "Telegram", status: "new",
+                desc: "Envía mensajes, fotos o archivos a Telegram.",
+                why: "Notificaciones instantáneas en tu móvil.",
+                cases: ["Alertas personales", "Enviar resúmenes", "Compartir archivos"],
+                code: `import httpx
+
+async def send_telegram(chat_id: str, text: str, token: str):
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+    async with httpx.AsyncClient() as client:
+        await client.post(url, json={"chat_id": chat_id, "text": text})`,
+                isOutput: true
+            },
+            {
+                id: "trigger-telegram", name: "Telegram Trigger", cat: "Trigger",
+                icon: "fa-paper-plane", color: "text-sky-400", tag: "Telegram", status: "new",
+                desc: "Recibe mensajes y comandos de Telegram.",
+                why: "Inicia pipelines desde tu móvil con comandos.",
+                cases: ["/resumen documento", "/traducir texto", "Enviar audio para transcribir"],
+                code: `from telegram import Update
+from telegram.ext import Application, CommandHandler
+
+async def handle_command(update: Update, context):
+    text = update.message.text
+    # Procesar con pipeline...
+    await update.message.reply_text("Procesando...")`,
+                isTrigger: true
+            },
+            // ==========================================
+            // API & DATA NODES
+            // ==========================================
+            {
+                id: "api-rest", name: "REST API Call", cat: "Proceso",
+                icon: "fa-plug", color: "text-green-400", tag: "HTTP", status: "new",
+                desc: "Llama a cualquier API REST (GET, POST, PUT, DELETE).",
+                why: "Conecta con servicios externos sin código custom.",
+                cases: ["Consultar APIs públicas", "Enviar datos a webhooks", "Integrar servicios"],
+                code: `import httpx
+
+async def call_api(url: str, method: str = "GET", data: dict = None, headers: dict = None):
+    async with httpx.AsyncClient() as client:
+        response = await client.request(method, url, json=data, headers=headers)
+        return response.json()`
+            },
+            {
+                id: "text-splitter", name: "Text Splitter", cat: "Proceso",
+                icon: "fa-scissors", color: "text-amber-400", tag: "Chunking", status: "new",
+                desc: "Divide textos largos en chunks para RAG.",
+                why: "Los LLMs tienen límite de tokens. Divide documentos grandes en partes manejables.",
+                cases: ["Preparar PDFs para ChromaDB", "Dividir libros", "Chunking semántico"],
+                code: `from langchain.text_splitter import RecursiveCharacterTextSplitter
+
+def split_text(text: str, chunk_size: int = 1000, overlap: int = 200):
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=overlap
+    )
+    return splitter.split_text(text)`
+            },
+            {
+                id: "notion-api", name: "Notion", cat: "Storage",
+                icon: "fa-n", color: "text-slate-300", tag: "Notion", status: "new",
+                desc: "Crea páginas y bases de datos en Notion.",
+                why: "Notion como backend para notas, documentos y bases de datos.",
+                cases: ["Guardar resúmenes", "Crear tareas", "Base de conocimiento"],
+                code: `from notion_client import Client
+
+notion = Client(auth=NOTION_TOKEN)
+
+def create_page(database_id: str, properties: dict):
+    return notion.pages.create(
+        parent={"database_id": database_id},
+        properties=properties
+    )`
+            },
+            {
+                id: "airtable", name: "Airtable", cat: "Storage",
+                icon: "fa-table-cells", color: "text-yellow-400", tag: "Airtable", status: "new",
+                desc: "Lee y escribe en bases de datos Airtable.",
+                why: "Base de datos visual con API simple. Ideal para datos estructurados.",
+                cases: ["CRM simple", "Inventario", "Tracking de contenido"],
+                code: `from pyairtable import Api
+
+api = Api(AIRTABLE_TOKEN)
+table = api.table(BASE_ID, TABLE_NAME)
+
+def add_record(fields: dict):
+    return table.create(fields)
+
+def get_records(formula: str = None):
+    return table.all(formula=formula)`
+            },
+            {
+                id: "spreadsheet", name: "Spreadsheet", cat: "Storage",
+                icon: "fa-file-excel", color: "text-emerald-400", tag: "Excel/CSV", status: "new",
+                desc: "Lee y escribe archivos CSV y Excel (.xlsx).",
+                why: "El formato más universal para datos tabulares.",
+                cases: ["Importar datos", "Exportar reportes", "Procesar CSVs"],
+                code: `import pandas as pd
+
+def read_spreadsheet(path: str):
+    if path.endswith('.csv'):
+        return pd.read_csv(path)
+    return pd.read_excel(path)
+
+def write_spreadsheet(df, path: str):
+    if path.endswith('.csv'):
+        df.to_csv(path, index=False)
+    else:
+        df.to_excel(path, index=False)`
+            },
             // ==========================================
             // FLOW CONTROL NODES
             // ==========================================
@@ -3754,6 +4036,185 @@ Incluye docker-compose para orquestar.`
             canvasGrid.style.backgroundSize = `${20 * canvasState.zoom}px ${20 * canvasState.zoom}px`;
             document.getElementById('zoom-level').textContent = `${Math.round(canvasState.zoom * 100)}%`;
             drawConnections();
+            updateMinimap();
+        }
+
+        // ============================================
+        // MINIMAP FUNCIONAL v10.10
+        // ============================================
+        function updateMinimap() {
+            const minimap = document.getElementById('canvas-minimap');
+            const minimapNodes = document.getElementById('minimap-nodes');
+            const minimapViewport = document.getElementById('minimap-viewport');
+
+            if (!minimap || !minimapNodes || canvasNodes.length === 0) {
+                if (minimap) minimap.style.display = 'none';
+                return;
+            }
+
+            minimap.style.display = 'block';
+
+            // Calcular bounds de todos los nodos
+            const nodeWidth = 260;
+            const nodeHeight = 70;
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+            canvasNodes.forEach(node => {
+                const pos = nodePositions[node.id];
+                if (pos) {
+                    minX = Math.min(minX, pos.x);
+                    minY = Math.min(minY, pos.y);
+                    maxX = Math.max(maxX, pos.x + nodeWidth);
+                    maxY = Math.max(maxY, pos.y + nodeHeight);
+                }
+            });
+
+            // Añadir padding
+            const padding = 100;
+            minX -= padding;
+            minY -= padding;
+            maxX += padding;
+            maxY += padding;
+
+            const canvasW = maxX - minX;
+            const canvasH = maxY - minY;
+
+            // Dimensiones del minimap
+            const mmW = 150;
+            const mmH = 100;
+            const scale = Math.min(mmW / canvasW, mmH / canvasH);
+
+            // Dibujar nodos en minimap
+            let nodesHtml = '';
+            canvasNodes.forEach(node => {
+                const pos = nodePositions[node.id];
+                if (!pos) return;
+
+                const x = (pos.x - minX) * scale;
+                const y = (pos.y - minY) * scale;
+                const w = nodeWidth * scale;
+                const h = nodeHeight * scale;
+
+                // Color según categoría
+                const colors = {
+                    'Trigger': '#10b981',
+                    'Proceso': '#f97316',
+                    'IA': '#a855f7',
+                    'Storage': '#eab308',
+                    'Flow': '#06b6d4',
+                    'Output': '#3b82f6'
+                };
+                const color = colors[node.cat] || '#64748b';
+
+                nodesHtml += `<div style="
+                    position: absolute;
+                    left: ${x}px;
+                    top: ${y}px;
+                    width: ${Math.max(w, 4)}px;
+                    height: ${Math.max(h, 3)}px;
+                    background: ${color};
+                    border-radius: 2px;
+                    opacity: 0.8;
+                "></div>`;
+            });
+            minimapNodes.innerHTML = nodesHtml;
+
+            // Viewport (área visible)
+            if (pipelineCanvas) {
+                const rect = pipelineCanvas.getBoundingClientRect();
+                const vpX = (-canvasState.panX / canvasState.zoom - minX) * scale;
+                const vpY = (-canvasState.panY / canvasState.zoom - minY) * scale;
+                const vpW = (rect.width / canvasState.zoom) * scale;
+                const vpH = (rect.height / canvasState.zoom) * scale;
+
+                minimapViewport.style.left = `${Math.max(0, vpX)}px`;
+                minimapViewport.style.top = `${Math.max(0, vpY)}px`;
+                minimapViewport.style.width = `${Math.min(vpW, mmW)}px`;
+                minimapViewport.style.height = `${Math.min(vpH, mmH)}px`;
+            }
+        }
+
+        // ============================================
+        // ANIMACIÓN DE FLUJO Y ESTADOS v10.10
+        // ============================================
+
+        // Activar animación de flujo en todas las conexiones
+        function startFlowAnimation() {
+            const paths = connectionsSvg?.querySelectorAll('.connection-line');
+            paths?.forEach(path => path.classList.add('flowing'));
+        }
+
+        // Detener animación de flujo
+        function stopFlowAnimation() {
+            const paths = connectionsSvg?.querySelectorAll('.connection-line');
+            paths?.forEach(path => path.classList.remove('flowing', 'active'));
+        }
+
+        // Activar flujo en una conexión específica
+        function setConnectionActive(fromId, toId) {
+            const path = connectionsSvg?.querySelector(`path[data-from="${fromId}"][data-to="${toId}"]`);
+            if (path) {
+                path.classList.add('active', 'flowing');
+            }
+        }
+
+        // Actualizar estado visual de un nodo
+        function setNodeState(nodeId, state) {
+            const nodeEl = document.querySelector(`.pipeline-node-pro[data-node-id="${nodeId}"]`);
+            if (!nodeEl) return;
+
+            // Limpiar estados anteriores
+            nodeEl.classList.remove('node-executing', 'node-success', 'node-error', 'node-pending');
+
+            // Aplicar nuevo estado
+            if (state && state !== 'idle') {
+                nodeEl.classList.add(`node-${state}`);
+            }
+        }
+
+        // Limpiar todos los estados de nodos
+        function clearAllNodeStates() {
+            document.querySelectorAll('.pipeline-node-pro').forEach(el => {
+                el.classList.remove('node-executing', 'node-success', 'node-error', 'node-pending');
+            });
+            stopFlowAnimation();
+        }
+
+        // Simular ejecución visual del pipeline (para demo/preview)
+        async function simulateFlowExecution() {
+            if (canvasNodes.length === 0) {
+                showToast('Añade nodos primero', 'info');
+                return;
+            }
+
+            clearAllNodeStates();
+            const ordered = getOrderedNodes();
+
+            for (let i = 0; i < ordered.length; i++) {
+                const node = ordered[i];
+                const prevNode = i > 0 ? ordered[i - 1] : null;
+
+                // Marcar anteriores como pendientes
+                ordered.slice(i + 1).forEach(n => setNodeState(n.id, 'pending'));
+
+                // Activar conexión entrante
+                if (prevNode) {
+                    setConnectionActive(prevNode.id, node.id);
+                }
+
+                // Ejecutando actual
+                setNodeState(node.id, 'executing');
+
+                // Esperar simulación
+                await new Promise(r => setTimeout(r, 800));
+
+                // Completado
+                setNodeState(node.id, 'success');
+            }
+
+            // Limpiar animación de flujo después
+            setTimeout(stopFlowAnimation, 500);
+            showToast('Simulación completada', 'success');
         }
 
         // Zoom con scroll
@@ -3964,19 +4425,274 @@ Incluye docker-compose para orquestar.`
         }
 
         // ============================================
-        // DRAG & DROP NODOS
+        // DRAG & DROP NODOS (con inserción en conexiones)
         // ============================================
+
+        // Detecta si un punto está cerca de una conexión (curva bezier)
+        function findConnectionAtPoint(x, y, threshold = 30) {
+            const nodeWidth = 260;
+            const nodeHeight = 70;
+
+            for (const conn of nodeConnections) {
+                const fromPos = nodePositions[conn.from];
+                const toPos = nodePositions[conn.to];
+                if (!fromPos || !toPos) continue;
+
+                // Puntos de la curva
+                const x1 = fromPos.x + nodeWidth + 6;
+                const y1 = fromPos.y + nodeHeight / 2;
+                const x2 = toPos.x - 6;
+                const y2 = toPos.y + nodeHeight / 2;
+
+                // Muestrear puntos a lo largo de la curva bezier
+                const dx = Math.abs(x2 - x1);
+                const controlOffset = Math.max(50, dx * 0.4);
+
+                for (let t = 0.1; t <= 0.9; t += 0.05) {
+                    // Bezier cúbica: B(t) = (1-t)³P0 + 3(1-t)²tP1 + 3(1-t)t²P2 + t³P3
+                    const mt = 1 - t;
+                    const bx = mt*mt*mt*x1 + 3*mt*mt*t*(x1+controlOffset) + 3*mt*t*t*(x2-controlOffset) + t*t*t*x2;
+                    const by = mt*mt*mt*y1 + 3*mt*mt*t*y1 + 3*mt*t*t*y2 + t*t*t*y2;
+
+                    const dist = Math.sqrt((x - bx) ** 2 + (y - by) ** 2);
+                    if (dist < threshold) {
+                        return { conn, t, midX: bx, midY: by };
+                    }
+                }
+            }
+            return null;
+        }
+
+        // Resaltar conexión al arrastrar sobre ella
+        let highlightedConnection = null;
+
+        function highlightConnection(conn) {
+            if (highlightedConnection === conn) return;
+            clearConnectionHighlight();
+            highlightedConnection = conn;
+
+            if (conn) {
+                const path = connectionsSvg.querySelector(`path[data-from="${conn.from}"][data-to="${conn.to}"]`);
+                if (path) {
+                    path.classList.add('connection-highlight');
+                    path.style.stroke = '#22c55e';
+                    path.style.strokeWidth = '4';
+                    path.style.filter = 'drop-shadow(0 0 8px rgba(34, 197, 94, 0.6))';
+                }
+            }
+        }
+
+        function clearConnectionHighlight() {
+            if (highlightedConnection) {
+                const path = connectionsSvg.querySelector(`path[data-from="${highlightedConnection.from}"][data-to="${highlightedConnection.to}"]`);
+                if (path) {
+                    path.classList.remove('connection-highlight');
+                    path.style.stroke = '';
+                    path.style.strokeWidth = '';
+                    path.style.filter = 'drop-shadow(0 0 4px rgba(59, 130, 246, 0.3))';
+                }
+                highlightedConnection = null;
+            }
+        }
+
+        // Insertar nodo en una conexión existente
+        function insertNodeInConnection(toolId, conn, x, y) {
+            // 1. Añadir el nuevo nodo
+            addNodeToCanvas(toolId, x - 130, y - 35); // Centrar en el punto
+
+            // 2. Reconectar: FROM → NUEVO → TO
+            // Eliminar conexión original
+            nodeConnections = nodeConnections.filter(c => !(c.from === conn.from && c.to === conn.to));
+
+            // Añadir nuevas conexiones
+            nodeConnections.push({ from: conn.from, to: toolId });
+            nodeConnections.push({ from: toolId, to: conn.to });
+
+            // 3. Redibujar
+            drawConnections();
+            saveToHistory();
+
+            showToast(`${toolId} insertado entre nodos`, 'success');
+        }
+
+        // Detecta si un punto está cerca del puerto de entrada de un nodo
+        function findNodeInputPortAtPoint(x, y, threshold = 40) {
+            const nodeWidth = 260;
+            const nodeHeight = 70;
+
+            for (const node of canvasNodes) {
+                // Ignorar triggers (no tienen puerto de entrada)
+                if (node.isTrigger) continue;
+
+                const pos = nodePositions[node.id];
+                if (!pos) continue;
+
+                // Puerto de entrada está a la izquierda del nodo
+                const portX = pos.x - 6;
+                const portY = pos.y + nodeHeight / 2;
+
+                const dist = Math.sqrt((x - portX) ** 2 + (y - portY) ** 2);
+                if (dist < threshold) {
+                    // Verificar que este nodo no tenga ya una conexión de entrada
+                    const hasInput = nodeConnections.some(c => c.to === node.id);
+                    if (!hasInput) {
+                        return { node, portX, portY };
+                    }
+                }
+            }
+            return null;
+        }
+
+        // Detecta si un punto está cerca del puerto de salida de un nodo
+        function findNodeOutputPortAtPoint(x, y, threshold = 40) {
+            const nodeWidth = 260;
+            const nodeHeight = 70;
+
+            for (const node of canvasNodes) {
+                const pos = nodePositions[node.id];
+                if (!pos) continue;
+
+                // Puerto de salida está a la derecha del nodo
+                const portX = pos.x + nodeWidth + 6;
+                const portY = pos.y + nodeHeight / 2;
+
+                const dist = Math.sqrt((x - portX) ** 2 + (y - portY) ** 2);
+                if (dist < threshold) {
+                    return { node, portX, portY };
+                }
+            }
+            return null;
+        }
+
+        // Conectar nuevo nodo ANTES de otro (al inicio)
+        function connectNodeBefore(toolId, targetNode, x, y) {
+            const targetPos = nodePositions[targetNode.id];
+            // Posicionar nuevo nodo a la izquierda del target
+            const newX = targetPos.x - 380;
+            const newY = targetPos.y;
+
+            addNodeToCanvas(toolId, newX, newY);
+
+            // Conectar: NUEVO → TARGET
+            nodeConnections.push({ from: toolId, to: targetNode.id });
+
+            drawConnections();
+            saveToHistory();
+            showToast(`${toolId} conectado antes de ${targetNode.name}`, 'success');
+        }
+
+        // Conectar nuevo nodo DESPUÉS de otro (al final)
+        function connectNodeAfter(toolId, sourceNode, x, y) {
+            const sourcePos = nodePositions[sourceNode.id];
+            // Posicionar nuevo nodo a la derecha del source
+            const newX = sourcePos.x + 380;
+            const newY = sourcePos.y;
+
+            addNodeToCanvas(toolId, newX, newY);
+
+            // Conectar: SOURCE → NUEVO
+            nodeConnections.push({ from: sourceNode.id, to: toolId });
+
+            drawConnections();
+            saveToHistory();
+            showToast(`${toolId} conectado después de ${sourceNode.name}`, 'success');
+        }
+
         if (nodesContainer) {
-            nodesContainer.ondragover = (ev) => { ev.preventDefault(); ev.dataTransfer.dropEffect = "copy"; };
+            // Estado para highlight de puertos
+            let highlightedPort = null;
+
+            function highlightPort(element) {
+                clearPortHighlight();
+                if (element) {
+                    highlightedPort = element;
+                    element.style.transform = 'scale(1.8)';
+                    element.style.boxShadow = '0 0 12px #22c55e';
+                    element.style.background = '#22c55e';
+                }
+            }
+
+            function clearPortHighlight() {
+                if (highlightedPort) {
+                    highlightedPort.style.transform = '';
+                    highlightedPort.style.boxShadow = '';
+                    highlightedPort.style.background = '';
+                    highlightedPort = null;
+                }
+            }
+
+            nodesContainer.ondragover = (ev) => {
+                ev.preventDefault();
+                ev.dataTransfer.dropEffect = "copy";
+
+                const rect = pipelineCanvas.getBoundingClientRect();
+                const x = (ev.clientX - rect.left - canvasState.panX) / canvasState.zoom;
+                const y = (ev.clientY - rect.top - canvasState.panY) / canvasState.zoom;
+
+                // Prioridad: 1) Conexión, 2) Puerto entrada, 3) Puerto salida
+                const hitConn = findConnectionAtPoint(x, y);
+                if (hitConn) {
+                    highlightConnection(hitConn.conn);
+                    clearPortHighlight();
+                    return;
+                }
+                clearConnectionHighlight();
+
+                const hitInput = findNodeInputPortAtPoint(x, y);
+                if (hitInput) {
+                    const portEl = document.querySelector(`.port-in[data-node-id="${hitInput.node.id}"]`);
+                    highlightPort(portEl);
+                    return;
+                }
+
+                const hitOutput = findNodeOutputPortAtPoint(x, y);
+                if (hitOutput) {
+                    const portEl = document.querySelector(`.port-out[data-node-id="${hitOutput.node.id}"]`);
+                    highlightPort(portEl);
+                    return;
+                }
+
+                clearPortHighlight();
+            };
+
+            nodesContainer.ondragleave = () => {
+                clearConnectionHighlight();
+                clearPortHighlight();
+            };
+
             nodesContainer.ondrop = (ev) => {
                 ev.preventDefault();
+                clearConnectionHighlight();
+                clearPortHighlight();
+
                 const toolId = ev.dataTransfer.getData("toolId");
-                if (toolId) {
-                    const rect = pipelineCanvas.getBoundingClientRect();
-                    const x = (ev.clientX - rect.left - canvasState.panX) / canvasState.zoom;
-                    const y = (ev.clientY - rect.top - canvasState.panY) / canvasState.zoom;
-                    addNodeToCanvas(toolId, x, y);
+                if (!toolId) return;
+
+                const rect = pipelineCanvas.getBoundingClientRect();
+                const x = (ev.clientX - rect.left - canvasState.panX) / canvasState.zoom;
+                const y = (ev.clientY - rect.top - canvasState.panY) / canvasState.zoom;
+
+                // Prioridad: 1) Sobre conexión → insertar, 2) Puerto entrada → antes, 3) Puerto salida → después
+                const hitConn = findConnectionAtPoint(x, y);
+                if (hitConn) {
+                    insertNodeInConnection(toolId, hitConn.conn, x, y);
+                    return;
                 }
+
+                const hitInput = findNodeInputPortAtPoint(x, y);
+                if (hitInput) {
+                    connectNodeBefore(toolId, hitInput.node, x, y);
+                    return;
+                }
+
+                const hitOutput = findNodeOutputPortAtPoint(x, y);
+                if (hitOutput) {
+                    connectNodeAfter(toolId, hitOutput.node, x, y);
+                    return;
+                }
+
+                // Default: añadir sin conexión
+                addNodeToCanvas(toolId, x, y);
             };
         }
 
@@ -4373,8 +5089,9 @@ Incluye docker-compose para orquestar.`
                 nodesContainer.appendChild(el);
             });
 
-            // Dibujar conexiones
+            // Dibujar conexiones y actualizar minimap
             drawConnections();
+            updateMinimap();
             document.getElementById('node-count').textContent = canvasNodes.length;
             document.getElementById('connection-count').textContent = nodeConnections.length;
         }
@@ -4419,18 +5136,211 @@ Incluye docker-compose para orquestar.`
                 const dx = Math.abs(x2 - x1);
                 const controlOffset = Math.max(50, dx * 0.4);
 
+                // Obtener tipo de dato de la conexión
+                const fromData = NODE_EDUCATION_DATA[conn.from] || NODE_EDUCATION_DATA['default'];
+                const dataType = fromData.outputType || 'any';
+
                 paths += `
                     <path d="M ${x1} ${y1} C ${x1 + controlOffset} ${y1}, ${x2 - controlOffset} ${y2}, ${x2} ${y2}"
                         class="connection-line"
                         marker-end="url(#arrowhead)"
                         style="filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.3)); pointer-events: stroke; cursor: pointer;"
                         onclick="removeConnection('${conn.from}', '${conn.to}')"
-                        data-from="${conn.from}" data-to="${conn.to}"/>
+                        data-from="${conn.from}" data-to="${conn.to}" data-type="${dataType}"/>
                 `;
             });
 
             connectionsSvg.innerHTML = paths;
             document.getElementById('connection-count').textContent = nodeConnections.length;
+
+            // Añadir event listeners para tooltips educativos
+            setupConnectionTooltips();
+        }
+
+        // ============================================
+        // TOOLTIPS EDUCATIVOS EN CONEXIONES
+        // ============================================
+
+        // Metadata educativa de cada nodo: qué produce, qué acepta, explicaciones
+        const NODE_EDUCATION_DATA = {
+            // Triggers
+            'trigger-manual': { output: 'señal de inicio', outputType: 'trigger', accepts: null, desc: 'Inicia el pipeline manualmente con un click' },
+            'trigger-file': { output: 'ruta del archivo detectado', outputType: 'filepath', accepts: null, desc: 'Detecta archivos nuevos en una carpeta' },
+            'trigger-cron': { output: 'timestamp de ejecución', outputType: 'trigger', accepts: null, desc: 'Ejecuta en horarios programados' },
+            'trigger-webhook': { output: 'JSON del request HTTP', outputType: 'json', accepts: null, desc: 'Recibe datos de servicios externos' },
+
+            // Proceso
+            'whisper': { output: 'texto transcrito', outputType: 'text', accepts: ['filepath', 'audio'], desc: 'Convierte audio a texto usando IA de OpenAI' },
+            'tesseract': { output: 'texto extraído de imagen', outputType: 'text', accepts: ['filepath', 'image'], desc: 'OCR - extrae texto de imágenes' },
+            'pdf-parser': { output: 'texto del PDF', outputType: 'text', accepts: ['filepath'], desc: 'Extrae texto y metadata de archivos PDF' },
+            'beautifulsoup': { output: 'datos estructurados del HTML', outputType: 'json', accepts: ['text', 'html'], desc: 'Parsea y extrae datos de páginas web' },
+            'ffmpeg': { output: 'archivo multimedia procesado', outputType: 'filepath', accepts: ['filepath', 'audio', 'video'], desc: 'Procesa audio/video (convertir, extraer, comprimir)' },
+
+            // IA
+            'claude-node': { output: 'respuesta de Claude', outputType: 'text', accepts: ['text', 'json'], desc: 'Procesa con Claude CLI (usa tu suscripción Pro/Max)' },
+            'claude-transform': { output: 'datos transformados por IA', outputType: 'text', accepts: ['text', 'json'], desc: 'Transforma datos usando un prompt personalizado' },
+            'ollama': { output: 'respuesta del modelo local', outputType: 'text', accepts: ['text'], desc: 'LLM local (Llama, Mistral) sin coste de API' },
+            'openai': { output: 'respuesta de GPT', outputType: 'text', accepts: ['text', 'json'], desc: 'Usa API de OpenAI (requiere API key)' },
+
+            // Storage
+            'chromadb': { output: 'IDs de documentos indexados', outputType: 'json', accepts: ['text', 'embeddings'], desc: 'Base de datos vectorial para búsqueda semántica' },
+            'sqlite': { output: 'resultado de query SQL', outputType: 'json', accepts: ['json', 'text'], desc: 'Base de datos relacional ligera y local' },
+            'redis': { output: 'confirmación de operación', outputType: 'json', accepts: ['json', 'text'], desc: 'Cache en memoria para datos temporales' },
+
+            // Flow
+            'flow-if': { output: 'datos filtrados según condición', outputType: 'any', accepts: ['any'], desc: 'Bifurca el flujo según una condición' },
+            'flow-loop': { output: 'resultado de cada iteración', outputType: 'any', accepts: ['array', 'json'], desc: 'Repite operación para cada elemento' },
+            'flow-delay': { output: 'datos sin modificar (después de espera)', outputType: 'any', accepts: ['any'], desc: 'Pausa el pipeline N segundos' },
+            'flow-inspector': { output: 'datos sin modificar', outputType: 'any', accepts: ['any'], desc: 'Pausa para inspección manual (HITL)' },
+
+            // Output
+            'output-file': { output: 'ruta del archivo guardado', outputType: 'filepath', accepts: ['text', 'json', 'any'], desc: 'Guarda resultado en archivo local' },
+            'output-notify': { output: 'confirmación de envío', outputType: 'boolean', accepts: ['text'], desc: 'Envía notificación desktop de macOS' },
+            'output-email': { output: 'confirmación de envío', outputType: 'boolean', accepts: ['text', 'html'], desc: 'Envía email con el resultado' },
+            'output-slack': { output: 'confirmación de envío', outputType: 'boolean', accepts: ['text', 'json'], desc: 'Envía mensaje a canal de Slack' },
+            'output-telegram': { output: 'confirmación de envío', outputType: 'boolean', accepts: ['text', 'filepath', 'json'], desc: 'Envía mensajes, fotos o archivos a Telegram' },
+
+            // Telegram Trigger
+            'trigger-telegram': { output: 'mensaje recibido (texto, comando, archivo)', outputType: 'json', accepts: null, desc: 'Recibe mensajes y comandos desde Telegram' },
+
+            // API & Data
+            'api-rest': { output: 'respuesta JSON de la API', outputType: 'json', accepts: ['json', 'text'], desc: 'Llama a cualquier API REST externa' },
+            'text-splitter': { output: 'lista de chunks de texto', outputType: 'array', accepts: ['text'], desc: 'Divide textos largos en fragmentos para RAG' },
+
+            // Storage adicional
+            'notion-api': { output: 'página o registro creado', outputType: 'json', accepts: ['json', 'text'], desc: 'Crea páginas y registros en Notion' },
+            'airtable': { output: 'registro de Airtable', outputType: 'json', accepts: ['json'], desc: 'Lee y escribe en bases de datos Airtable' },
+            'spreadsheet': { output: 'datos tabulares (DataFrame)', outputType: 'json', accepts: ['json', 'filepath'], desc: 'Lee y escribe archivos CSV y Excel' },
+
+            // Defaults para nodos no definidos
+            'default': { output: 'datos procesados', outputType: 'any', accepts: ['any'], desc: 'Procesa los datos de entrada' }
+        };
+
+        // Tips de cuándo usar cada herramienta
+        function getNodeUsageTip(nodeId, node) {
+            const tips = {
+                'whisper': 'Úsalo cuando tengas archivos de audio (entrevistas, notas de voz, podcasts) y necesites el texto para procesarlo.',
+                'pdf-parser': 'Ideal para extraer información de documentos: facturas, contratos, papers académicos, manuales.',
+                'tesseract': 'Úsalo cuando el texto esté en imágenes: capturas de pantalla, fotos de documentos, PDFs escaneados.',
+                'chromadb': 'Perfecto para crear bases de conocimiento buscables. Combínalo con Claude para RAG (preguntas sobre tus documentos).',
+                'sqlite': 'Úsalo cuando necesites guardar datos estructurados: registros, logs, resultados que quieras consultar después.',
+                'claude-node': 'Para cualquier tarea de procesamiento de lenguaje: resumir, analizar, extraer información, responder preguntas.',
+                'claude-transform': 'Similar a Claude pero con un prompt fijo. Útil para transformaciones repetitivas como extraer entidades o formatear.',
+                'ollama': 'Alternativa local a Claude. Úsalo si quieres privacidad total o no tienes conexión a internet.',
+                'beautifulsoup': 'Para extraer datos de páginas web: precios, noticias, listados, cualquier información pública en HTML.',
+                'ffmpeg': 'Preprocesa audio/video antes de otros nodos: extraer audio de video, convertir formatos, normalizar volumen.',
+                'trigger-file': 'Automatiza pipelines cuando aparecen archivos nuevos en una carpeta. Ideal para procesar descargas o exports.',
+                'trigger-webhook': 'Conecta servicios externos (Zapier, n8n, APIs) que envíen datos a tu pipeline.',
+                'trigger-cron': 'Ejecuta pipelines en horarios fijos: reportes diarios, backups semanales, limpieza mensual.',
+                'output-file': 'Guarda resultados en archivos locales. Útil para generar reportes, exports, o backups.',
+                'output-notify': 'Recibe alertas en tu Mac cuando el pipeline termina o encuentra algo importante.',
+                'flow-if': 'Bifurca el flujo según condiciones: procesar diferente si es PDF vs imagen, urgente vs normal.',
+                'flow-loop': 'Procesa listas de items: múltiples archivos, varios registros, colección de URLs.',
+                'flow-inspector': 'Pausa para revisar datos manualmente. Útil para debugging o aprobaciones.',
+                'redis': 'Cache rápida para datos temporales entre ejecuciones. Evita reprocesar lo mismo.',
+                // Nuevos nodos
+                'output-telegram': 'Recibe notificaciones en tu móvil al instante. Puedes enviar texto, fotos o archivos.',
+                'trigger-telegram': 'Controla pipelines desde tu móvil con comandos como /resumen o /traducir. Envía archivos para procesar.',
+                'api-rest': 'Conecta con cualquier servicio que tenga API: clima, stocks, servicios internos, webhooks.',
+                'text-splitter': 'Esencial antes de ChromaDB cuando procesas documentos largos. Divide en chunks con overlap.',
+                'notion-api': 'Usa Notion como base de datos y wiki. Ideal para guardar resúmenes, notas, o crear dashboards.',
+                'airtable': 'Base de datos visual sin código. Perfecto para CRMs simples, inventarios, o tracking.',
+                'spreadsheet': 'El formato más universal. Importa/exporta datos de cualquier fuente en CSV o Excel.'
+            };
+
+            return tips[nodeId] || null;
+        }
+
+        // Genera explicación contextual de por qué tiene sentido una conexión
+        function getConnectionExplanation(fromNode, toNode) {
+            const fromData = NODE_EDUCATION_DATA[fromNode?.id] || NODE_EDUCATION_DATA['default'];
+            const toData = NODE_EDUCATION_DATA[toNode?.id] || NODE_EDUCATION_DATA['default'];
+
+            // Explicaciones específicas por combinación común
+            const explanations = {
+                'whisper→chromadb': 'Whisper genera texto que ChromaDB indexa como embeddings para búsqueda semántica posterior.',
+                'whisper→claude-node': 'El texto transcrito se envía a Claude para análisis, resumen o extracción de información.',
+                'whisper→claude-transform': 'Transforma la transcripción usando un prompt personalizado (resumir, extraer entidades, etc.).',
+                'pdf-parser→chromadb': 'El texto del PDF se convierte en vectores para poder buscarlo semánticamente.',
+                'pdf-parser→claude-node': 'Claude analiza el contenido del PDF (resumir, responder preguntas, extraer datos).',
+                'beautifulsoup→sqlite': 'Los datos extraídos del HTML se guardan estructurados en la base de datos.',
+                'beautifulsoup→chromadb': 'El contenido web se indexa para búsqueda semántica.',
+                'claude-node→sqlite': 'La respuesta de Claude se guarda en base de datos para consulta posterior.',
+                'claude-node→output-file': 'Guarda la respuesta de Claude en un archivo local.',
+                'chromadb→claude-node': 'Los resultados de búsqueda semántica dan contexto a Claude (RAG pattern).',
+                'trigger-file→whisper': 'Cuando se detecta un archivo de audio, Whisper lo transcribe automáticamente.',
+                'trigger-file→pdf-parser': 'Cuando se detecta un PDF, se extrae su texto automáticamente.',
+                'trigger-webhook→claude-node': 'Los datos recibidos por webhook se procesan con Claude.',
+                'ollama→sqlite': 'La respuesta del LLM local se persiste en base de datos.',
+                'tesseract→claude-node': 'El texto extraído de la imagen se envía a Claude para análisis.',
+                // Nuevas conexiones
+                'trigger-telegram→whisper': 'Cuando recibes un audio en Telegram, Whisper lo transcribe automáticamente.',
+                'trigger-telegram→claude-node': 'Los mensajes de Telegram se procesan con Claude para responder o analizar.',
+                'claude-node→output-telegram': 'La respuesta de Claude se envía de vuelta al chat de Telegram.',
+                'whisper→output-telegram': 'La transcripción se envía a Telegram para compartir o revisar.',
+                'pdf-parser→text-splitter': 'El texto del PDF se divide en chunks antes de indexar en ChromaDB.',
+                'text-splitter→chromadb': 'Los chunks se indexan como embeddings para búsqueda semántica.',
+                'beautifulsoup→spreadsheet': 'Los datos extraídos del HTML se guardan en CSV/Excel.',
+                'api-rest→sqlite': 'Los datos de la API se guardan en base de datos para consultas posteriores.',
+                'api-rest→notion-api': 'Los datos de APIs externas se guardan como páginas en Notion.',
+                'claude-node→notion-api': 'Las respuestas de Claude se guardan en Notion como documentación.',
+                'claude-node→airtable': 'Los datos estructurados por Claude se guardan en Airtable.',
+                'spreadsheet→chromadb': 'Los datos del CSV/Excel se indexan para búsqueda semántica.',
+                'trigger-telegram→api-rest': 'Los comandos de Telegram pueden consultar APIs externas.'
+            };
+
+            const key = `${fromNode?.id}→${toNode?.id}`;
+            if (explanations[key]) {
+                return explanations[key];
+            }
+
+            // Explicación genérica basada en tipos
+            return `${fromNode?.name || 'Nodo'} produce ${fromData.output} que ${toNode?.name || 'siguiente nodo'} puede procesar.`;
+        }
+
+        // Configura los event listeners para mostrar tooltips
+        function setupConnectionTooltips() {
+            const tooltip = document.getElementById('connection-tooltip');
+            if (!tooltip) return;
+
+            const paths = connectionsSvg.querySelectorAll('.connection-line');
+
+            paths.forEach(path => {
+                path.addEventListener('mouseenter', (e) => {
+                    const fromId = path.dataset.from;
+                    const toId = path.dataset.to;
+                    const fromNode = canvasNodes.find(n => n.id === fromId);
+                    const toNode = canvasNodes.find(n => n.id === toId);
+
+                    if (!fromNode || !toNode) return;
+
+                    const fromData = NODE_EDUCATION_DATA[fromId] || NODE_EDUCATION_DATA['default'];
+                    const toData = NODE_EDUCATION_DATA[toId] || NODE_EDUCATION_DATA['default'];
+
+                    // Llenar tooltip
+                    document.getElementById('tooltip-from').textContent = fromNode.name;
+                    document.getElementById('tooltip-to').textContent = toNode.name;
+                    document.getElementById('tooltip-output').textContent = fromData.output;
+                    document.getElementById('tooltip-input').textContent = toData.accepts ? toData.accepts.join(', ') : 'cualquier dato';
+                    document.getElementById('tooltip-explanation').textContent = getConnectionExplanation(fromNode, toNode);
+
+                    // Posicionar tooltip cerca del mouse
+                    const rect = pipelineCanvas.getBoundingClientRect();
+                    tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
+                    tooltip.style.top = (e.clientY - rect.top + 10) + 'px';
+                    tooltip.classList.add('visible');
+                });
+
+                path.addEventListener('mousemove', (e) => {
+                    const rect = pipelineCanvas.getBoundingClientRect();
+                    tooltip.style.left = (e.clientX - rect.left + 15) + 'px';
+                    tooltip.style.top = (e.clientY - rect.top + 15) + 'px';
+                });
+
+                path.addEventListener('mouseleave', () => {
+                    tooltip.classList.remove('visible');
+                });
+            });
         }
 
         function autoLayoutNodes() {
@@ -4487,7 +5397,30 @@ Incluye docker-compose para orquestar.`
 
             document.getElementById('config-node-name').textContent = node.name;
             document.getElementById('config-node-tag').textContent = node.tag || node.cat;
-            document.getElementById('config-node-desc').textContent = node.desc || node.why || 'Sin descripción';
+
+            // Obtener datos educativos del nodo
+            const eduData = NODE_EDUCATION_DATA[nodeId] || NODE_EDUCATION_DATA['default'];
+
+            // Descripción clara de qué hace
+            document.getElementById('config-node-desc').textContent = eduData.desc || node.desc || 'Procesa los datos de entrada';
+
+            // Input/Output types
+            const inputTypes = eduData.accepts ? eduData.accepts.join(', ') : 'Inicio del pipeline';
+            const outputType = eduData.output || 'datos procesados';
+            document.getElementById('config-node-input-type').textContent = inputTypes;
+            document.getElementById('config-node-output-type').textContent = outputType;
+
+            // Tip de cuándo usar
+            const tips = getNodeUsageTip(nodeId, node);
+            const tipContainer = document.getElementById('config-node-tip-container');
+            const tipEl = document.getElementById('config-node-tip');
+            if (tips) {
+                tipEl.textContent = tips;
+                tipContainer.classList.remove('hidden');
+            } else {
+                tipContainer.classList.add('hidden');
+            }
+
             document.getElementById('config-node-code').textContent = node.code || '# Sin código de ejemplo';
 
             // Contar conexiones
@@ -6064,52 +6997,179 @@ ${report}
         });
 
         // ============================================
-        // ATAJOS DE TECLADO GLOBALES v9.1
+        // ATAJOS DE TECLADO GLOBALES v10.10
         // ============================================
+
+        // Clipboard para copy/paste
+        let clipboardNodes = [];
+        let clipboardConnections = [];
+
         document.addEventListener('keydown', (e) => {
             // Solo en vista architect
             const isArchitectView = document.getElementById('view-architect')?.classList.contains('hidden') === false;
             if (!isArchitectView) return;
 
             // Ignorar si estamos en un input
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+
+            const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+            const modKey = isMac ? e.metaKey : e.ctrlKey;
 
             // Ctrl+Z / Cmd+Z = Undo
-            if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'z') {
+            if (modKey && !e.shiftKey && e.key === 'z') {
                 e.preventDefault();
                 canvasUndo();
+                showToast('Deshacer', 'info');
             }
 
             // Ctrl+Shift+Z / Cmd+Shift+Z = Redo
-            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') {
+            if (modKey && e.shiftKey && (e.key === 'z' || e.key === 'Z')) {
                 e.preventDefault();
                 canvasRedo();
+                showToast('Rehacer', 'info');
             }
 
-            // Ctrl+S / Cmd+S = Guardar arquitectura
-            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            // Ctrl+S / Cmd+S = Guardar pipeline
+            if (modKey && e.key === 's') {
                 e.preventDefault();
-                saveArchitecture();
+                savePipelineModal();
             }
 
             // Ctrl+E / Cmd+E = Exportar JSON
-            if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+            if (modKey && e.key === 'e') {
                 e.preventDefault();
                 exportPipelineJSON();
             }
 
-            // Delete / Backspace = Eliminar último nodo
-            if ((e.key === 'Delete' || e.key === 'Backspace') && canvasNodes.length > 0) {
-                e.preventDefault();
-                if (selectedNodeIndex !== null && selectedNodeIndex < canvasNodes.length) {
-                    removeNode(selectedNodeIndex);
-                    selectedNodeIndex = null;
-                } else {
-                    // Si no hay nodo seleccionado, eliminar el último
-                    removeNode(canvasNodes.length - 1);
+            // Ctrl+C / Cmd+C = Copiar nodo seleccionado
+            if (modKey && e.key === 'c') {
+                if (canvasState.selectedNodeId) {
+                    e.preventDefault();
+                    copySelectedNode();
                 }
             }
+
+            // Ctrl+V / Cmd+V = Pegar nodo
+            if (modKey && e.key === 'v') {
+                if (clipboardNodes.length > 0) {
+                    e.preventDefault();
+                    pasteNodes();
+                }
+            }
+
+            // Ctrl+D / Cmd+D = Duplicar nodo seleccionado
+            if (modKey && e.key === 'd') {
+                if (canvasState.selectedNodeId) {
+                    e.preventDefault();
+                    duplicateSelectedNode();
+                }
+            }
+
+            // Ctrl+A / Cmd+A = Seleccionar todos (prevenir default por ahora)
+            if (modKey && e.key === 'a') {
+                e.preventDefault();
+                showToast(`${canvasNodes.length} nodos en canvas`, 'info');
+            }
+
+            // Ctrl+L / Cmd+L = Auto-layout
+            if (modKey && e.key === 'l') {
+                e.preventDefault();
+                autoLayoutNodes();
+            }
+
+            // Delete / Backspace = Eliminar nodo seleccionado
+            if ((e.key === 'Delete' || e.key === 'Backspace') && canvasNodes.length > 0) {
+                e.preventDefault();
+                if (canvasState.selectedNodeId) {
+                    const nodeName = canvasNodes.find(n => n.id === canvasState.selectedNodeId)?.name;
+                    removeNode(canvasState.selectedNodeId);
+                    canvasState.selectedNodeId = null;
+                    showToast(`${nodeName} eliminado`, 'info');
+                }
+            }
+
+            // Escape = Deseleccionar / Cerrar paneles
+            if (e.key === 'Escape') {
+                canvasState.selectedNodeId = null;
+                document.getElementById('node-config-panel')?.classList.add('hidden');
+                document.getElementById('validation-panel')?.classList.add('hidden');
+                renderCanvas();
+            }
+
+            // + / = = Zoom in
+            if (e.key === '+' || e.key === '=') {
+                e.preventDefault();
+                canvasZoomIn();
+            }
+
+            // - = Zoom out
+            if (e.key === '-') {
+                e.preventDefault();
+                canvasZoomOut();
+            }
+
+            // 0 = Reset zoom
+            if (e.key === '0' && modKey) {
+                e.preventDefault();
+                canvasZoomReset();
+            }
         });
+
+        // Copiar nodo seleccionado al clipboard
+        function copySelectedNode() {
+            const node = canvasNodes.find(n => n.id === canvasState.selectedNodeId);
+            if (!node) return;
+
+            clipboardNodes = [{...node, _originalId: node.id}];
+            // Copiar conexiones relacionadas
+            clipboardConnections = nodeConnections.filter(
+                c => c.from === node.id || c.to === node.id
+            );
+
+            showToast(`${node.name} copiado`, 'success');
+        }
+
+        // Pegar nodos del clipboard
+        function pasteNodes() {
+            if (clipboardNodes.length === 0) return;
+
+            const offset = 50; // Offset para no pegar encima
+            let pastedCount = 0;
+
+            clipboardNodes.forEach(node => {
+                // Generar nuevo ID único
+                const newId = `${node.id}-copy-${Date.now()}`;
+                const originalPos = nodePositions[node._originalId] || { x: 200, y: 200 };
+
+                // Verificar que no existe ya un nodo con el mismo ID base
+                if (!canvasNodes.find(n => n.id === node.id)) {
+                    // Usar ID original si no existe
+                    canvasNodes.push({...node, id: node.id});
+                    nodePositions[node.id] = {
+                        x: originalPos.x + offset,
+                        y: originalPos.y + offset
+                    };
+                    pastedCount++;
+                } else {
+                    showToast(`${node.name} ya existe en el canvas`, 'info');
+                }
+            });
+
+            if (pastedCount > 0) {
+                renderCanvas();
+                saveToHistory();
+                showToast(`${pastedCount} nodo(s) pegado(s)`, 'success');
+            }
+        }
+
+        // Duplicar nodo seleccionado (in-place)
+        function duplicateSelectedNode() {
+            const node = canvasNodes.find(n => n.id === canvasState.selectedNodeId);
+            if (!node) return;
+
+            // No permitir duplicar si ya existe (por ID único)
+            showToast(`Usa la barra lateral para añadir otro ${node.name}`, 'info');
+        }
 
         function initializePromptBuilder() {
             const wfContainer = document.getElementById('pb-workflow');
@@ -9354,6 +10414,329 @@ Genera documentación Markdown con:
             } catch (e) {
                 showToast(`Error: ${e.message}`, 'error');
             }
+        }
+
+        // ============================================
+        // LEARNING PATH EXPORT (v10.10)
+        // ============================================
+
+        function exportLearningPath() {
+            if (canvasNodes.length === 0) {
+                showToast('Añade nodos al pipeline primero', 'info');
+                return;
+            }
+
+            // Ordenar nodos según el flujo (topológico simple)
+            const orderedNodes = getOrderedNodes();
+
+            // Generar nombre del pipeline basado en nodos
+            const pipelineName = generatePipelineName(orderedNodes);
+
+            // Construir el Learning Path
+            let markdown = `# Learning Path: ${pipelineName}
+
+> Guía paso a paso para implementar este pipeline con Claude Code
+
+## Resumen del Pipeline
+
+\`\`\`
+${orderedNodes.map(n => n.name).join(' → ')}
+\`\`\`
+
+**Nodos:** ${orderedNodes.length}
+**Conexiones:** ${nodeConnections.length}
+**Categorías:** ${[...new Set(orderedNodes.map(n => n.cat))].join(', ')}
+
+---
+
+## Pasos de Implementación
+
+`;
+
+            orderedNodes.forEach((node, index) => {
+                const eduData = NODE_EDUCATION_DATA[node.id] || NODE_EDUCATION_DATA['default'];
+                const prevNode = index > 0 ? orderedNodes[index - 1] : null;
+                const nextNode = index < orderedNodes.length - 1 ? orderedNodes[index + 1] : null;
+
+                // Generar prompt específico para Claude Code
+                const prompt = generateClaudeCodePrompt(node, prevNode, nextNode, eduData);
+
+                markdown += `### Paso ${index + 1}: ${node.name}
+
+**Categoría:** ${node.cat}
+**Qué hace:** ${eduData.desc}
+
+| Input | Output |
+|-------|--------|
+| ${eduData.accepts ? eduData.accepts.join(', ') : 'Trigger inicial'} | ${eduData.output} |
+
+#### Prompt para Claude Code:
+
+\`\`\`
+${prompt}
+\`\`\`
+
+${prevNode ? `**Recibe de:** ${prevNode.name} (${NODE_EDUCATION_DATA[prevNode.id]?.output || 'datos'})` : '**Es el inicio del pipeline**'}
+${nextNode ? `**Envía a:** ${nextNode.name}` : '**Es el final del pipeline**'}
+
+---
+
+`;
+            });
+
+            // Añadir sección de integración
+            markdown += `## Integración Final
+
+Una vez implementados todos los pasos, conecta los módulos:
+
+\`\`\`python
+# main.py - Orquestador del pipeline
+
+${orderedNodes.map((n, i) => `from modules.${n.id.replace(/-/g, '_')} import process_${n.id.replace(/-/g, '_')}`).join('\n')}
+
+def run_pipeline(input_data):
+    """Ejecuta el pipeline completo"""
+    data = input_data
+${orderedNodes.map((n, i) => `    data = process_${n.id.replace(/-/g, '_')}(data)  # Paso ${i + 1}: ${n.name}`).join('\n')}
+    return data
+\`\`\`
+
+## Prompt de Inicio Rápido
+
+Copia este prompt completo para que Claude Code implemente todo el pipeline:
+
+\`\`\`
+Implementa un pipeline de ${pipelineName.toLowerCase()} con los siguientes pasos:
+
+${orderedNodes.map((n, i) => `${i + 1}. ${n.name}: ${NODE_EDUCATION_DATA[n.id]?.desc || n.desc || 'procesar datos'}`).join('\n')}
+
+Requisitos:
+- Python 3.9+
+- Estructura modular (un archivo por componente)
+- Manejo de errores en cada paso
+- Logging con loguru
+- Genera requirements.txt
+
+Empieza por el paso 1 y continúa secuencialmente.
+\`\`\`
+
+---
+
+*Generado por DirectOS Learning Path Export*
+*Fecha: ${new Date().toLocaleDateString('es-ES')}*
+`;
+
+            // Mostrar en el modal de output
+            document.getElementById('architect-prompt-output').textContent = markdown;
+            document.getElementById('architect-output-modal').classList.remove('hidden');
+
+            showToast('Learning Path generado - Copia y usa con Claude Code', 'success');
+        }
+
+        // Ordena los nodos según el flujo de conexiones
+        function getOrderedNodes() {
+            if (nodeConnections.length === 0) return [...canvasNodes];
+
+            const ordered = [];
+            const visited = new Set();
+
+            // Encontrar nodos de inicio (sin entradas)
+            const nodesWithInputs = new Set(nodeConnections.map(c => c.to));
+            let startNodes = canvasNodes.filter(n => !nodesWithInputs.has(n.id));
+
+            if (startNodes.length === 0) startNodes = [canvasNodes[0]];
+
+            // BFS desde los nodos de inicio
+            const queue = [...startNodes];
+            while (queue.length > 0) {
+                const node = queue.shift();
+                if (visited.has(node.id)) continue;
+                visited.add(node.id);
+                ordered.push(node);
+
+                // Añadir nodos conectados
+                nodeConnections
+                    .filter(c => c.from === node.id)
+                    .forEach(c => {
+                        const nextNode = canvasNodes.find(n => n.id === c.to);
+                        if (nextNode && !visited.has(nextNode.id)) {
+                            queue.push(nextNode);
+                        }
+                    });
+            }
+
+            // Añadir nodos no conectados
+            canvasNodes.forEach(n => {
+                if (!visited.has(n.id)) ordered.push(n);
+            });
+
+            return ordered;
+        }
+
+        // Genera un nombre descriptivo para el pipeline
+        function generatePipelineName(nodes) {
+            const categories = [...new Set(nodes.map(n => n.cat))];
+
+            if (nodes.some(n => n.id.includes('whisper')) && nodes.some(n => n.id.includes('chroma'))) {
+                return 'Audio Search Engine';
+            }
+            if (nodes.some(n => n.id.includes('pdf')) && nodes.some(n => n.id.includes('chroma'))) {
+                return 'Document Knowledge Base';
+            }
+            if (nodes.some(n => n.id.includes('beautifulsoup')) && nodes.some(n => n.id.includes('sqlite'))) {
+                return 'Web Scraper Pipeline';
+            }
+            if (nodes.some(n => n.id.includes('claude')) && nodes.some(n => n.id.includes('chroma'))) {
+                return 'RAG Pipeline';
+            }
+            if (nodes.some(n => n.id.includes('webhook'))) {
+                return 'Webhook Automation';
+            }
+            if (categories.includes('IA')) {
+                return 'AI Processing Pipeline';
+            }
+
+            return `${nodes[0]?.name || 'Custom'} Pipeline`;
+        }
+
+        // Genera un prompt específico para Claude Code
+        function generateClaudeCodePrompt(node, prevNode, nextNode, eduData) {
+            const prompts = {
+                'whisper': `Crea una función que transcriba audio usando Whisper.
+Input: ruta a archivo de audio (mp3, wav, m4a)
+Output: texto transcrito
+Usa el modelo "base" de openai-whisper. Incluye manejo de errores.`,
+
+                'pdf-parser': `Crea una función que extraiga texto de PDFs.
+Input: ruta al archivo PDF
+Output: texto completo del documento
+Usa pdfplumber o PyPDF2. Maneja PDFs con múltiples páginas.`,
+
+                'chromadb': `Crea una función que indexe texto en ChromaDB.
+Input: texto a indexar (string o lista de strings)
+Output: IDs de los documentos indexados
+Usa sentence-transformers para embeddings (modelo all-MiniLM-L6-v2).
+Incluye función de búsqueda semántica.`,
+
+                'sqlite': `Crea funciones CRUD para SQLite.
+Input: datos a guardar (dict o lista)
+Output: confirmación o resultados de query
+Crea el schema automáticamente basado en los datos.
+Incluye funciones: insert, select, update, delete.`,
+
+                'claude-node': `Crea una función que llame a Claude CLI.
+Input: prompt (string) y contexto opcional
+Output: respuesta de Claude
+Usa subprocess para llamar a 'claude' CLI.
+Parsea la respuesta y maneja timeouts.`,
+
+                'claude-transform': `Crea una función que transforme datos usando Claude.
+Input: datos a transformar y prompt de instrucciones
+Output: datos transformados según el prompt
+Permite prompts personalizables para diferentes transformaciones.`,
+
+                'beautifulsoup': `Crea una función que extraiga datos de HTML.
+Input: URL o contenido HTML
+Output: datos estructurados (dict o lista)
+Usa requests + BeautifulSoup4.
+Incluye manejo de rate limiting y User-Agent.`,
+
+                'ollama': `Crea una función que llame a Ollama local.
+Input: prompt (string)
+Output: respuesta del modelo
+Usa la API REST de Ollama (localhost:11434).
+Modelo por defecto: llama3 o mistral.`,
+
+                'trigger-file': `Crea un watcher que detecte archivos nuevos.
+Input: directorio a monitorear y extensiones
+Output: ruta del archivo detectado
+Usa watchdog library. Incluye filtro por extensión.`,
+
+                'trigger-webhook': `Crea un endpoint webhook con FastAPI.
+Input: JSON del request HTTP POST
+Output: datos parseados del webhook
+Incluye validación del payload y autenticación opcional.`,
+
+                'output-file': `Crea una función que guarde datos en archivo.
+Input: datos (string, dict, o lista) y nombre de archivo
+Output: ruta del archivo guardado
+Detecta formato automáticamente (json, txt, csv).`,
+
+                'output-notify': `Crea una función que envíe notificaciones macOS.
+Input: título y mensaje
+Output: confirmación de envío
+Usa osascript o pync para notificaciones nativas.`,
+
+                'tesseract': `Crea una función de OCR con Tesseract.
+Input: ruta a imagen (png, jpg)
+Output: texto extraído
+Usa pytesseract. Pre-procesa imagen para mejor reconocimiento.`,
+
+                'ffmpeg': `Crea funciones de procesamiento multimedia.
+Input: ruta a archivo de audio/video
+Output: archivo procesado
+Incluye: extraer audio, convertir formato, comprimir.`,
+
+                'output-telegram': `Crea una función que envíe mensajes a Telegram.
+Input: chat_id, texto (y opcionalmente archivo)
+Output: confirmación de envío
+Usa httpx para llamar a la API de Telegram Bot.
+Soporta enviar texto, fotos y documentos.`,
+
+                'trigger-telegram': `Crea un bot de Telegram que reciba mensajes.
+Input: comandos y mensajes de usuarios
+Output: texto del mensaje, archivos adjuntos
+Usa python-telegram-bot. Implementa handlers para /start y comandos custom.
+Permite recibir archivos (audio, documentos) para procesarlos.`,
+
+                'api-rest': `Crea una función genérica para llamar APIs REST.
+Input: URL, método (GET/POST/PUT/DELETE), headers, body
+Output: respuesta JSON parseada
+Usa httpx async. Maneja errores HTTP, timeouts y reintentos.
+Soporta autenticación Bearer y API keys.`,
+
+                'text-splitter': `Crea una función que divida textos largos en chunks.
+Input: texto largo (string)
+Output: lista de chunks con overlap
+Usa langchain RecursiveCharacterTextSplitter o implementa manualmente.
+Parámetros: chunk_size=1000, overlap=200. Divide por párrafos primero.`,
+
+                'notion-api': `Crea funciones para interactuar con Notion API.
+Input: database_id, propiedades de página
+Output: página creada o actualizada
+Usa notion-client. Implementa: crear página, actualizar, buscar.
+Maneja diferentes tipos de propiedades (texto, fecha, select, etc.).`,
+
+                'airtable': `Crea funciones CRUD para Airtable.
+Input: base_id, table_name, campos
+Output: registro creado/actualizado
+Usa pyairtable. Implementa: crear, leer, actualizar, buscar con fórmulas.
+Maneja paginación para tablas grandes.`,
+
+                'spreadsheet': `Crea funciones para leer/escribir CSV y Excel.
+Input: ruta a archivo o DataFrame
+Output: DataFrame de pandas o archivo guardado
+Usa pandas. Detecta formato automáticamente (.csv, .xlsx).
+Maneja encodings (utf-8, latin1) y diferentes separadores.`
+            };
+
+            let basePrompt = prompts[node.id] || `Crea una función para ${node.name}.
+Input: ${eduData.accepts ? eduData.accepts.join(' o ') : 'datos de entrada'}
+Output: ${eduData.output}
+${eduData.desc}`;
+
+            // Añadir contexto de conexiones
+            if (prevNode) {
+                const prevData = NODE_EDUCATION_DATA[prevNode.id] || NODE_EDUCATION_DATA['default'];
+                basePrompt += `\n\nNota: Recibirá ${prevData.output} del paso anterior (${prevNode.name}).`;
+            }
+
+            if (nextNode) {
+                const nextData = NODE_EDUCATION_DATA[nextNode.id] || NODE_EDUCATION_DATA['default'];
+                basePrompt += `\nDebe preparar output compatible con ${nextNode.name} (acepta ${nextData.accepts?.join(', ') || 'cualquier dato'}).`;
+            }
+
+            return basePrompt;
         }
 
         // ============================================

@@ -1,11 +1,56 @@
 
-# DirectOS v10.9 - Pipeline Builder Pro
+# DirectOS v10.10 - Pipeline Builder Pro
 
 > Tu cockpit de desarrollo con IA integrada, Human-in-the-Loop y Memoria Evolutiva
 
 ## Qué es
 
 DirectOS es tu **cockpit de desarrollo** para el ecosistema minerOS. Diseña pipelines visualmente, ejecútalos con IA real (Claude CLI), supervisa cada paso con HITL, y aprende cómo funcionan las automatizaciones.
+
+## Novedades v10.10
+
+### Canvas Pro - UX Mejorada
+| Feature | Descripción |
+|---------|-------------|
+| **Insertar en conexión** | Arrastra un nodo sobre una línea → se inserta automáticamente |
+| **Conectar en puertos** | Suelta cerca de un puerto → se conecta automáticamente |
+| **Minimap funcional** | Vista miniatura del canvas con colores por categoría |
+| **Animación de flujo** | Pulso animado en conexiones durante ejecución |
+| **Preview visual** | Botón para simular ejecución paso a paso |
+| **Estados de nodos** | Visual: ejecutando (amarillo), success (✓), error (✗) |
+| **Colores por tipo** | Conexiones coloreadas según tipo de dato |
+
+### Atajos de Teclado
+| Atajo | Acción |
+|-------|--------|
+| `Ctrl/Cmd+Z` | Deshacer |
+| `Ctrl/Cmd+Shift+Z` | Rehacer |
+| `Ctrl/Cmd+S` | Guardar pipeline |
+| `Ctrl/Cmd+C/V` | Copiar/Pegar nodo |
+| `Ctrl/Cmd+L` | Auto-layout |
+| `Supr/Backspace` | Eliminar nodo |
+| `Escape` | Deseleccionar |
+| `+/-/0` | Zoom in/out/reset |
+
+### Sistema Educativo
+| Feature | Descripción |
+|---------|-------------|
+| **Tooltips en conexiones** | Hover sobre línea → explica qué datos fluyen y por qué |
+| **Panel de nodo mejorado** | "Qué hace", Input/Output, "Cuándo usarlo" |
+| **Learning Path export** | Genera guía paso a paso con prompts para Claude Code |
+
+### 7 Nuevos Nodos
+| Nodo | Categoría | Descripción |
+|------|-----------|-------------|
+| **Telegram Bot** | Output | Envía mensajes, fotos o archivos a Telegram |
+| **Telegram Trigger** | Trigger | Recibe mensajes y comandos desde Telegram |
+| **REST API Call** | Proceso | Llama a cualquier API REST externa |
+| **Text Splitter** | Proceso | Divide textos largos en chunks para RAG |
+| **Notion** | Storage | Crea páginas y bases de datos en Notion |
+| **Airtable** | Storage | Lee y escribe en bases de datos Airtable |
+| **Spreadsheet** | Storage | Lee y escribe archivos CSV y Excel |
+
+---
 
 ## Novedades v10.9
 
@@ -95,6 +140,7 @@ Sistema de aprendizaje continuo basado en localStorage:
 
 | Versión | Highlights |
 |---------|------------|
+| **v10.10** | Canvas Pro + 7 nuevos nodos + Sistema Educativo |
 | **v10.9** | MINEROS BRAIN & MEMORY (Memoria Evolutiva) |
 | **v10.8** | Claude Intelligence Suite (7 funcionalidades IA) |
 | **v10.7** | Persistencia de pipelines + Logs inline por nodo |
@@ -251,16 +297,16 @@ cp .env.example .env
 - Sugiere la solución directamente
 - Contexto de tu stack (minerOS)
 
-## Nodos disponibles (36)
+## Nodos disponibles (43)
 
 | Categoría | Nodos |
 |-----------|-------|
-| **Trigger** | Manual, File Watch, Cron, Webhook |
-| **Proceso** | Whisper, Tesseract OCR, PDF Parser, BeautifulSoup |
+| **Trigger** | Manual, File Watch, Cron, Webhook, **Telegram** |
+| **Proceso** | Whisper, Tesseract OCR, PDF Parser, BeautifulSoup, **REST API**, **Text Splitter** |
 | **IA** | Claude (CLI), Claude Transform, Ollama, OpenAI |
-| **Storage** | ChromaDB, SQLite, Redis |
+| **Storage** | ChromaDB, SQLite, Redis, **Notion**, **Airtable**, **Spreadsheet** |
 | **Flow** | If, Loop, Delay, Inspector |
-| **Output** | File, Notify, Email, Slack |
+| **Output** | File, Notify, Email, Slack, **Telegram** |
 
 ## Arquitectura
 

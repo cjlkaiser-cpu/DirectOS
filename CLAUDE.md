@@ -14,7 +14,7 @@
 
 ```
 DirectOS/
-├── frontend/index.html    # UI completa (434KB, Tailwind + JS vanilla)
+├── frontend/index.html    # UI completa (~500KB, Tailwind + JS vanilla)
 ├── backend/
 │   ├── main.py            # FastAPI server (endpoints + ejecución pipelines)
 │   └── modules/
@@ -24,10 +24,10 @@ DirectOS/
 └── versions/              # Histórico de versiones
 ```
 
-## Estado Actual: v10.9
+## Estado Actual: v10.10
 
 ### Implementado
-- [x] Pipeline Builder (36 nodos, conexiones SVG, ejecución real)
+- [x] Pipeline Builder (43 nodos, conexiones SVG, ejecución real)
 - [x] Claude CLI Integration (sin coste API)
 - [x] Human-in-the-Loop (Inspector, Dry Run, Pausas por nodo)
 - [x] Prompt Builder Pro (8 plantillas, instalar en ~/.claude/commands/)
@@ -54,16 +54,31 @@ DirectOS/
   - Tracking: nodos, pipelines, sugerencias
   - Chat history persistente (50 msgs)
   - getSummaryForClaude() (contexto memoria)
+- [x] **Canvas Pro v10.10:**
+  - Insertar nodo en conexión existente
+  - Conectar arrastrando a puertos
+  - Minimap funcional con colores
+  - Animación de flujo en conexiones
+  - Estados visuales de nodos (executing, success, error)
+  - Atajos de teclado completos (Ctrl+C/V, Supr, etc.)
+- [x] **Sistema Educativo v10.10:**
+  - Tooltips en conexiones (qué datos fluyen)
+  - Panel de nodo mejorado (Qué hace, Input/Output, Cuándo usarlo)
+  - Learning Path export (guía + prompts para Claude Code)
+- [x] **7 Nuevos Nodos v10.10:**
+  - Telegram Bot, Telegram Trigger
+  - REST API Call, Text Splitter
+  - Notion, Airtable, Spreadsheet
 
-### Categorías de Nodos (36 total)
+### Categorías de Nodos (43 total)
 | Categoría | Nodos |
 |-----------|-------|
-| Trigger | Manual, File Watch, Cron, Webhook |
-| Proceso | Whisper, Tesseract OCR, PDF Parser, BeautifulSoup |
-| IA | Claude (CLI), Ollama, OpenAI |
-| Storage | ChromaDB, SQLite, Redis |
+| Trigger | Manual, File Watch, Cron, Webhook, Telegram |
+| Proceso | Whisper, Tesseract OCR, PDF Parser, BeautifulSoup, REST API, Text Splitter |
+| IA | Claude (CLI), Claude Transform, Ollama, OpenAI |
+| Storage | ChromaDB, SQLite, Redis, Notion, Airtable, Spreadsheet |
 | Flow | If, Loop, Delay, Inspector |
-| Output | File, Notify, Email, Slack |
+| Output | File, Notify, Email, Slack, Telegram |
 
 ## Endpoints API
 
@@ -110,3 +125,6 @@ DirectOS/
 - **MINEROS BRAIN**: Todas las llamadas Claude usan `askClaudeUnified()`
 - **MINEROS MEMORY**: Persistencia en localStorage key `mineros_memory`
 - Funciones refactorizadas: sendChatMessage, generatePipelineFromDescription, askClaudeForHelp, generateDocumentation, validateWithAI
+- **Canvas v10.10**: Funciones de flujo: `startFlowAnimation()`, `setNodeState()`, `simulateFlowExecution()`
+- **Educativo v10.10**: `NODE_EDUCATION_DATA` con metadata de 43 nodos, `getNodeUsageTip()` para tips contextuales
+- **Learning Path v10.10**: `exportLearningPath()` genera guía Markdown con prompts para Claude Code

@@ -2,13 +2,26 @@
 
 > Mejoras pendientes y próximas versiones
 
-## Estado actual: v10.9
+## Estado actual: v10.10
 
 Ver [CHANGELOG.md](./CHANGELOG.md) para el historial completo de cambios.
 
 ---
 
 ## Completado
+
+### v10.10 - Canvas Pro & Sistema Educativo ✅
+- [x] **Insertar nodo en conexión**: Arrastra sobre línea → se inserta automáticamente
+- [x] **Conectar en puertos**: Suelta cerca de puerto → se conecta
+- [x] **Minimap funcional**: Vista miniatura con colores por categoría
+- [x] **Animación de flujo**: Pulso animado en conexiones durante ejecución
+- [x] **Estados visuales**: executing (amarillo), success (✓), error (✗)
+- [x] **Atajos de teclado**: Ctrl+C/V, Ctrl+L, Supr, Escape, +/-/0
+- [x] **Tooltips en conexiones**: Hover → explica datos y por qué
+- [x] **Panel de nodo mejorado**: Qué hace, Input/Output, Cuándo usarlo
+- [x] **Learning Path export**: Genera guía con prompts para Claude Code
+- [x] **7 nuevos nodos**: Telegram (in/out), REST API, Text Splitter, Notion, Airtable, Spreadsheet
+- [x] **Refactor**: `_parse_command_frontmatter()` extraído en backend
 
 ### v10.9 - MINEROS BRAIN & MEMORY ✅
 - [x] **MINEROS_SYSTEM_PROMPT**: Prompt maestro con identidad DirectOS
@@ -174,8 +187,8 @@ Alto │ v11+  │ Skip  │
      └───────┴───────┘
 ```
 
-**Próximo a implementar**: v10.10 (Triggers automáticos, Auto-save)
+**Próximo a implementar**: v11.0 (Panel de Ejecuciones, Triggers automáticos)
 
 ---
 
-*Última actualización: 8 Dic 2025 - v10.9*
+*Última actualización: 9 Dic 2025 - v10.10*

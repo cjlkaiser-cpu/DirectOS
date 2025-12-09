@@ -325,6 +325,30 @@ async def content_stats():
 
 COMMANDS_DIR = Path.home() / ".claude" / "commands"
 
+def _parse_command_frontmatter(content: str) -> dict:
+    """Parsea frontmatter YAML de slash commands"""
+    meta = {"description": "", "allowed_tools": [], "argument_hint": ""}
+    if not content.startswith("---"):
+        return meta
+
+    parts = content.split("---", 2)
+    if len(parts) < 3:
+        return meta
+
+    for line in parts[1].strip().split("\n"):
+        if ":" not in line:
+            continue
+        key, value = line.split(":", 1)
+        key = key.strip().replace("-", "_")
+        value = value.strip()
+        if key == "description":
+            meta["description"] = value
+        elif key == "allowed_tools":
+            meta["allowed_tools"] = [t.strip() for t in value.split(",")]
+        elif key == "argument_hint":
+            meta["argument_hint"] = value
+    return meta
+
 class CommandCreate(BaseModel):
     """Crear/actualizar un slash command"""
     name: str
@@ -354,24 +378,7 @@ async def list_commands():
     for file in COMMANDS_DIR.glob("*.md"):
         try:
             content = file.read_text()
-            # Parsear frontmatter básico
-            meta = {"name": file.stem, "description": "", "allowed_tools": [], "argument_hint": ""}
-
-            if content.startswith("---"):
-                parts = content.split("---", 2)
-                if len(parts) >= 3:
-                    frontmatter = parts[1].strip()
-                    for line in frontmatter.split("\n"):
-                        if ":" in line:
-                            key, value = line.split(":", 1)
-                            key = key.strip().replace("-", "_")
-                            value = value.strip()
-                            if key == "description":
-                                meta["description"] = value
-                            elif key == "allowed_tools":
-                                meta["allowed_tools"] = [t.strip() for t in value.split(",")]
-                            elif key == "argument_hint":
-                                meta["argument_hint"] = value
+            meta = _parse_command_frontmatter(content)
 
             commands.append({
                 "name": file.stem,
@@ -396,25 +403,7 @@ async def get_command(name: str):
         raise HTTPException(status_code=404, detail=f"Comando '{name}' no encontrado")
 
     content = file_path.read_text()
-
-    # Parsear frontmatter
-    meta = {"description": "", "allowed_tools": [], "argument_hint": ""}
-
-    if content.startswith("---"):
-        parts = content.split("---", 2)
-        if len(parts) >= 3:
-            frontmatter = parts[1].strip()
-            for line in frontmatter.split("\n"):
-                if ":" in line:
-                    key, value = line.split(":", 1)
-                    key = key.strip().replace("-", "_")
-                    value = value.strip()
-                    if key == "description":
-                        meta["description"] = value
-                    elif key == "allowed_tools":
-                        meta["allowed_tools"] = [t.strip() for t in value.split(",")]
-                    elif key == "argument_hint":
-                        meta["argument_hint"] = value
+    meta = _parse_command_frontmatter(content)
 
     return {
         "name": name,

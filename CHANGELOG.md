@@ -6,6 +6,94 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 ---
 
+## [10.10.0] - 2025-12-09
+
+### Added - Canvas Pro
+
+#### UX Mejorada
+- **Insertar nodo en conexión**: Arrastra un nodo sobre una línea y se inserta automáticamente entre los dos nodos conectados
+- **Conectar en puertos**: Suelta un nodo cerca de un puerto de entrada/salida y se conecta automáticamente
+- **Highlight visual**: Las conexiones y puertos se resaltan en verde al arrastrar sobre ellos
+- **Minimap funcional**: Vista miniatura del canvas en esquina inferior derecha
+  - Nodos coloreados por categoría (Trigger=verde, IA=púrpura, Storage=amarillo, etc.)
+  - Viewport azul muestra área visible actual
+  - Se actualiza con zoom/pan
+
+#### Animación de Flujo
+- **Clase `.flowing`**: Conexiones con animación de pulso (dash animado)
+- **Clase `.active`**: Conexión activa resaltada en verde con glow
+- **`simulateFlowExecution()`**: Botón "Preview" simula ejecución visual paso a paso
+- **Estados de nodos**: `node-executing` (amarillo pulsante), `node-success` (verde ✓), `node-error` (rojo ✗)
+
+#### Atajos de Teclado Mejorados
+- `Ctrl/Cmd+C`: Copiar nodo seleccionado
+- `Ctrl/Cmd+V`: Pegar nodo
+- `Ctrl/Cmd+D`: Duplicar nodo
+- `Ctrl/Cmd+L`: Auto-layout
+- `Ctrl/Cmd+A`: Info de nodos en canvas
+- `Supr/Backspace`: Eliminar nodo seleccionado
+- `Escape`: Deseleccionar y cerrar paneles
+- `+/-`: Zoom in/out
+- `Ctrl/Cmd+0`: Reset zoom
+
+### Added - Sistema Educativo
+
+#### Tooltips en Conexiones
+- **Hover sobre línea**: Muestra tooltip con explicación educativa
+  - Nombre de nodos conectados
+  - Tipo de datos que fluyen (📤 Output / 📥 Input)
+  - Explicación contextual de por qué tiene sentido la conexión
+- **`NODE_EDUCATION_DATA`**: Metadata educativa para 43 nodos
+- **`getConnectionExplanation()`**: 15+ explicaciones específicas para conexiones comunes
+
+#### Panel de Nodo Mejorado
+- **"Qué hace"**: Descripción clara en lenguaje simple
+- **Datos**: Cajitas Input/Output con tipos esperados
+- **"Cuándo usarlo"**: Tip contextual con casos de uso prácticos
+- **`getNodeUsageTip()`**: Tips para 27 nodos
+
+#### Learning Path Export
+- **Botón "Learning Path"**: Genera guía Markdown paso a paso
+- **Contenido generado**:
+  - Resumen del pipeline
+  - Pasos de implementación con prompts para Claude Code
+  - Tabla Input/Output por nodo
+  - Código de integración final
+  - "Mega-prompt" para implementar todo de una vez
+- **Nombres automáticos**: Detecta tipo de pipeline (RAG, Audio Search, etc.)
+
+### Added - 7 Nuevos Nodos
+
+#### Comunicación
+- **Telegram Bot** (Output): Envía mensajes, fotos o archivos a Telegram
+- **Telegram Trigger** (Trigger): Recibe mensajes y comandos desde Telegram
+
+#### API & Data
+- **REST API Call** (Proceso): Llama a cualquier API REST (GET, POST, PUT, DELETE)
+- **Text Splitter** (Proceso): Divide textos largos en chunks para RAG
+
+#### Storage
+- **Notion** (Storage): Crea páginas y bases de datos en Notion
+- **Airtable** (Storage): Lee y escribe en bases de datos Airtable
+- **Spreadsheet** (Storage): Lee y escribe archivos CSV y Excel (.xlsx)
+
+### Changed
+- Total nodos: 36 → 43
+- Panel de configuración de nodo completamente rediseñado
+- Colores de conexiones según tipo de dato (`data-type` attribute)
+
+### Refactored
+- **Backend**: Extraída función `_parse_command_frontmatter()` para eliminar duplicación
+- **Frontend**: Clipboard system para copy/paste de nodos
+
+### Technical
+- Nuevas funciones: `findConnectionAtPoint()`, `insertNodeInConnection()`, `connectNodeBefore()`, `connectNodeAfter()`
+- Nuevas funciones: `updateMinimap()`, `startFlowAnimation()`, `setNodeState()`, `clearAllNodeStates()`
+- Nuevas funciones: `setupConnectionTooltips()`, `exportLearningPath()`, `getOrderedNodes()`, `generateClaudeCodePrompt()`
+- CSS: `.connection-line.flowing`, `.connection-line.active`, `.node-executing`, `.node-success`, `.node-error`
+
+---
+
 ## [10.9.0] - 2025-12-08
 
 ### Added - MINEROS BRAIN & MEMORY
