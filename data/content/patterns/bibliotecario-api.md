@@ -1,4 +1,5 @@
 ---
+category: docs-visual
 emoji: "\U0001F4DA"
 flow:
 - fastapi

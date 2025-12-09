@@ -1,4 +1,5 @@
 ---
+category: comodin
 emoji: "\U0001F0CF"
 flow:
 - claude

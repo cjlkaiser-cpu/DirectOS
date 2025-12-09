@@ -1,4 +1,5 @@
 ---
+category: debug
 emoji: "\U0001F50D"
 flow:
 - python

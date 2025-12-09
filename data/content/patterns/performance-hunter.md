@@ -1,4 +1,5 @@
 ---
+category: debug
 emoji: ⚡
 flow:
 - python

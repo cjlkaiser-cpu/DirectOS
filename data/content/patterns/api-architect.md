@@ -1,4 +1,5 @@
 ---
+category: data-api
 emoji: "\U0001F3DB️"
 flow:
 - fastapi

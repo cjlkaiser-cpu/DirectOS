@@ -1,4 +1,5 @@
 ---
+category: docs-visual
 emoji: "\U0001F4D0"
 flow:
 - markdown

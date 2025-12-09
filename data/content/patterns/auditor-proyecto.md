@@ -1,4 +1,5 @@
 ---
+category: comodin
 emoji: "\U0001F50E"
 flow:
 - python

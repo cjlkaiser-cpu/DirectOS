@@ -1,4 +1,5 @@
 ---
+category: seguridad
 emoji: "\U0001F512"
 flow:
 - python

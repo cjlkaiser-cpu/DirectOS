@@ -1,4 +1,5 @@
 ---
+category: meta
 emoji: "\U0001F916"
 flow:
 - python

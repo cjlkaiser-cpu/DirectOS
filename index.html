@@ -2886,6 +2886,73 @@ import sqlite3
             }
         }
 
+        /**
+         * Carga patterns desde /api/patterns
+         * Si falla, usa promptPatterns como fallback
+         * Agrupa los patterns planos en categorías
+         */
+        async function loadPatternsFromAPI() {
+            try {
+                console.log('[DUAL-LOAD] Intentando cargar patterns desde /api/patterns...');
+                const response = await fetch('/api/patterns');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.patterns && Array.isArray(data.patterns)) {
+                    console.log(`[DUAL-LOAD] ✅ Cargados ${data.count} patterns desde API`);
+
+                    // Agrupar patterns por categoría
+                    const grouped = {};
+
+                    // Inicializar todas las categorías
+                    Object.keys(PATTERN_CATEGORIES).forEach(catId => {
+                        grouped[catId] = {
+                            name: PATTERN_CATEGORIES[catId].name,
+                            icon: PATTERN_CATEGORIES[catId].icon,
+                            patterns: []
+                        };
+                    });
+
+                    // Agrupar patterns
+                    data.patterns.forEach(p => {
+                        if (p.id && p.category && grouped[p.category]) {
+                            grouped[p.category].patterns.push({
+                                id: p.id,
+                                name: p.name,
+                                emoji: p.emoji,
+                                problem: p.problem || '',
+                                prompt: p.prompt || '',
+                                flow: p.flow || [],
+                                flowDesc: p.flowDesc || ''
+                            });
+                        }
+                    });
+
+                    // Eliminar categorías vacías
+                    Object.keys(grouped).forEach(catId => {
+                        if (grouped[catId].patterns.length === 0) {
+                            delete grouped[catId];
+                        }
+                    });
+
+                    patternsData = grouped;
+                    console.log(`[DUAL-LOAD] 📦 Patterns agrupados en ${Object.keys(patternsData).length} categorías`);
+
+                    return true;
+                }
+                throw new Error('Formato de respuesta inválido');
+
+            } catch (error) {
+                console.warn('[DUAL-LOAD] ⚠️ API patterns falló, usando fallback:', error.message);
+                patternsData = { ...promptPatterns };
+                return false;
+            }
+        }
+
         // Helpers para parsear markdown
         function extractSection(content, heading) {
             if (!content) return '';
@@ -3355,6 +3422,27 @@ import sqlite3
                 ]
             }
         };
+
+        // Metadatos de categorías de patterns (nombre e icono)
+        const PATTERN_CATEGORIES = {
+            "refactoring": { name: "🔧 Refactoring", icon: "fa-wrench" },
+            "contenido": { name: "📝 Contenido", icon: "fa-pen-fancy" },
+            "seguridad": { name: "🛡️ Seguridad", icon: "fa-shield-halved" },
+            "knowledge": { name: "🧠 Knowledge", icon: "fa-brain" },
+            "aprendizaje": { name: "📖 Aprendizaje", icon: "fa-graduation-cap" },
+            "devops": { name: "🔧 DevOps", icon: "fa-code" },
+            "debug": { name: "🔍 Debug & Performance", icon: "fa-bug" },
+            "data-api": { name: "🗂️ Data & API", icon: "fa-database" },
+            "meta": { name: "🎯 Meta & Automation", icon: "fa-wand-magic-sparkles" },
+            "ui-creative": { name: "🎨 Creatividad & UI", icon: "fa-palette" },
+            "robustez": { name: "🛠️ Ingeniería & Robustez", icon: "fa-hammer" },
+            "data-eng": { name: "🧹 Data Engineering", icon: "fa-broom" },
+            "docs-visual": { name: "📐 Documentación Visual", icon: "fa-diagram-project" },
+            "comodin": { name: "🃏 Comodín", icon: "fa-hat-wizard" }
+        };
+
+        // Variable dinámica para patterns (se llena desde API o fallback)
+        let patternsData = { ...promptPatterns };
 
         const nodeDetails = {
             fastapi: { title: "FastAPI", role: "Arquitecto Senior", desc: "Servidor asíncrono. Maneja las peticiones de entrada.", code: "@app.post('/ingest')\nasync def ingest(file: UploadFile):\n    await process_file(file)\n    return {'status': 'ok'}", goal: "Crear endpoint no bloqueante para subida de archivos." },
@@ -6678,13 +6766,19 @@ ${report}
         // ============================================
         let currentPattern = null;
 
-        function initPatternsAccordion() {
+        async function initPatternsAccordion() {
+            // Intentar cargar desde API primero
+            await loadPatternsFromAPI();
+            renderPatternsAccordion();
+        }
+
+        function renderPatternsAccordion() {
             const container = document.getElementById('patterns-accordion');
             if (!container) return;
 
             container.innerHTML = '';
 
-            for (const [catId, category] of Object.entries(promptPatterns)) {
+            for (const [catId, category] of Object.entries(patternsData)) {
                 const catDiv = document.createElement('div');
                 catDiv.className = 'border border-slate-800 rounded-lg overflow-hidden';
 

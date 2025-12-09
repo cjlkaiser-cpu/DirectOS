@@ -1,4 +1,5 @@
 ---
+category: aprendizaje
 emoji: "\U0001F393"
 flow:
 - python

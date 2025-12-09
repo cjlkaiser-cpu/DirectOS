@@ -1,4 +1,5 @@
 ---
+category: refactoring
 emoji: "\U0001F3A8"
 flow:
 - html

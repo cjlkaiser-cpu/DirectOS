@@ -1,4 +1,5 @@
 ---
+category: knowledge
 emoji: "\U0001F4DA"
 flow:
 - fastapi

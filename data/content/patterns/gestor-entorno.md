@@ -1,4 +1,5 @@
 ---
+category: docs-visual
 emoji: ⚙️
 flow:
 - python

@@ -1,4 +1,5 @@
 ---
+category: contenido
 emoji: ✨
 flow:
 - python

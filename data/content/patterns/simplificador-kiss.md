@@ -1,4 +1,5 @@
 ---
+category: comodin
 emoji: ✂️
 flow:
 - python

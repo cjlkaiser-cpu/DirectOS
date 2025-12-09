@@ -1,4 +1,5 @@
 ---
+category: meta
 emoji: "\U0001F3AF"
 flow:
 - claude

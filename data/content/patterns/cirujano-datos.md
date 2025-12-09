@@ -1,4 +1,5 @@
 ---
+category: robustez
 emoji: "\U0001F52C"
 flow:
 - sqlite

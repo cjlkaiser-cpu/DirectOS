@@ -1,4 +1,5 @@
 ---
+category: devops
 emoji: "\U0001F331"
 flow:
 - fastapi
