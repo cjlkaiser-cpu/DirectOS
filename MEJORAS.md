@@ -144,6 +144,54 @@ Ver [CHANGELOG.md](./CHANGELOG.md) para el historial completo de cambios.
 
 ---
 
+## 💡 A Valorar - Ideas en Maduración
+
+> Conceptos interesantes que requieren más reflexión antes de implementar.
+
+### Automation Suite (v11.x?)
+
+**Concepto**: Herramientas para automatizar el setup y workflows de Claude Code.
+
+#### 🚀 Project Scaffolder
+Generador de estructura para proyectos nuevos:
+- Selector de tipo: Script | Web | API | Research | Tesis
+- Niveles de contexto (0-3): genera `.ai-context/`, `CLAUDE.md`
+- Opción "Clonar setup de proyecto existente"
+- Incluir `/commands` favoritos automáticamente
+
+**Valor**: Elimina el "cold start" de cada proyecto nuevo.
+
+#### ⚡ Slash Command Studio
+Crear `/comandos` visualmente (formulario → .md):
+- Nombre, descripción, argument-hint
+- Selector de tools permitidos (checkboxes)
+- Workflow builder (pasos arrastrables)
+- Output format: Markdown | Tabla | Lista | JSON
+- Destino: Proyecto o Personal (~/.claude/commands/)
+
+**Valor**: Ya tienes Prompt Builder, esto lo especializa para slash commands.
+
+#### 🔧 Skill Exporter
+Convertir pipelines maduros en Skills reutilizables:
+- Desde Pipeline Builder: botón "Exportar como Skill"
+- Infiere `allowed-tools` de los nodos usados
+- Genera `SKILL.md` con workflow del pipeline
+- Instala en `~/.claude/skills/` para todos los proyectos
+
+**Valor**: El pipeline visual se convierte en capacidad permanente de Claude.
+
+### 🧠 Context Sync Dashboard
+
+Panel de control para Memoria Evolutiva:
+- Lista proyectos activos con su nivel de contexto
+- Estado de sincronización `.ai-context/` ↔ `CLAUDE.md`
+- Botón "Sincronizar todos" (regenera CLAUDE.md desde base.md)
+- Compatible con sistema Multi-Motor (Claude, Gemini, Copilot)
+
+**Valor**: Visualiza y gestiona tu memoria evolutiva en un solo lugar.
+
+---
+
 ## Backlog
 
 ### UX/UI
