@@ -331,6 +331,72 @@ DirectOS/
 └── README.md
 ```
 
+## Arquitectura de Datos
+
+DirectOS tiene un sistema **dual de carga**: API primero, fallback si falla.
+
+### Fuente de verdad: `data/content/*.md`
+
+```
+data/content/
+├── tools/      → 52 herramientas (Glosario)
+├── flows/      → 13 recetas (Recetas de Arquitectura)
+├── patterns/   → 35 patrones de prompts (Biblioteca)
+├── presets/    → 6 arquitecturas predefinidas
+└── projects/   → 20 proyectos documentados
+```
+
+### Flujo de datos
+
+```
+Archivos .md  →  Backend (ContentManager)  →  API endpoints  →  Frontend
+                                                    ↓
+                                         fallback si API falla
+                                                    ↓
+                                         datos hardcodeados en HTML
+```
+
+| Categoría | API | Fallback |
+|-----------|-----|----------|
+| Tools | `/api/tools` | `FALLBACK_TOOLS` |
+| Flows (Recetas) | `/api/flows` | `FLOWS_DATA` |
+| Patterns | `/api/patterns` | `promptPatterns` |
+| Presets | `/api/presets` | `presets` |
+| Projects | `/api/projects` | ninguno |
+
+### Para añadir contenido nuevo
+
+1. Crear archivo `.md` en la carpeta correspondiente con frontmatter YAML
+2. Reiniciar backend o refrescar cache:
+   ```bash
+   curl -X POST http://localhost:8000/api/content/refresh
+   ```
+3. El cambio aparece automáticamente en la UI
+
+### Ejemplo: Nueva receta
+
+```markdown
+---
+id: mi-receta
+title: Mi Nueva Receta
+emoji: 🚀
+category: automation
+stack:
+  - python
+  - fastapi
+complexity: low
+cost: local
+useCase: Descripción del caso de uso
+flowDesc: Paso1 → Paso2 → Paso3
+prompt: |
+  Actúa como...
+---
+
+# Mi Nueva Receta
+
+Descripción detallada...
+```
+
 ## Stack técnico
 
 ### Frontend
