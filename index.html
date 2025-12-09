@@ -2826,6 +2826,66 @@ import sqlite3
             }
         }
 
+        /**
+         * Carga flows/recetas desde /api/flows
+         * Si falla, usa FLOWS_DATA como fallback
+         */
+        async function loadFlowsFromAPI() {
+            try {
+                console.log('[DUAL-LOAD] Intentando cargar flows desde /api/flows...');
+                const response = await fetch('/api/flows');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.flows && Array.isArray(data.flows)) {
+                    console.log(`[DUAL-LOAD] ✅ Cargados ${data.count} flows desde API`);
+
+                    // Transformar array a objeto {id: flow}
+                    const flowsFromAPI = {};
+                    data.flows.forEach(f => {
+                        if (f.id) {
+                            flowsFromAPI[f.id] = {
+                                title: f.title || f.name,
+                                emoji: f.emoji,
+                                desc: f.desc || '',
+                                category: f.category,
+                                stack: f.stack || [],
+                                complexity: f.complexity || 'mid',
+                                cost: f.cost || 'local',
+                                useCase: f.useCase || '',
+                                flowDesc: f.flowDesc || '',
+                                prompt: f.prompt || f.content || ''
+                            };
+                        }
+                    });
+
+                    // MERGE: Combinar flows de API con los que faltan de FLOWS_DATA
+                    const apiIds = new Set(Object.keys(flowsFromAPI));
+                    const remainingFallback = {};
+                    Object.entries(FLOWS_DATA).forEach(([id, flow]) => {
+                        if (!apiIds.has(id)) {
+                            remainingFallback[id] = flow;
+                        }
+                    });
+
+                    flowsData = { ...flowsFromAPI, ...remainingFallback };
+                    console.log(`[DUAL-LOAD] 📦 Total flows: ${Object.keys(flowsData).length} (${Object.keys(flowsFromAPI).length} desde API + ${Object.keys(remainingFallback).length} fallback)`);
+
+                    return true;
+                }
+                throw new Error('Formato de respuesta inválido');
+
+            } catch (error) {
+                console.warn('[DUAL-LOAD] ⚠️ API flows falló, usando fallback:', error.message);
+                flowsData = { ...FLOWS_DATA };
+                return false;
+            }
+        }
+
         // Helpers para parsear markdown
         function extractSection(content, heading) {
             if (!content) return '';
@@ -3566,6 +3626,9 @@ Incluye docker-compose para orquestar.`
             "local": { label: "Local", icon: "💻", desc: "Ollama/CPU", class: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
             "api": { label: "API", icon: "💸", desc: "Claude/OpenAI", class: "bg-orange-500/20 text-orange-400 border-orange-500/30" }
         };
+
+        // Variable dinámica para flows (se llena desde API o fallback)
+        let flowsData = { ...FLOWS_DATA };
 
         // ============================================
         // 2. ARQUITECTO PRO (CORE)
@@ -6432,7 +6495,9 @@ ${report}
         let currentFlow = null;
         let currentFlowFilter = 'all';
 
-        function initFlowsGallery() {
+        async function initFlowsGallery() {
+            // Intentar cargar desde API primero
+            await loadFlowsFromAPI();
             renderFlowsGrid('all');
         }
 
@@ -6443,8 +6508,8 @@ ${report}
 
             grid.innerHTML = '';
 
-            // Filtrar flujos
-            const flowEntries = Object.entries(FLOWS_DATA).filter(([key, flow]) => {
+            // Filtrar flujos (usa flowsData que viene de API o fallback)
+            const flowEntries = Object.entries(flowsData).filter(([key, flow]) => {
                 return filter === 'all' || flow.category === filter;
             });
 
@@ -6524,7 +6589,7 @@ ${report}
         }
 
         function openFlowModal(flowId) {
-            const flow = FLOWS_DATA[flowId];
+            const flow = flowsData[flowId];
             if (!flow) return;
 
             currentFlow = { id: flowId, ...flow };
@@ -6587,7 +6652,7 @@ ${report}
         }
 
         function quickCloneFlow(flowId) {
-            const flow = FLOWS_DATA[flowId];
+            const flow = flowsData[flowId];
             if (!flow) return;
 
             // Limpiar canvas y cargar herramientas
