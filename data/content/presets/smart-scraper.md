@@ -1,14 +1,15 @@
 ---
-id: smart-scraper
-name: 🕵️ Agente Curador
-useCase: Investigación, precios
-tools:
-  - python
-  - bs4
-  - claude
-  - sqlite
-  - loguru
+desc: Smart Scraper - Extrae datos limpios de webs
 flow: URL → HTML → LLM extrae JSON → Guarda
+id: smart-scraper
+name: "\U0001F575️ Agente Curador"
+tools:
+- python
+- bs4
+- claude
+- sqlite
+- loguru
+useCase: Investigación, precios
 ---
 
 # Smart Scraper - Extrae datos limpios de webs

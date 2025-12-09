@@ -1,12 +1,16 @@
 ---
+emoji: "\U0001F6E1️"
+flow:
+- python
+- loguru
+flowDesc: Código frágil → Identificar fallos → try/except → Retry → Log
 id: centinela-errores
 name: Centinela de Errores
-emoji: 🛡️
 problem: Tu script se rompe si falta internet o un archivo.
-flow:
-  - python
-  - loguru
-flowDesc: Código frágil → Identificar fallos → try/except → Retry → Log
+prompt: 'Actúa como SRE (Site Reliability Engineer). Envuelve este código en estructura
+  robusta de errores: Excepciones específicas (NetworkError, FileNotFoundError), retry
+  con backoff exponencial (3 intentos: 1s→2s→4s), fallback graceful, Loguru para registrar
+  timestamp/intento/error/contexto.'
 ---
 
 # Centinela de Errores

@@ -1,14 +1,15 @@
 ---
-id: rag-chatbot
-name: 🧠 Cerebro de Segunda Memoria
-useCase: farmaIA, DocMine
-tools:
-  - fastapi
-  - sbert
-  - chroma
-  - claude
-  - htmx
+desc: RAG Chatbot - Chatea con tus PDFs/Apuntes
 flow: Pregunta → Vector → Busca contexto → LLM responde
+id: rag-chatbot
+name: "\U0001F9E0 Cerebro de Segunda Memoria"
+tools:
+- fastapi
+- sbert
+- chroma
+- claude
+- htmx
+useCase: farmaIA, DocMine
 ---
 
 # RAG Chatbot - Chatea con tus PDFs/Apuntes

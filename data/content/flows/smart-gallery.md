@@ -1,18 +1,34 @@
 ---
-id: smart-gallery
-title: Smart Gallery
-emoji: 🖼️
 category: media
-stack:
-  - python
-  - clip
-  - sqlite
-  - html
-  - watchdog
 complexity: mid
 cost: local
-useCase: PhotoMine v2, organizar biblioteca familiar, portfolio.
+desc: Organiza 10.000 fotos automáticamente sin tocarlas.
+emoji: "\U0001F5BC️"
 flowDesc: Watchdog detecta → CLIP analiza → SQLite metadata → HTML5 galería
+id: smart-gallery
+prompt: 'Actúa como Photo Engineer. Sistema Smart Gallery:
+
+  1. Watchdog monitorea carpeta de fotos
+
+  2. CLIP genera tags automáticos (top 10 conceptos)
+
+  3. SQLite guarda: path, hash, tags, fecha EXIF, GPS
+
+  4. HTML5 galería estática con filtros por tag
+
+  5. Búsqueda semántica por texto
+
+  6. No mueve archivos, solo indexa
+
+  Incluye detección de duplicados por hash perceptual.'
+stack:
+- python
+- clip
+- sqlite
+- html
+- watchdog
+title: Smart Gallery
+useCase: PhotoMine v2, organizar biblioteca familiar, portfolio.
 ---
 
 # Smart Gallery

@@ -1,17 +1,31 @@
 ---
-id: voice-to-knowledge
-title: Voice-to-Knowledge
-emoji: 🎤
 category: knowledge
-stack:
-  - whisper
-  - python
-  - ollama
-  - markdown
 complexity: mid
 cost: local
-useCase: Diario personal hablado, ideas al conducir, reuniones.
+desc: Convierte audios en notas estructuradas para Obsidian.
+emoji: "\U0001F3A4"
 flowDesc: Audio → Whisper transcribe → Ollama limpia/resume → Obsidian .md
+id: voice-to-knowledge
+prompt: 'Actúa como Knowledge Engineer. Pipeline de voz a notas:
+
+  1. Watchdog detecta .mp3/.m4a en carpeta inbox/
+
+  2. Whisper (base) transcribe a texto raw
+
+  3. Ollama (llama3) limpia muletillas y estructura
+
+  4. Genera YAML frontmatter (fecha, tags inferidos)
+
+  5. Guarda en vault/diario/ con nombre fecha-hora.md
+
+  Incluye manejo de errores y logs con Loguru.'
+stack:
+- whisper
+- python
+- ollama
+- markdown
+title: Voice-to-Knowledge
+useCase: Diario personal hablado, ideas al conducir, reuniones.
 ---
 
 # Voice-to-Knowledge

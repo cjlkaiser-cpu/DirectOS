@@ -1,18 +1,34 @@
 ---
-id: smart-scraper
-title: Smart Scraper
-emoji: 🕷️
 category: automation
-stack:
-  - python
-  - bs4
-  - claude
-  - sqlite
-  - loguru
 complexity: mid
 cost: api
-useCase: Comparador de precios, monitor de BOE, tracking de productos.
+desc: Extrae datos estructurados de cualquier web con IA.
+emoji: "\U0001F577️"
 flowDesc: URL → HTTPX fetch → Claude extrae JSON → Valida → SQLite
+id: smart-scraper
+prompt: 'Actúa como Scraping Engineer. Sistema inteligente:
+
+  1. HTTPX con retry y rate limiting
+
+  2. BeautifulSoup parsea HTML
+
+  3. Claude extrae datos según schema Pydantic definido
+
+  4. Validación estricta antes de guardar
+
+  5. SQLite con histórico (tracking de cambios)
+
+  6. Loguru registra cada operación
+
+  Incluye modo --dry-run y ejemplos de schemas.'
+stack:
+- python
+- bs4
+- claude
+- sqlite
+- loguru
+title: Smart Scraper
+useCase: Comparador de precios, monitor de BOE, tracking de productos.
 ---
 
 # Smart Scraper

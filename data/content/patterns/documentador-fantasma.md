@@ -1,13 +1,17 @@
 ---
+emoji: "\U0001F47B"
+flow:
+- python
+- claude
+- markdown
+flowDesc: Código → AST extrae estructura → LLM documenta → docs/
 id: documentador-fantasma
 name: Documentador Fantasma
-emoji: 👻
 problem: Tu código funciona pero no tiene documentación.
-flow:
-  - python
-  - claude
-  - markdown
-flowDesc: Código → AST extrae estructura → LLM documenta → docs/
+prompt: 'Actúa como Technical Writer. Lee este módulo Python usando AST y genera:
+  1) Docstrings en formato Google Style para cada función, 2) Un README.md con: descripción,
+  instalación, uso básico, y ejemplos. 3) Un diagrama ASCII del flujo principal. No
+  inventes funcionalidad - documenta solo lo que existe.'
 ---
 
 # Documentador Fantasma

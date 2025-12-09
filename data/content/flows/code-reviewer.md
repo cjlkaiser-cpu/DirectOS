@@ -1,17 +1,23 @@
 ---
-id: code-reviewer
-title: Code Reviewer
-emoji: 👀
 category: devops
-stack:
-  - git
-  - python
-  - claude
-  - loguru
 complexity: low
 cost: api
-useCase: CI/CD local, pre-commit hook, code quality.
+desc: Revisa tu código antes de hacer commit.
+emoji: "\U0001F440"
 flowDesc: git diff → Claude analiza → Reporte severidad → Aprueba/Rechaza
+id: code-reviewer
+prompt: "Actúa como Code Review Bot. Sistema de revisión:\n1. git diff --staged captura
+  cambios\n2. Claude analiza buscando:\n   - Vulnerabilidades de seguridad\n   - Code
+  smells\n   - Falta de type hints\n   - Complejidad ciclomática\n3. Genera reporte
+  con severidad (critical/warning/info)\n4. Exit code 1 si hay críticos (bloquea commit)\nIntegrable
+  como pre-commit hook."
+stack:
+- git
+- python
+- claude
+- loguru
+title: Code Reviewer
+useCase: CI/CD local, pre-commit hook, code quality.
 ---
 
 # Code Reviewer

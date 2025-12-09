@@ -1,17 +1,33 @@
 ---
-id: docmine-classic
-title: DocMine Classic
-emoji: 📄
 category: knowledge
-stack:
-  - fastapi
-  - python
-  - chroma
-  - ollama
 complexity: low
 cost: local
-useCase: Consultar manuales técnicos, contratos, documentación interna.
+desc: Chat con tus PDFs y documentos. RAG simple pero efectivo.
+emoji: "\U0001F4C4"
 flowDesc: Documento → Chunking → Embeddings → ChromaDB → Query → LLM responde
+id: docmine-classic
+prompt: 'Actúa como Arquitecto RAG. Implementa un pipeline DocMine:
+
+  1. FastAPI endpoint para subir PDFs
+
+  2. PyMuPDF para extraer texto
+
+  3. Chunking con overlap (500 chars, 50 overlap)
+
+  4. Sentence-BERT para embeddings
+
+  5. ChromaDB para persistencia
+
+  6. Ollama (llama3) para respuestas
+
+  Entrega código modular en services/, routers/.'
+stack:
+- fastapi
+- python
+- chroma
+- ollama
+title: DocMine Classic
+useCase: Consultar manuales técnicos, contratos, documentación interna.
 ---
 
 # DocMine Classic

@@ -1,14 +1,15 @@
 ---
-id: auto-tagger
-name: 👻 Clasificador Fantasma
-useCase: Descargas, Escritorio
-tools:
-  - watchdog
-  - clip
-  - ocr
-  - chroma
-  - python
+desc: Auto-Tagging - Organiza archivos por contenido
 flow: Detecta archivo → Analiza → Clasifica → Mueve
+id: auto-tagger
+name: "\U0001F47B Clasificador Fantasma"
+tools:
+- watchdog
+- clip
+- ocr
+- chroma
+- python
+useCase: Descargas, Escritorio
 ---
 
 # Auto-Tagging - Organiza archivos por contenido

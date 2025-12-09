@@ -1,14 +1,15 @@
 ---
-id: text-to-sql
-name: 🔮 Oráculo de Datos
-useCase: Farmacia, Fiscalidad
-tools:
-  - fastapi
-  - claude
-  - python
-  - sqlite
-  - htmx
+desc: Text-to-SQL - Pregunta a tu BD en lenguaje natural
 flow: Pregunta → LLM genera SQL → Ejecuta → Muestra
+id: text-to-sql
+name: "\U0001F52E Oráculo de Datos"
+tools:
+- fastapi
+- claude
+- python
+- sqlite
+- htmx
+useCase: Farmacia, Fiscalidad
 ---
 
 # Text-to-SQL - Pregunta a tu BD en lenguaje natural

@@ -1,13 +1,14 @@
 ---
-id: voice-notes
-name: 🎤 Escriba Silencioso
-useCase: Diario, ideas, reuniones
-tools:
-  - whisper
-  - python
-  - claude
-  - markdown
+desc: Voice-to-Knowledge - Notas de voz a texto estructurado
 flow: Audio → Transcribe → LLM resume → Guarda .md
+id: voice-notes
+name: "\U0001F3A4 Escriba Silencioso"
+tools:
+- whisper
+- python
+- claude
+- markdown
+useCase: Diario, ideas, reuniones
 ---
 
 # Voice-to-Knowledge - Notas de voz a texto estructurado

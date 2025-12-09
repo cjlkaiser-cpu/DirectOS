@@ -1,13 +1,17 @@
 ---
+emoji: "\U0001F6E1️"
+flow:
+- python
+- sqlite
+- loguru
+flowDesc: Código → Analiza → Genera tests → conftest.py + tests/
 id: guardian-calidad
 name: Guardián de Calidad
-emoji: 🛡️
 problem: Tienes miedo de tocar el código porque se puede romper.
-flow:
-  - python
-  - sqlite
-  - loguru
-flowDesc: Código → Analiza → Genera tests → conftest.py + tests/
+prompt: Actúa como Ingeniero de QA experto en Pytest. Genera una suite de tests completa
+  para este módulo. Incluye conftest.py con fixtures para mockear la base de datos
+  y las llamadas a APIs externas (como OpenAI). Cubre casos de éxito, casos de error
+  y casos borde.
 ---
 
 # Guardián de Calidad

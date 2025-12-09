@@ -1,17 +1,33 @@
 ---
-id: research-synthesizer
-title: Research Synthesizer
-emoji: 🔬
 category: knowledge
-stack:
-  - python
-  - chroma
-  - claude
-  - markdown
 complexity: high
 cost: api
-useCase: Estado del arte de una tecnología, comparativas, investigación.
+desc: Genera informes a partir de múltiples fuentes. Deep research.
+emoji: "\U0001F52C"
 flowDesc: Tema → Multi-query ChromaDB → Reranking → Claude sintetiza → Markdown
+id: research-synthesizer
+prompt: 'Actúa como Research Engineer. Crea un sintetizador que:
+
+  1. Reciba un tema de investigación
+
+  2. Genere 5 queries diferentes (Multi-Query RAG)
+
+  3. Busque en ChromaDB con cada query
+
+  4. Reordene por relevancia (cross-encoder)
+
+  5. Pase contexto a Claude con prompt estructurado
+
+  6. Genere informe Markdown con citas
+
+  Output: Informe con secciones, bullet points y fuentes.'
+stack:
+- python
+- chroma
+- claude
+- markdown
+title: Research Synthesizer
+useCase: Estado del arte de una tecnología, comparativas, investigación.
 ---
 
 # Research Synthesizer

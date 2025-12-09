@@ -1,14 +1,15 @@
 ---
-id: video-search
-name: 🦅 Ojo de Halcón
-useCase: VideoMine, PhotoMine++
-tools:
-  - ffmpeg
-  - whisper
-  - clip
-  - sqlite
-  - fastapi
+desc: Video Search - Encuentra momentos por texto o imagen
 flow: Video → Escenas + Audio → Indexa → Busca
+id: video-search
+name: "\U0001F985 Ojo de Halcón"
+tools:
+- ffmpeg
+- whisper
+- clip
+- sqlite
+- fastapi
+useCase: VideoMine, PhotoMine++
 ---
 
 # Video Search - Encuentra momentos por texto o imagen

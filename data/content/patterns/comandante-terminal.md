@@ -1,12 +1,16 @@
 ---
+emoji: ⌨️
+flow:
+- python
+- loguru
+flowDesc: Script → Identificar inputs → Typer CLI → Instalable con pip
 id: comandante-terminal
 name: Comandante de Terminal
-emoji: ⌨️
 problem: Ejecutar scripts editando variables en el código es cutre.
-flow:
-  - python
-  - loguru
-flowDesc: Script → Identificar inputs → Typer CLI → Instalable con pip
+prompt: 'Actúa como Python Tooling Expert. Convierte este script en una CLI profesional
+  con Typer. Requisitos: Comandos claros (scan, process, clean), opciones con defaults,
+  barras de progreso con rich/tqdm, ayuda automática (--help), colores para éxito/error,
+  manejo de Ctrl+C graceful.'
 ---
 
 # Comandante de Terminal

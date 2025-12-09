@@ -1,16 +1,34 @@
 ---
-id: api-gateway
-title: API Gateway
-emoji: 🚪
 category: devops
-stack:
-  - fastapi
-  - pydantic
-  - loguru
 complexity: mid
 cost: local
-useCase: Exponer herramientas minerOS de forma segura, API unificada.
+desc: Unifica todos tus microservicios locales en un solo punto.
+emoji: "\U0001F6AA"
 flowDesc: Request → Auth → Route → Proxy al servicio → Log → Response
+id: api-gateway
+prompt: 'Actúa como API Architect. Gateway unificado:
+
+  1. FastAPI como punto de entrada único
+
+  2. Rutas: /photos/* → PhotoMine, /docs/* → DocMine, etc.
+
+  3. Middleware de autenticación (API key simple)
+
+  4. Rate limiting por IP
+
+  5. Loguru registra cada request
+
+  6. Health checks a cada servicio
+
+  7. Swagger unificado en /docs
+
+  Incluye docker-compose para orquestar.'
+stack:
+- fastapi
+- pydantic
+- loguru
+title: API Gateway
+useCase: Exponer herramientas minerOS de forma segura, API unificada.
 ---
 
 # API Gateway
