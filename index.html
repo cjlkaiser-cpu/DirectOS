@@ -2953,6 +2953,52 @@ import sqlite3
             }
         }
 
+        /**
+         * Carga presets desde /api/presets
+         * Si falla, usa presets como fallback
+         */
+        async function loadPresetsFromAPI() {
+            try {
+                console.log('[DUAL-LOAD] Intentando cargar presets desde /api/presets...');
+                const response = await fetch('/api/presets');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.presets && Array.isArray(data.presets)) {
+                    console.log(`[DUAL-LOAD] ✅ Cargados ${data.count} presets desde API`);
+
+                    // Transformar formato API → formato frontend
+                    const presetsFromAPI = data.presets.map(p => ({
+                        id: p.id,
+                        name: p.name,
+                        desc: p.desc || '',
+                        useCase: p.useCase || '',
+                        tools: p.tools || [],
+                        flow: p.flow || ''
+                    }));
+
+                    // MERGE: Combinar presets de API con los que faltan del fallback
+                    const apiIds = new Set(presetsFromAPI.map(p => p.id));
+                    const remainingFallback = presets.filter(p => !apiIds.has(p.id));
+
+                    presetsData = [...presetsFromAPI, ...remainingFallback];
+                    console.log(`[DUAL-LOAD] 📦 Total presets: ${presetsData.length}`);
+
+                    return true;
+                }
+                throw new Error('Formato de respuesta inválido');
+
+            } catch (error) {
+                console.warn('[DUAL-LOAD] ⚠️ API presets falló, usando fallback:', error.message);
+                presetsData = [...presets];
+                return false;
+            }
+        }
+
         // Helpers para parsear markdown
         function extractSection(content, heading) {
             if (!content) return '';
@@ -3032,7 +3078,10 @@ import sqlite3
                 flow: "Pregunta → LLM genera SQL → Ejecuta → Muestra"
             }
         ];
-        
+
+        // Variable dinámica para presets (se llena desde API o fallback)
+        let presetsData = [...presets];
+
         const catStyles = { "Frontend": "cat-frontend", "Backend": "cat-backend", "IA Model": "cat-ai", "Storage": "cat-storage", "Process": "cat-process", "DevOps": "cat-devops", "Trigger": "cat-trigger", "Output": "cat-output", "Flow": "cat-flow" };
         const statusLabels = { "used": "✅ Dominada", "learning": "🚧 En progreso", "new": "🆕 Por descubrir" };
 
@@ -5130,6 +5179,9 @@ EOF
 
         // --- PRESETS ---
         async function initPresets() {
+            // Cargar presets desde API primero
+            await loadPresetsFromAPI();
+
             const selector = document.getElementById('preset-selector');
 
             // Limpiar selector (excepto la primera opción vacía)
@@ -5139,10 +5191,10 @@ EOF
             // Remover optgroups existentes
             selector.querySelectorAll('optgroup').forEach(g => g.remove());
 
-            // Grupo: Patrones (hardcoded)
+            // Grupo: Patrones (desde API o fallback)
             const patternsGroup = document.createElement('optgroup');
             patternsGroup.label = '📐 Patrones';
-            presets.forEach(p => {
+            presetsData.forEach(p => {
                 const opt = document.createElement('option');
                 opt.value = `preset:${p.id}`;
                 opt.textContent = p.name;
@@ -5198,7 +5250,7 @@ EOF
 
             if (type === 'preset') {
                 // Cargar preset predefinido
-                const preset = presets.find(p => p.id === id);
+                const preset = presetsData.find(p => p.id === id);
                 if (!preset) return;
 
                 document.getElementById('preset-info').classList.remove('hidden');
