@@ -14,7 +14,7 @@
 
 ```
 DirectOS/
-├── frontend/index.html    # UI completa (~500KB, Tailwind + JS vanilla)
+├── index.html             # UI completa (~500KB, Tailwind + JS vanilla)
 ├── backend/
 │   ├── main.py            # FastAPI server (endpoints + ejecución pipelines)
 │   └── modules/

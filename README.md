@@ -312,8 +312,7 @@ cp .env.example .env
 
 ```
 DirectOS/
-├── frontend/
-│   └── index.html          ← UI completa (Tailwind + JS vanilla)
+├── index.html              ← UI completa (Tailwind + JS vanilla)
 ├── backend/
 │   ├── main.py             ← FastAPI server
 │   ├── modules/

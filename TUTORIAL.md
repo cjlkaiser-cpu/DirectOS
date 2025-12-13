@@ -84,7 +84,7 @@ pip install fastapi uvicorn anthropic chromadb sentence-transformers
 
 # 4. Arrancar (opcion B - manual)
 cd backend && uvicorn main:app --reload --port 8000 &
-open frontend/index.html
+open http://localhost:8000
 ```
 
 ### Verificar que funciona

@@ -335,6 +335,24 @@
                 <span id="sync-status" class="text-xs font-medium px-2 py-1 rounded bg-slate-700 text-slate-400 border border-slate-600">
                     <i class="fa-solid fa-circle-notch fa-spin mr-1"></i> Checking...
                 </span>
+                <!-- Ports Widget -->
+                <div class="relative">
+                    <button onclick="togglePortsPanel()" id="ports-btn" class="text-xs font-medium px-2 py-1 rounded bg-slate-800 text-slate-400 border border-slate-700 hover:bg-slate-700 transition flex items-center gap-1" title="Puertos activos">
+                        <i class="fa-solid fa-network-wired"></i> <span id="ports-count">-</span>
+                    </button>
+                    <div id="ports-panel" class="hidden absolute right-0 top-full mt-2 w-72 bg-slate-900 border border-slate-700 rounded-lg shadow-xl z-50 p-3">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs font-bold text-slate-400 uppercase">Puertos Activos</span>
+                            <button onclick="refreshPorts()" class="text-xs text-blue-400 hover:text-blue-300"><i class="fa-solid fa-refresh"></i></button>
+                        </div>
+                        <div id="ports-list" class="space-y-2 max-h-64 overflow-y-auto"></div>
+                        <div class="mt-3 pt-3 border-t border-slate-700">
+                            <button onclick="killAllExceptEssential()" class="w-full text-xs bg-red-900/50 hover:bg-red-800/50 text-red-400 py-1.5 rounded border border-red-800/50 transition">
+                                <i class="fa-solid fa-broom mr-1"></i> Limpiar todo (excepto DirectOS + Ollama)
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 <span class="text-xs font-mono text-slate-500 bg-slate-900 px-2 py-1 rounded border border-slate-800" id="clock">00:00</span>
             </div>
         </header>
@@ -6655,9 +6673,9 @@ ${report}
 
             // Renderizar tarjetas
             flowEntries.forEach(([flowId, flow]) => {
-                const cat = FLOW_CATEGORIES[flow.category];
-                const complexity = COMPLEXITY_LABELS[flow.complexity];
-                const cost = COST_LABELS[flow.cost];
+                const cat = FLOW_CATEGORIES[flow.category] || { bg: 'bg-slate-800/50', border: 'border-slate-700' };
+                const complexity = COMPLEXITY_LABELS[flow.complexity] || COMPLEXITY_LABELS['mid'];
+                const cost = COST_LABELS[flow.cost] || COST_LABELS['local'];
 
                 const card = document.createElement('div');
                 card.className = `flow-card bg-slate-900 border border-slate-800 rounded-xl overflow-hidden hover:border-slate-600 transition-all duration-300 cursor-pointer group hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1`;
@@ -9263,7 +9281,8 @@ Conexiones: ${connsDesc}`);
 
             // 3. Pipelines guardados (si se solicita)
             if (options.includeSavedPipelines) {
-                const saved = OfflineStore.getPipelines();
+                const savedObj = OfflineStore.get('pipelines') || {};
+                const saved = Object.values(savedObj);
                 if (saved.length > 0) {
                     const pipelinesList = saved.slice(0, 5).map(p =>
                         `- ${p.name} (${p.nodes?.length || 0} nodos)`
@@ -9743,16 +9762,122 @@ Por favor:
         }
 
         // ============================================
+        // PORTS WIDGET v10.11
+        // ============================================
+        let portsData = [];
+
+        async function refreshPorts() {
+            try {
+                const res = await fetch(`${API_URL}/api/system/ports`);
+                const data = await res.json();
+                portsData = data.ports || [];
+                document.getElementById('ports-count').textContent = portsData.length;
+                renderPortsList();
+            } catch (e) {
+                console.error('[PORTS] Error:', e);
+                document.getElementById('ports-count').textContent = '!';
+            }
+        }
+
+        function renderPortsList() {
+            const container = document.getElementById('ports-list');
+            if (!portsData.length) {
+                container.innerHTML = '<p class="text-xs text-slate-500 text-center py-2">No hay puertos activos</p>';
+                return;
+            }
+            container.innerHTML = portsData.map(p => {
+                const isEssential = p.is_directos || p.is_ollama;
+                const label = p.is_directos ? 'DirectOS' : p.is_ollama ? 'Ollama' : p.command;
+                const color = isEssential ? 'text-emerald-400' : 'text-slate-400';
+                const badge = isEssential ? 'bg-emerald-900/50 border-emerald-700' : 'bg-slate-800 border-slate-700';
+                return `
+                    <div class="flex items-center justify-between p-2 rounded ${badge} border">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full ${isEssential ? 'bg-emerald-400' : 'bg-amber-400'}"></span>
+                            <span class="text-xs font-mono ${color}">:${p.port}</span>
+                            <span class="text-xs text-slate-500">${label}</span>
+                        </div>
+                        ${!isEssential ? `<button onclick="killPort(${p.pid})" class="text-xs text-red-400 hover:text-red-300 px-2" title="Matar proceso"><i class="fa-solid fa-xmark"></i></button>` : '<span class="text-xs text-emerald-600"><i class="fa-solid fa-lock"></i></span>'}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function togglePortsPanel() {
+            const panel = document.getElementById('ports-panel');
+            panel.classList.toggle('hidden');
+            if (!panel.classList.contains('hidden')) {
+                refreshPorts();
+            }
+        }
+
+        async function killPort(pid) {
+            if (!confirm(`¿Matar proceso PID ${pid}?`)) return;
+            try {
+                await fetch(`${API_URL}/api/system/kill/${pid}`, { method: 'POST' });
+                refreshPorts();
+            } catch (e) {
+                console.error('[PORTS] Kill error:', e);
+            }
+        }
+
+        async function killAllExceptEssential() {
+            const toKill = portsData.filter(p => !p.is_directos && !p.is_ollama);
+            if (!toKill.length) {
+                alert('No hay procesos para limpiar');
+                return;
+            }
+            if (!confirm(`¿Matar ${toKill.length} procesos?`)) return;
+            for (const p of toKill) {
+                try {
+                    await fetch(`${API_URL}/api/system/kill/${p.pid}`, { method: 'POST' });
+                } catch (e) {}
+            }
+            refreshPorts();
+        }
+
+        // Close panel when clicking outside
+        document.addEventListener('click', (e) => {
+            const panel = document.getElementById('ports-panel');
+            const btn = document.getElementById('ports-btn');
+            if (!panel.contains(e.target) && !btn.contains(e.target)) {
+                panel.classList.add('hidden');
+            }
+        });
+
+        // Initial load
+        setTimeout(refreshPorts, 1000);
+
+        // ============================================
         // INICIALIZACIÓN
         // ============================================
-        SyncManager.init();  // Offline-first sync
-        initPresets();
-        initPatternsAccordion();
-        initFlowsGallery();
-        initProjects();
-        renderSavedPipelines();  // v10.7 - Load saved pipelines list
-        switchView('architect');
-        renderCanvas();
+        (async function initApp() {
+            console.log('[INIT] 🚀 Iniciando app...');
+            SyncManager.init();  // Offline-first sync
+
+            // Cargar datos desde API (async) - usamos allSettled para no fallar si una falla
+            const results = await Promise.allSettled([
+                initPresets().catch(e => console.error('[INIT] ❌ initPresets falló:', e)),
+                initPatternsAccordion().catch(e => console.error('[INIT] ❌ initPatternsAccordion falló:', e)),
+                initFlowsGallery().catch(e => console.error('[INIT] ❌ initFlowsGallery falló:', e))
+            ]);
+
+            results.forEach((r, i) => {
+                const names = ['Presets', 'Patterns', 'Flows'];
+                if (r.status === 'fulfilled') {
+                    console.log(`[INIT] ✅ ${names[i]} cargados`);
+                } else {
+                    console.error(`[INIT] ❌ ${names[i]} falló:`, r.reason);
+                }
+            });
+
+            initProjects();
+            renderSavedPipelines();  // v10.7 - Load saved pipelines list
+            switchView('architect');
+            renderCanvas();
+
+            console.log('[INIT] ✅ App inicializada');
+        })();
     </script>
 </body>
 </html>

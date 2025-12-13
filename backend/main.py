@@ -56,7 +56,7 @@ app.add_middleware(
 
 # Paths
 BASE_DIR = Path(__file__).parent.parent
-FRONTEND_DIR = BASE_DIR / "frontend"
+FRONTEND_DIR = BASE_DIR  # Servir desde root, no desde frontend/
 DATA_DIR = BASE_DIR / "data"
 
 # Inicializar módulos
@@ -203,6 +203,56 @@ async def health_check():
             "notifier": notifier.get_status()
         }
     }
+
+@app.get("/api/system/ports")
+async def get_system_ports():
+    """Lista de puertos activos con procesos Python/Node"""
+    import subprocess
+    try:
+        result = subprocess.run(
+            ["lsof", "-iTCP", "-sTCP:LISTEN", "-P", "-n"],
+            capture_output=True, text=True, timeout=5
+        )
+        lines = result.stdout.strip().split('\n')[1:]  # Skip header
+
+        ports = []
+        seen = set()
+        for line in lines:
+            parts = line.split()
+            if len(parts) >= 9:
+                cmd, pid, name = parts[0], parts[1], parts[8]
+                # Extract port from name like *:8000 or 127.0.0.1:8000
+                port = name.split(':')[-1].replace('(LISTEN)', '')
+                key = f"{cmd}:{port}"
+                if key not in seen and cmd.lower() in ['python', 'node', 'ollama', 'uvicorn']:
+                    seen.add(key)
+                    ports.append({
+                        "command": cmd,
+                        "pid": int(pid),
+                        "port": int(port) if port.isdigit() else port,
+                        "is_directos": port == "8000",
+                        "is_ollama": port == "11434"
+                    })
+
+        return {"ports": sorted(ports, key=lambda x: x.get('port', 0) if isinstance(x.get('port'), int) else 0)}
+    except Exception as e:
+        return {"ports": [], "error": str(e)}
+
+@app.post("/api/system/kill/{pid}")
+async def kill_process(pid: int):
+    """Mata un proceso por PID (excepto DirectOS)"""
+    import subprocess
+    import os
+
+    # Safety: no matar DirectOS (este proceso)
+    if pid == os.getpid() or pid == os.getppid():
+        raise HTTPException(status_code=400, detail="No se puede matar DirectOS")
+
+    try:
+        subprocess.run(["kill", "-9", str(pid)], check=True)
+        return {"killed": pid, "success": True}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # =============================================================================
 # ENDPOINTS - KNOWLEDGE BASE
